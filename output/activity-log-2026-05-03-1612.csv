@@ -1,0 +1,17 @@
+﻿Date,Level,Message
+2026-05-03T16:12:34.241Z,success,Daily routine complete. Cap used: 15. Window: US_EU.
+2026-05-03T16:12:34.227Z,warn,[relationship-builder] content script did not respond after 15 retries — skipping
+2026-05-03T16:11:44.059Z,warn,[relationship-builder] content script did not respond after 15 retries — skipping
+2026-05-03T16:10:54.756Z,info,Step 4/4 — Building relationships (birthdays + anniversaries)…
+2026-05-03T16:10:54.734Z,info,■ post-engager done | 0 likes / 0 comments
+2026-05-03T16:10:08.298Z,info,▶ post-engager started | https://www.linkedin.com/search/results/content/?keywords=%22project%20manager%22%20latam&sortBy=%22relevance%22&datePosted=%22past-week%22
+2026-05-03T16:10:02.758Z,info,"Keyword 1/15: """"project manager"" latam"""
+2026-05-03T16:10:02.754Z,info,Step 3/4 — Engaging with targeted content search posts…
+2026-05-03T16:10:02.726Z,warn,✗ recruiter-prospector — no search result cards found
+2026-05-03T16:09:57.871Z,info,▶ recruiter-prospector started | https://www.linkedin.com/search/results/people/?keywords=Tech%20Recruiter%20Information%20Technology&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%5D
+2026-05-03T16:09:52.737Z,info,Step 2/4 — Prospecting Tech Recruiters (cap: 15)…
+2026-05-03T16:09:52.720Z,success,■ ssi-monitor done | total:51 brand:51 people:14 insights:14 rel:7
+2026-05-03T16:09:42.249Z,info,▶ ssi-monitor started | https://www.linkedin.com/sales/ssi
+2026-05-03T16:09:38.660Z,info,Step 1/4 — Capturing SSI scores…
+2026-05-03T16:09:38.660Z,warn,[Manual] Full sequence triggered. Cap today: 15.
+2026-05-03T16:09:33.782Z,success,Extension installed. Daily alarms registered.
