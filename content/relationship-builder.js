@@ -151,6 +151,29 @@ function getNetworkCards() {
   );
   if (byLink.length) { console.log(`[Relationship Builder] Found ${byLink.length} cards via artdeco+profile-link fallback.`); return byLink; }
 
+  // Strategy 5: scaffold finite-scroll list items (LinkedIn 2025 infinite-scroll layout)
+  const byScaffold = Array.from(document.querySelectorAll(
+    '.scaffold-finite-scroll__content li, ' +
+    'ul.pvs-list li, ' +
+    '[data-view-name*="catch-up"]'
+  )).filter(el => el.querySelector('a[href*="/in/"]'));
+  if (byScaffold.length) { console.log(`[Relationship Builder] Found ${byScaffold.length} cards via scaffold fallback.`); return byScaffold; }
+
+  // Strategy 6: broadest possible — any li or div on the page with a profile link
+  const byAny = Array.from(document.querySelectorAll('li, div[class]')).filter(
+    el => el.querySelector('a[href*="/in/"]') && !el.closest('[data-ssi-found]')
+  );
+  // De-duplicate: keep only the innermost unique containers
+  const seen = new Set();
+  const deduped = byAny.filter(el => {
+    const link = el.querySelector('a[href*="/in/"]');
+    const key = link ? link.href : null;
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  if (deduped.length) { console.log(`[Relationship Builder] Found ${deduped.length} cards via broadest fallback.`); return deduped; }
+
   console.warn('[Relationship Builder] All selectors failed. Page URL:', location.href);
   return [];
 }

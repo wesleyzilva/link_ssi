@@ -208,6 +208,22 @@ function getFeedPosts() {
   ));
   if (byArtdeco.length) { console.log(`[Post Engager] Found ${byArtdeco.length} posts via artdeco fallback.`); return byArtdeco; }
 
+  // Strategy 6: search/results/content — list items in search result containers (LinkedIn 2025)
+  const bySearchLi = Array.from(document.querySelectorAll(
+    'ul.reusable-search__entity-result-list > li, ' +
+    '.search-results-container li, ' +
+    'li.search-content-result__wrapper'
+  )).filter(el => el.querySelector('[aria-label*="Like"], [data-urn], [data-id]'));
+  if (bySearchLi.length) { console.log(`[Post Engager] Found ${bySearchLi.length} posts via search-li fallback.`); return bySearchLi; }
+
+  // Strategy 7: absolute broadest — any element with a reaction button
+  const byReaction = Array.from(document.querySelectorAll(
+    '[data-reaction-type], [aria-label*="React"], ' +
+    'button[aria-label*="Like"], button[aria-label*="Comment"]'
+  )).map(btn => btn.closest('article, li, [data-id], [data-urn]') || btn.parentElement).filter(Boolean);
+  const uniqueContainers = [...new Set(byReaction)];
+  if (uniqueContainers.length) { console.log(`[Post Engager] Found ${uniqueContainers.length} posts via reaction-button fallback.`); return uniqueContainers; }
+
   console.warn('[Post Engager] All selectors failed. Page URL:', location.href);
   return [];
 }

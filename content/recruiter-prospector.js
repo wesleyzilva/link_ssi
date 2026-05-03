@@ -164,6 +164,28 @@ function getSearchResultCards() {
   );
   if (byProfileLink.length) { console.log(`[Recruiter Prospector] Found ${byProfileLink.length} cards via profile-link fallback.`); return byProfileLink; }
 
+  // Strategy 4 (LinkedIn 2025): div-based result containers (LinkedIn migrated away from li in some views)
+  const byDivResult = Array.from(document.querySelectorAll(
+    'div.search-result, div[class*="search-result"], ' +
+    'div.reusable-search__result-container'
+  )).filter(el => el.querySelector('a[href*="/in/"]'));
+  if (byDivResult.length) { console.log(`[Recruiter Prospector] Found ${byDivResult.length} cards via div-result fallback.`); return byDivResult; }
+
+  // Strategy 5: absolute broadest — any div or li anywhere on the page with a profile link,
+  // de-duplicated to one container per unique profile
+  const allWithLink = Array.from(document.querySelectorAll('div, li')).filter(
+    el => el.querySelector('a[href*="/in/"]')
+  );
+  const seenIds = new Set();
+  const deduped = allWithLink.filter(el => {
+    const link = el.querySelector('a[href*="/in/"]');
+    const key = link ? link.href.split('?')[0] : null;
+    if (!key || seenIds.has(key)) return false;
+    seenIds.add(key);
+    return true;
+  });
+  if (deduped.length) { console.log(`[Recruiter Prospector] Found ${deduped.length} cards via broadest fallback.`); return deduped; }
+
   console.warn('[Recruiter Prospector] All selectors failed. LinkedIn DOM may have changed.');
   return [];
 }

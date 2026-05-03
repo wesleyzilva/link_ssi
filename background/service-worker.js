@@ -137,7 +137,7 @@ async function runDailySequence(targetWindow, dailyCap) {
   await exportAllCsvs();
   chrome.notifications.create({
     type: 'basic',
-    iconUrl: 'icons/icon48.png',
+    iconUrl: chrome.runtime.getURL('icons/icon48.png'),
     title: 'SSI Optimizer',
     message: `Daily routine complete. ${dailyCap} connections attempted. Window: ${targetWindow}.`,
   });
