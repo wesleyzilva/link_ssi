@@ -21,7 +21,7 @@ async function contentLog(msg, level = 'info') {
 }
 
 const SESSION_CAP = 10;
-const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+// SEVEN_DAYS_MS is already declared as a global by utils/db.js (loaded first in manifest)
 
 const BIRTHDAY_MESSAGES = [
   "Happy birthday! Hope you're having a great day. 🎂",

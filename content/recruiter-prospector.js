@@ -55,17 +55,34 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
 // ─── Core logic ───────────────────────────────────────────────────────────────
 
+/**
+ * Polls a DOM query function until it returns at least one element, or times out.
+ * @param {Function} queryFn  - zero-arg function that returns an array
+ * @param {number}   maxWait  - total ms to keep trying (default 20 s)
+ * @param {number}   interval - ms between attempts (default 2 s)
+ */
+async function waitForElements(queryFn, maxWait = 20000, interval = 2000) {
+  const deadline = Date.now() + maxWait;
+  while (Date.now() < deadline) {
+    const els = queryFn();
+    if (els.length) return els;
+    await new Promise(r => setTimeout(r, interval));
+  }
+  return queryFn(); // final attempt
+}
+
 async function prospectRecruiters() {
   await contentLog(`▶ recruiter-prospector started | ${window.location.href}`);
-  await randomWait(4000, 8000); // wait for search results to render
+  await randomWait(5000, 9000); // initial wait for SPA render
 
-  const results = getSearchResultCards();
+  const results = await waitForElements(getSearchResultCards);
   if (!results.length) {
     console.warn('[Recruiter Prospector] No search result cards found — selectors may need updating.');
-    await contentLog('✗ recruiter-prospector — no search result cards found', 'warn');
+    await contentLog('✗ recruiter-prospector — no search result cards found (waited 20 s)', 'warn');
     await chrome.storage.local.set({ lastProspecting: { sent: 0, runAt: new Date().toISOString() } });
     return { sent: 0 };
   }
+  await contentLog(`recruiter-prospector — ${results.length} cards found`);
 
   let sent = 0;
 

@@ -61,9 +61,22 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
 // ─── Core logic ───────────────────────────────────────────────────────────────
 
+/**
+ * Polls a DOM query function until it returns at least one element, or times out.
+ */
+async function waitForElements(queryFn, maxWait = 20000, interval = 2000) {
+  const deadline = Date.now() + maxWait;
+  while (Date.now() < deadline) {
+    const els = queryFn();
+    if (els.length) return els;
+    await new Promise(r => setTimeout(r, interval));
+  }
+  return queryFn();
+}
+
 async function engageWithPosts() {
   await contentLog(`▶ post-engager started | ${window.location.href}`);
-  await randomWait(3000, 6000);
+  await randomWait(4000, 8000); // initial wait for SPA render
 
   // Simulate a person arriving on the feed and reading before engaging
   await simulatePageReading(randomInt(8000, 14000));
@@ -77,7 +90,7 @@ async function engageWithPosts() {
     (likesGiven < CAPS.likes || commentsMade < CAPS.comments) &&
     scrollRounds < MAX_SCROLL_ROUNDS
   ) {
-    const posts = getFeedPosts();
+    const posts = await waitForElements(getFeedPosts, 15000);
 
     for (const post of posts) {
       if (likesGiven >= CAPS.likes && commentsMade >= CAPS.comments) break;
