@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SSI Optimizer — History</title>
+  <link rel="stylesheet" href="history.css" />
+</head>
+<body>
+  <header>
+    <h1>SSI Optimizer — Activity History</h1>
+    <div class="header-actions">
+      <button id="btn-refresh" class="btn btn--ghost">↻ Refresh</button>
+      <button id="btn-export-all-csv" class="btn btn--ghost">⬇ Export All CSV</button>
+      <button id="btn-clear-all" class="btn btn--danger">🗑 Clear All</button>
+    </div>
+  </header>
+
+  <!-- ─── Tab bar ──────────────────────────────────────────────────────── -->
+  <nav class="tabs">
+    <button class="tab-btn tab-btn--active" data-tab="connections">
+      🤝 Connections <span id="badge-connections" class="badge">0</span>
+    </button>
+    <button class="tab-btn" data-tab="posts">
+      💬 Posts <span id="badge-posts" class="badge">0</span>
+    </button>
+    <button class="tab-btn" data-tab="relationships">
+      🎉 Relationships <span id="badge-relationships" class="badge">0</span>
+    </button>
+    <button class="tab-btn" data-tab="log">
+      📋 Activity Log <span id="badge-log" class="badge">0</span>
+    </button>
+    <button class="tab-btn" data-tab="ssi">
+      📈 SSI Scores <span id="badge-ssi" class="badge">0</span>
+    </button>
+  </nav>
+
+  <!-- ─── Connections tab ───────────────────────────────────────────────── -->
+  <section id="tab-connections" class="tab-panel tab-panel--active">
+    <div class="tab-toolbar">
+      <p class="hint">People you sent a connection request to. Click a name to open their LinkedIn profile.</p>
+      <button id="btn-csv-connections" class="btn btn--ghost">⬇ Export CSV</button>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Name</th>
+            <th>Profile</th>
+          </tr>
+        </thead>
+        <tbody id="connections-body">
+          <tr><td colspan="3" class="empty">No connections recorded yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ─── Posts tab ─────────────────────────────────────────────────────── -->
+  <section id="tab-posts" class="tab-panel">
+    <div class="tab-toolbar">
+      <p class="hint">Posts you liked or commented on. Click the post ID to open it (if LinkedIn preserves the URL).</p>
+      <button id="btn-csv-posts" class="btn btn--ghost">⬇ Export CSV</button>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Action</th>
+            <th>Post link</th>
+          </tr>
+        </thead>
+        <tbody id="posts-body">
+          <tr><td colspan="3" class="empty">No post interactions recorded yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ─── Relationships tab ────────────────────────────────────────────── -->
+  <section id="tab-relationships" class="tab-panel">
+    <div class="tab-toolbar">
+      <p class="hint">Anniversary and new-job congratulations sent to your network. Click to open the profile.</p>
+      <button id="btn-csv-relationships" class="btn btn--ghost">⬇ Export CSV</button>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Name</th>
+            <th>Event</th>
+            <th>Message sent</th>
+            <th>Profile</th>
+          </tr>
+        </thead>
+        <tbody id="relationships-body">
+          <tr><td colspan="5" class="empty">No relationship touches recorded yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ─── Activity Log tab ─────────────────────────────────────────────── -->
+  <section id="tab-log" class="tab-panel">
+    <div class="tab-toolbar">
+      <p class="hint">Full chronological log of every action taken by the extension.</p>
+      <button id="btn-csv-log" class="btn btn--ghost">⬇ Export CSV</button>
+    </div>
+    <div id="log-list" class="log-list">
+      <p class="empty">No log entries yet.</p>
+    </div>
+  </section>
+
+  <!-- ─── SSI Scores tab ──────────────────────────────────────────────── -->
+  <section id="tab-ssi" class="tab-panel">
+    <div class="tab-toolbar">
+      <p class="hint">Daily SSI score snapshots. Up to 90 entries (~3 months). Export for trend analysis in Excel / Sheets.</p>
+      <button id="btn-csv-ssi" class="btn btn--ghost">⬇ Export CSV</button>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Total</th>
+            <th>Brand</th>
+            <th>People</th>
+            <th>Insights</th>
+            <th>Relationships</th>
+          </tr>
+        </thead>
+        <tbody id="ssi-body">
+          <tr><td colspan="6" class="empty">No SSI scores captured yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <script src="history.js"></script>
+</body>
+</html>

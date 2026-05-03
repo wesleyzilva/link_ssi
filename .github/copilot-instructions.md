@@ -5,15 +5,22 @@
 
 ## This Project: link_ssi
 
-- **Type:** Angular SPA — single-page link hub
-- **Hosting:** GitHub Pages (`gh-pages` branch)
-- **Analytics:** GA4 — track every link click with `event_category: link_click`
-- **Goal:** Zero third-party dependency, full ownership of link-in-bio data
+- **Type:** Chrome Extension — LinkedIn SSI automation tool
+- **Manifest:** V3 (Service Worker, Content Scripts, Declarative permissions)
+- **Runtime:** Vanilla JavaScript (ES modules) — no build step, no framework
+- **Storage:** IndexedDB only — no backend, no cloud, no third-party services
+- **Execution:** Local only — runs in an authenticated Chrome session with the user's real LinkedIn cookies
 
 ## Quick Rules
 
 - English C2 in all code and documentation
 - STAR methodology for any decision record or PR description
-- Angular signals, standalone components, `OnPush` change detection
+- Vanilla JS only — do NOT use Angular, React, Vue, or any component framework
+- No `npm install` — zero dependencies; pure browser APIs only
+- All DOM selectors must include a fallback strategy (LinkedIn changes DOM frequently)
+- Human-mimicry is mandatory before every interaction: use `randomWait()` and `scrollIntoViewAndPause()` from `utils/human-mimicry.js`
+- Anti-duplication must be enforced via IndexedDB before every action (posts + recruiters)
+- Daily caps are hardcoded constants — never remove or bypass them
 - `feat`/`fix`/`chore` conventional commits, max 72-char subject
-- No secrets committed — GA4 measurement ID lives in `environment.ts`
+- No secrets committed — no API keys, tokens, or credentials of any kind
+

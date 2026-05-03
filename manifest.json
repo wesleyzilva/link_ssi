@@ -1,0 +1,67 @@
+{
+  "manifest_version": 3,
+  "name": "LinkedIn SSI Optimizer — Wesley Silva",
+  "version": "1.0.0",
+  "description": "Daily SSI monitoring, strategic recruiter prospecting, and engagement automation for LinkedIn networking. Runs once per day with human-mimicry delays and full anti-duplication controls.",
+
+  "permissions": [
+    "storage",
+    "alarms",
+    "tabs",
+    "scripting",
+    "notifications",
+    "downloads"
+  ],
+
+  "host_permissions": [
+    "https://www.linkedin.com/*"
+  ],
+
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["https://www.linkedin.com/sales/ssi*"],
+      "js": ["utils/human-mimicry.js", "utils/db.js", "content/ssi-monitor.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.linkedin.com/search/results/*"],
+      "js": ["utils/human-mimicry.js", "utils/db.js", "content/recruiter-prospector.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.linkedin.com/feed/*",
+        "https://www.linkedin.com/",
+        "https://www.linkedin.com/search/results/content/*"
+      ],
+      "js": ["utils/human-mimicry.js", "utils/db.js", "content/post-engager.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.linkedin.com/mynetwork/*"],
+      "js": ["utils/human-mimicry.js", "utils/db.js", "content/relationship-builder.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "SSI Optimizer",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

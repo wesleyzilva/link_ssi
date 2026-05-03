@@ -1,0 +1,17 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# No node_modules (this project has no npm dependencies)
+node_modules/
+
+# Build artifacts (none expected — no build step)
+dist/
+build/

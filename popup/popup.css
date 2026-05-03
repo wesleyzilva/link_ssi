@@ -1,0 +1,321 @@
+/* popup.css — SSI Optimizer popup styles */
+
+:root {
+  --color-bg: #0a0a0a;
+  --color-surface: #1a1a1a;
+  --color-border: #2a2a2a;
+  --color-text: #e8e8e8;
+  --color-muted: #888;
+  --color-accent: #0077b5;  /* LinkedIn brand blue */
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --radius: 8px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font);
+  font-size: 13px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  width: 300px;
+  padding: 16px;
+}
+
+/* ─── Header ─────────────────────────────────────────────────────────────── */
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+h1 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-accent);
+  letter-spacing: -0.3px;
+}
+
+.badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+.badge--success { background: #166534; color: #86efac; }
+.badge--neutral { background: var(--color-surface); color: var(--color-muted); }
+
+/* ─── SSI Scores ─────────────────────────────────────────────────────────── */
+
+.ssi-scores {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.score-main {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.score-main .label {
+  font-size: 11px;
+  color: var(--color-muted);
+  margin-right: auto;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.value-large {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--color-accent);
+  line-height: 1;
+}
+
+.max {
+  font-size: 12px;
+  color: var(--color-muted);
+}
+
+.score-pillars {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 10px;
+}
+
+.pillar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.pillar-label {
+  font-size: 10px;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.pillar-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/* ─── Activity log ───────────────────────────────────────────────────────── */
+
+.activity-log {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+h2 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-muted);
+  margin-bottom: 8px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+td {
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+td:first-child {
+  color: var(--color-muted);
+}
+
+td:last-child {
+  text-align: right;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* ─── Next run ───────────────────────────────────────────────────────────── */
+
+.next-run {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.next-run p {
+  font-size: 12px;
+  color: var(--color-warning);
+  font-weight: 500;
+}
+
+/* ─── Footer ─────────────────────────────────────────────────────────────── */
+
+footer {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+footer a {
+  font-size: 11px;
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
+
+/* ─── Header actions ─────────────────────────────────────────────────────── */
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ─── Buttons ────────────────────────────────────────────────────────────── */
+
+.btn {
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background: var(--color-accent);
+  color: #fff;
+  padding: 5px 10px;
+}
+
+.btn--primary:hover:not(:disabled) { opacity: 0.85; }
+
+.btn--task {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  padding: 7px 4px;
+  width: 100%;
+  font-size: 11px;
+}
+
+.btn--task:hover:not(:disabled) {
+  background: #252525;
+  border-color: var(--color-accent);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--color-muted);
+  padding: 2px 6px;
+  font-size: 10px;
+}
+
+.btn--ghost:hover { color: var(--color-text); }
+
+/* ─── Controls ───────────────────────────────────────────────────────────── */
+
+.controls {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.controls-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+
+/* ─── Live log ───────────────────────────────────────────────────────────── */
+
+.live-log {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.live-log-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.live-log-header h2 { margin-bottom: 0; }
+
+.log-entries {
+  max-height: 150px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+.log-empty {
+  font-size: 11px;
+  color: var(--color-muted);
+  text-align: center;
+  padding: 8px 0;
+}
+
+.log-entry {
+  display: grid;
+  grid-template-columns: 68px 1fr;
+  gap: 6px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.log-entry:last-child { border-bottom: none; }
+
+.log-time {
+  color: var(--color-muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.log-msg { color: var(--color-text); word-break: break-word; }
+
+.log-entry--error   .log-msg { color: #f87171; }
+.log-entry--warn    .log-msg { color: var(--color-warning); }
+.log-entry--success .log-msg { color: var(--color-success); }
