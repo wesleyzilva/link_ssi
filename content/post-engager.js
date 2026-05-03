@@ -230,7 +230,14 @@ function getFeedPosts() {
 
 function extractPostId(post) {
   const urn = post.getAttribute('data-urn') || post.getAttribute('data-id');
-  return urn || null;
+  if (urn) return urn;
+  // Fallback: derive a stable ID from the post's permalink URL so the post
+  // is still dedup-tracked even when the container has no data-urn/data-id.
+  const link =
+    post.querySelector('a[href*="/feed/update/"]') ||
+    post.querySelector('a[href*="/posts/"]') ||
+    post.querySelector('a[href*="/activity-"]');
+  return link ? link.href.split('?')[0] : null;
 }
 
 /**
@@ -261,8 +268,13 @@ function getCommentCount(post) {
 }
 
 async function likePost(post) {
-  const likeButton = post.querySelector('[data-test-id="like-button"]') ||
-    post.querySelector('button[aria-label*="Like"]');
+  const likeButton =
+    post.querySelector('[data-test-id="like-button"]') ||
+    post.querySelector('button[aria-label*="Like"]') ||
+    post.querySelector('button[aria-label*="React"]') ||
+    Array.from(post.querySelectorAll('button')).find(
+      b => /^(like|react)/i.test((b.getAttribute('aria-label') || b.textContent).trim())
+    );
   if (!likeButton || likeButton.getAttribute('aria-pressed') === 'true') return false;
 
   await humanClick(likeButton);
@@ -270,24 +282,44 @@ async function likePost(post) {
 }
 
 async function commentOnPost(post) {
-  const commentButton = post.querySelector('button[aria-label*="Comment"]');
+  const commentButton =
+    post.querySelector('button[aria-label*="Comment"]') ||
+    post.querySelector('button[aria-label*="comment"]') ||
+    Array.from(post.querySelectorAll('button')).find(
+      b => /^comment$/i.test(b.textContent.trim())
+    );
   if (!commentButton) return false;
 
   await humanClick(commentButton);
   await randomWait(1500, 3000);
 
-  const commentBox = post.querySelector('.ql-editor[data-placeholder]') ||
-    document.querySelector('.comments-comment-texteditor .ql-editor');
+  const commentBox =
+    post.querySelector('.ql-editor[data-placeholder]') ||
+    document.querySelector('.comments-comment-texteditor .ql-editor') ||
+    document.querySelector('.comments-comment-box__text-editor .ql-editor') ||
+    document.querySelector('[contenteditable="true"][data-placeholder*="comment"]') ||
+    document.querySelector('[contenteditable="true"][data-placeholder*="Comment"]') ||
+    document.querySelector('.comments-comment-box [contenteditable="true"]');
   if (!commentBox) return false;
 
   const template = COMMENT_TEMPLATES[Math.floor(Math.random() * COMMENT_TEMPLATES.length)];
   commentBox.focus();
-  commentBox.textContent = template;
+  // execCommand is required for React-controlled contenteditable editors:
+  // assigning textContent directly bypasses React's synthetic event system
+  // and leaves the submit button disabled.
+  document.execCommand('selectAll', false, null);
+  document.execCommand('insertText', false, template);
   commentBox.dispatchEvent(new InputEvent('input', { bubbles: true }));
   await randomWait(3000, 6000);
 
-  const submitButton = post.querySelector('button[class*="comments-comment-box__submit-button"]') ||
-    document.querySelector('.comments-comment-box__submit-button--cr');
+  const submitButton =
+    post.querySelector('button[class*="comments-comment-box__submit-button"]') ||
+    document.querySelector('.comments-comment-box__submit-button--cr') ||
+    document.querySelector('.comments-comment-box .artdeco-button--primary') ||
+    document.querySelector('button[data-control-name="submit-post"]') ||
+    Array.from(document.querySelectorAll('.comments-comment-box button')).find(
+      b => /^post$/i.test(b.textContent.trim()) || /submit/i.test(b.getAttribute('aria-label') || '')
+    );
   if (!submitButton) return false;
 
   await humanClick(submitButton);

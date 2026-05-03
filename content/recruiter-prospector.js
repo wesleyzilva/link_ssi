@@ -218,32 +218,87 @@ function getConnectButton(card) {
 }
 
 async function handleConnectionModal(card, profileId) {
-  await randomWait(1500, 3000);
+  // Poll for the invite modal to appear (up to 5 s)
+  const modal = await new Promise(resolve => {
+    const deadline = Date.now() + 5000;
+    const tick = setInterval(() => {
+      const m =
+        document.querySelector('div[data-test-modal-id="send-invite-modal"]') ||
+        document.querySelector('.send-invite') ||
+        document.querySelector('[data-test-modal]') ||
+        document.querySelector('.artdeco-modal[role="dialog"]');
+      if (m || Date.now() >= deadline) { clearInterval(tick); resolve(m || null); }
+    }, 300);
+  });
 
-  const addNoteButton = document.querySelector('[aria-label="Add a note"]');
-  if (addNoteButton) {
-    await humanClick(addNoteButton);
+  if (!modal) {
+    // No modal — LinkedIn sent the request directly (no note required)
+    return true;
+  }
+
+  // Try to click the "Add a note" button inside the modal
+  const addNoteBtn =
+    modal.querySelector('[aria-label="Add a note"]') ||
+    modal.querySelector('button[data-control-name="add-note"]') ||
+    Array.from(modal.querySelectorAll('button')).find(
+      b => /add\s*a?\s*note/i.test(b.textContent)
+    );
+
+  if (addNoteBtn) {
+    await humanClick(addNoteBtn);
     await randomWait(800, 1600);
 
-    const noteInput = document.querySelector('#custom-message');
+    const noteInput =
+      document.querySelector('#custom-message') ||
+      document.querySelector('#connect-cta-form__message') ||
+      document.querySelector('textarea[name="message"]') ||
+      document.querySelector('.connect-button-send-invite__custom-message') ||
+      document.querySelector('.artdeco-modal textarea');
+
     if (noteInput) {
       const firstName = extractName(card);
       const personalizedNote = CONNECTION_NOTE.replace('{firstName}', firstName);
-      noteInput.value = personalizedNote;
+      noteInput.focus();
+      // Use execCommand so the character counter and submit-enable logic fires
+      document.execCommand('selectAll', false, null);
+      document.execCommand('insertText', false, personalizedNote);
       noteInput.dispatchEvent(new InputEvent('input', { bubbles: true }));
       await randomWait(1000, 2000);
     }
   }
 
-  const sendButton = document.querySelector('[aria-label="Send now"]');
+  // Find the send / submit button
+  const sendButton =
+    document.querySelector('[aria-label="Send now"]') ||
+    document.querySelector('[aria-label="Send invitation"]') ||
+    document.querySelector('button[data-control-name="send-invite-cta-btn"]') ||
+    Array.from(document.querySelectorAll('.artdeco-modal button')).find(
+      b => !b.disabled && /send/i.test(b.textContent.trim())
+    );
+
   if (sendButton) {
     await humanClick(sendButton);
     await randomWait(1000, 2500);
     return true;
   }
 
-  // Close modal if send failed
-  const dismissButton = document.querySelector('[aria-label="Dismiss"]');
+  // Last resort: "Send without a note" so the connection is still attempted
+  const sendWithoutNote =
+    document.querySelector('[aria-label="Send without a note"]') ||
+    Array.from(document.querySelectorAll('button')).find(
+      b => /send without/i.test(b.textContent)
+    );
+  if (sendWithoutNote) {
+    await humanClick(sendWithoutNote);
+    await randomWait(1000, 2000);
+    return true;
+  }
+
+  // Could not send — close the modal and skip
+  const dismissButton =
+    document.querySelector('[aria-label="Dismiss"]') ||
+    document.querySelector('.artdeco-modal__dismiss') ||
+    document.querySelector('button[data-control-name="overlay.close"]');
   if (dismissButton) await humanClick(dismissButton);
   return false;
 }

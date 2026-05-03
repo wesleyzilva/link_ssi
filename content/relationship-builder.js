@@ -61,12 +61,25 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
 // ─── Core logic ───────────────────────────────────────────────────────────────
 
+/**
+ * Polls a DOM query function until it returns at least one element, or times out.
+ */
+async function waitForElements(queryFn, maxWait = 25000, interval = 2000) {
+  const deadline = Date.now() + maxWait;
+  while (Date.now() < deadline) {
+    const els = queryFn();
+    if (els.length) return els;
+    await new Promise(r => setTimeout(r, interval));
+  }
+  return queryFn();
+}
+
 async function buildRelationships() {
   await contentLog(`▶ relationship-builder started | ${window.location.href}`);
   await randomWait(3000, 6000);
 
   let touched = 0;
-  const cards = getNetworkCards();
+  const cards = await waitForElements(getNetworkCards, 25000);
 
   for (const card of cards) {
     if (touched >= SESSION_CAP) break;
@@ -246,16 +259,26 @@ async function sendMessage(card, messages) {
   await humanClick(messageButton);
   await randomWait(2000, 4000);
 
-  const messageBox = document.querySelector('.msg-form__contenteditable[contenteditable="true"]');
+  const messageBox =
+    document.querySelector('.msg-form__contenteditable[contenteditable="true"]') ||
+    document.querySelector('[contenteditable="true"][data-placeholder*="message"]') ||
+    document.querySelector('[contenteditable="true"][data-placeholder*="Message"]') ||
+    document.querySelector('.msg-form__message-texteditor [contenteditable="true"]');
   if (!messageBox) return false;
 
   const message = messages[Math.floor(Math.random() * messages.length)];
   messageBox.focus();
-  messageBox.textContent = message;
+  document.execCommand('selectAll', false, null);
+  document.execCommand('insertText', false, message);
   messageBox.dispatchEvent(new InputEvent('input', { bubbles: true }));
   await randomWait(2000, 4000);
 
-  const sendButton = document.querySelector('.msg-form__send-button');
+  const sendButton =
+    document.querySelector('.msg-form__send-button') ||
+    document.querySelector('button[data-control-name="send-message"]') ||
+    Array.from(document.querySelectorAll('button')).find(
+      b => /^send$/i.test(b.textContent.trim())
+    );
   if (!sendButton) return false;
 
   await humanClick(sendButton);
