@@ -25,7 +25,7 @@ async function contentLog(msg, level = 'info') {
   } catch (e) { console.warn('[contentLog]', e); }
 }
 
-const CAPS = { likes: 5, comments: 2 };
+const CAPS = { likes: 5, comments: 3, follows: 10 };
 
 /**
  * Comment templates written for posts about PM/Delivery/Agile/LATAM topics.
@@ -83,17 +83,18 @@ async function engageWithPosts() {
 
   let likesGiven = 0;
   let commentsMade = 0;
+  let followsGiven = 0;
   let scrollRounds = 0;
   const MAX_SCROLL_ROUNDS = 5;
 
   while (
-    (likesGiven < CAPS.likes || commentsMade < CAPS.comments) &&
+    (likesGiven < CAPS.likes || commentsMade < CAPS.comments || followsGiven < CAPS.follows) &&
     scrollRounds < MAX_SCROLL_ROUNDS
   ) {
     const posts = await waitForElements(getFeedPosts, 15000);
 
     for (const post of posts) {
-      if (likesGiven >= CAPS.likes && commentsMade >= CAPS.comments) break;
+      if (likesGiven >= CAPS.likes && commentsMade >= CAPS.comments && followsGiven >= CAPS.follows) break;
 
       const postId = extractPostId(post);
       if (!postId) continue;
@@ -101,11 +102,14 @@ async function engageWithPosts() {
       // Independent per-action dedup checks
       const alreadyLiked     = await hasInteractedWithPost(postId);
       const alreadyCommented = await hasCommentedOnPostRecord(postId);
+      const authorId         = extractAuthorId(post);
+      const alreadyFollowed  = await hasFollowedAuthor(authorId);
 
-      // Skip entirely only when both actions are done, or nothing useful can happen
-      const likeCapReached  = likesGiven >= CAPS.likes;
-      const commCapReached  = commentsMade >= CAPS.comments;
-      if ((alreadyLiked || likeCapReached) && (alreadyCommented || commCapReached)) continue;
+      // Skip when all actions are exhausted for this post
+      const likeCapReached   = likesGiven >= CAPS.likes;
+      const commCapReached   = commentsMade >= CAPS.comments;
+      const followCapReached = followsGiven >= CAPS.follows;
+      if ((alreadyLiked || likeCapReached) && (alreadyCommented || commCapReached) && (alreadyFollowed || followCapReached)) continue;
 
       const commentCount = getCommentCount(post);
       const priority = getPriority(commentCount);
@@ -115,7 +119,36 @@ async function engageWithPosts() {
       // Simulate reading the post content before deciding to engage
       await readBeforeActing(post, 4000, 10000);
 
-      // Like the post
+      // ── COMMENT — main priority, runs first on HIGH + MEDIUM posts ────────
+      if (commentsMade < CAPS.comments && !alreadyCommented) {
+        const commented = await commentOnPost(post);
+        if (commented) {
+          commentsMade++;
+          const postUrl = extractPostUrl(post);
+          await contentLog(`✓ commented | ${postUrl || postId} (${commentsMade}/${CAPS.comments})`, 'success');
+          const { postInteractions = [] } = await chrome.storage.local.get('postInteractions');
+          postInteractions.push({ postId, postUrl, action: 'comment', interactedAt: new Date().toISOString() });
+          await chrome.storage.local.set({ postInteractions: postInteractions.slice(-200) });
+          console.log(`[Post Engager] Commented on ${postId} (${commentsMade}/${CAPS.comments})`);
+          await randomWait(15000, 30000); // longer pause after commenting
+        }
+      }
+
+      // ── FOLLOW the post author ────────────────────────────────────────────
+      if (followsGiven < CAPS.follows && !alreadyFollowed) {
+        const { followed } = await followAuthor(post);
+        if (followed && authorId) {
+          followsGiven++;
+          const { followedAuthors = [] } = await chrome.storage.local.get('followedAuthors');
+          followedAuthors.push({ authorId, followedAt: new Date().toISOString() });
+          await chrome.storage.local.set({ followedAuthors: followedAuthors.slice(-500) });
+          await contentLog(`✓ followed | ${authorId} (${followsGiven}/${CAPS.follows})`, 'success');
+          console.log(`[Post Engager] Followed ${authorId} (${followsGiven}/${CAPS.follows})`);
+          await randomWait(3000, 7000);
+        }
+      }
+
+      // ── LIKE the post ─────────────────────────────────────────────────────
       if (likesGiven < CAPS.likes && !alreadyLiked) {
         const liked = await likePost(post);
         if (liked) {
@@ -123,28 +156,11 @@ async function engageWithPosts() {
           const postUrl = extractPostUrl(post);
           await markPostAsInteracted(postId);
           await contentLog(`✓ liked | ${postUrl || postId} (${likesGiven}/${CAPS.likes})`, 'success');
-          // Persist to history
           const { postInteractions = [] } = await chrome.storage.local.get('postInteractions');
           postInteractions.push({ postId, postUrl, action: 'like', interactedAt: new Date().toISOString() });
           await chrome.storage.local.set({ postInteractions: postInteractions.slice(-200) });
           console.log(`[Post Engager] Liked post ${postId} (${likesGiven}/${CAPS.likes})`);
           await randomWait(5000, 12000);
-        }
-      }
-
-      // Comment on HIGH priority posts only (only if not already commented)
-      if (commentsMade < CAPS.comments && priority === 'HIGH' && !alreadyCommented) {
-        const commented = await commentOnPost(post);
-        if (commented) {
-          commentsMade++;
-          const postUrl = extractPostUrl(post);
-          await contentLog(`✓ commented | ${postUrl || postId} (${commentsMade}/${CAPS.comments})`, 'success');
-          // Persist to history
-          const { postInteractions = [] } = await chrome.storage.local.get('postInteractions');
-          postInteractions.push({ postId, postUrl, action: 'comment', interactedAt: new Date().toISOString() });
-          await chrome.storage.local.set({ postInteractions: postInteractions.slice(-200) });
-          console.log(`[Post Engager] Commented on ${postId} (${commentsMade}/${CAPS.comments})`);
-          await randomWait(15000, 30000); // longer pause after commenting
         }
       }
     }
@@ -159,12 +175,13 @@ async function engageWithPosts() {
     lastEngagement: {
       likes: likesGiven,
       comments: commentsMade,
+      follows: followsGiven,
       runAt: new Date().toISOString(),
     },
   });
-  await contentLog(`■ post-engager done | ${likesGiven} likes / ${commentsMade} comments`);
+  await contentLog(`■ post-engager done | ${commentsMade} comments / ${followsGiven} follows / ${likesGiven} likes`);
 
-  return { likes: likesGiven, comments: commentsMade };
+  return { likes: likesGiven, comments: commentsMade, follows: followsGiven };
 }
 
 // ─── Priority classification ──────────────────────────────────────────────────
@@ -265,6 +282,36 @@ function getCommentCount(post) {
   const text = countEl.textContent.trim();
   const match = text.match(/(\d+)/);
   return match ? parseInt(match[1], 10) : 0;
+}
+
+function extractAuthorId(post) {
+  const link =
+    post.querySelector('a[href*="/in/"][data-control-name="actor_container"]') ||
+    post.querySelector('a.app-aware-link[href*="/in/"]') ||
+    post.querySelector('a[href*="/in/"]');
+  if (!link) return null;
+  return link.href.split('?')[0].replace(/\/$/, '');
+}
+
+async function hasFollowedAuthor(authorId) {
+  if (!authorId) return false;
+  const { followedAuthors = [] } = await chrome.storage.local.get('followedAuthors');
+  return followedAuthors.some(r => r.authorId === authorId);
+}
+
+async function followAuthor(post) {
+  // Follow button appears in the post header actor-card or as a secondary action
+  const followButton =
+    post.querySelector('button[aria-label*="Follow"]') ||
+    post.querySelector('button[data-control-name="follow"]') ||
+    post.querySelector('.follow-button:not(.is-following)') ||
+    Array.from(post.querySelectorAll('button')).find(
+      b => /^follow$/i.test((b.getAttribute('aria-label') || b.textContent).trim()) && !b.disabled
+    );
+  if (!followButton || followButton.disabled) return { followed: false };
+
+  await humanClick(followButton);
+  return { followed: true };
 }
 
 async function likePost(post) {
