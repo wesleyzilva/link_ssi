@@ -121,17 +121,31 @@ async function prospectRecruiters() {
       continue;
     }
 
-    const connectButton = getConnectButton(card);
+    let connectButton = getConnectButton(card);
+    let viaMoreMenu = false;
+
     if (!connectButton) {
+      // 3rd-degree profiles hide Connect inside the "More actions" overflow menu
       await scrollIntoViewAndPause(card);
+      await readBeforeActing(card, 2000, 5000);
+      connectButton = await getConnectButtonViaMore(card);
+      viaMoreMenu = true;
+    }
+
+    if (!connectButton) {
       await randomWait(1000, 2500);
       await contentLog(`↷ ${profileUrl} — no connect button (viewed)`);
       continue;
     }
 
-    // Simulate reading the profile card before deciding to connect
-    await readBeforeActing(card, 3000, 7000);
-    await humanClick(connectButton);
+    // Simulate reading the profile card before deciding to connect (skip if already done above)
+    if (!viaMoreMenu) {
+      await readBeforeActing(card, 3000, 7000);
+      await humanClick(connectButton);
+    } else {
+      // More menu is already open and connectButton is the dropdown item — just click it
+      await humanClick(connectButton);
+    }
 
     // Send connection WITHOUT a note — avoids modal friction and feels more organic
     const connected = await handleConnectionModalNoNote();
@@ -236,10 +250,56 @@ function extractName(card) {
 }
 
 function getConnectButton(card) {
-  const buttons = card.querySelectorAll('button');
-  return Array.from(buttons).find(
-    (btn) => btn.textContent.trim().toLowerCase() === 'connect'
-  ) || null;
+  return Array.from(card.querySelectorAll('button')).find(b => {
+    const text  = b.textContent.trim().toLowerCase();
+    const label = (b.getAttribute('aria-label') || '').toLowerCase();
+    return text === 'connect' ||
+           /^connect$/i.test(label) ||
+           /^invite .+ to connect/i.test(label);
+  }) || null;
+}
+
+/**
+ * Opens the "More actions" overflow menu in a search result card and returns
+ * the Connect button found inside the dropdown. Returns null if not found.
+ * Closes the dropdown via Escape if Connect is absent.
+ */
+async function getConnectButtonViaMore(card) {
+  const moreBtn =
+    card.querySelector('button[aria-label*="More actions"]') ||
+    card.querySelector('button[aria-label*="More options"]') ||
+    Array.from(card.querySelectorAll('button')).find(b => {
+      const label = (b.getAttribute('aria-label') || b.textContent || '').trim().toLowerCase();
+      return label === 'more' || label === 'more actions' || label === 'more options';
+    });
+
+  if (!moreBtn) return null;
+
+  await humanClick(moreBtn);
+  await randomWait(600, 1400);
+
+  // Poll up to 3s for the dropdown Connect item to appear
+  const deadline = Date.now() + 3000;
+  while (Date.now() < deadline) {
+    const item =
+      document.querySelector('.artdeco-dropdown__content li button[aria-label*="Connect"]') ||
+      document.querySelector('.artdeco-dropdown__content li button[aria-label*="Invite"]') ||
+      Array.from(document.querySelectorAll(
+        '.artdeco-dropdown__content li, .artdeco-dropdown li'
+      )).reduce((found, li) => {
+        if (found) return found;
+        const btn = li.querySelector('button') || li;
+        const label = (btn.getAttribute('aria-label') || btn.textContent || '').trim().toLowerCase();
+        return (label === 'connect' || label.startsWith('connect ') || /^invite .+ to connect/i.test(label))
+          ? btn : null;
+      }, null);
+    if (item) return item;
+    await new Promise(r => setTimeout(r, 300));
+  }
+
+  // Connect not in dropdown — close it and report
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  return null;
 }
 
 async function handleConnectionModal(card, profileId) {

@@ -313,6 +313,18 @@ async function saveInteraction(postId, postUrl, action) {
 // ─── DOM helpers ──────────────────────────────────────────────────────────────
 
 function getFeedPosts() {
+  // Strategy 0: Content-search page (/search/results/content/) — result li containers
+  // These are the actual post-result wrappers; checked first so the reaction-button
+  // fallback (which can match sidebar widgets) never runs on content-search pages.
+  const s0 = Array.from(document.querySelectorAll(
+    'li.reusable-search__result-container,' +
+    'li[class*="reusable-search__result"]'
+  )).filter(el =>
+    el.querySelector('a[href*="/feed/update/"], a[href*="/posts/"]') ||
+    el.querySelector('button[aria-label*="Like"], button[aria-label*="React"]')
+  );
+  if (s0.length) { console.log(`[Post Engager] ${s0.length} posts via content-search li`); return s0; }
+
   const s1 = Array.from(document.querySelectorAll(
     'div[data-id*=":activity:"], div[data-id*=":ugcPost:"], div[data-id*=":share:"]'
   ));
@@ -347,7 +359,11 @@ function getFeedPosts() {
 
   const byReaction = Array.from(document.querySelectorAll(
     'button[aria-label*="Like"], button[aria-label*="Comment"]'
-  )).map(btn => btn.closest('article, li, [data-id], [data-urn]') || btn.parentElement).filter(Boolean);
+  )).map(btn =>
+    btn.closest('[data-id], [data-urn], [data-chameleon-result-urn], .feed-shared-update-v2, .occludable-update, article') ||
+    btn.closest('li') ||
+    btn.parentElement
+  ).filter(Boolean);
   const unique = [...new Set(byReaction)];
   if (unique.length) { console.log(`[Post Engager] ${unique.length} posts via reaction-button fallback`); return unique; }
 
@@ -356,12 +372,24 @@ function getFeedPosts() {
 }
 
 function extractPostId(post) {
-  const urn = post.getAttribute('data-urn') || post.getAttribute('data-id');
-  if (urn) return urn;
+  // Direct URN attribute
+  const direct = post.getAttribute('data-urn') || post.getAttribute('data-id') || post.getAttribute('data-chameleon-result-urn');
+  if (direct) return direct;
+
+  // Walk up the DOM — reaction-button fallback may land on a wrapper element
+  const ancestor = post.closest('[data-urn], [data-id], [data-chameleon-result-urn]');
+  if (ancestor) return ancestor.getAttribute('data-urn') || ancestor.getAttribute('data-id') || ancestor.getAttribute('data-chameleon-result-urn');
+
+  // Nested element carrying the URN (e.g. feed-shared-update-v2 inside a search li)
+  const nested = post.querySelector('[data-urn], [data-id]');
+  if (nested) return nested.getAttribute('data-urn') || nested.getAttribute('data-id');
+
+  // Link-based fallback — also handles URL-encoded URNs (urn%3Ali%3A)
   const link =
     post.querySelector('a[href*="/feed/update/"]') ||
     post.querySelector('a[href*="/posts/"]') ||
-    post.querySelector('a[href*="/activity-"]');
+    post.querySelector('a[href*="/activity-"]') ||
+    post.querySelector('a[href*="urn%3Ali%3A"]');
   return link ? link.href.split('?')[0] : null;
 }
 
@@ -369,7 +397,8 @@ function extractPostUrl(post) {
   const link =
     post.querySelector('a[href*="/feed/update/"]') ||
     post.querySelector('a[href*="/posts/"]') ||
-    post.querySelector('a[href*="/activity-"]');
+    post.querySelector('a[href*="/activity-"]') ||
+    post.querySelector('a[href*="urn%3Ali%3A"]');
   return link ? link.href.split('?')[0] : null;
 }
 
