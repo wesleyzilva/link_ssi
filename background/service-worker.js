@@ -399,10 +399,9 @@ function downloadCsvFromSW(filename, headers, rows) {
 
 async function exportAllCsvs() {
   const data = await chrome.storage.local.get([
-    'connections', 'postInteractions', 'relationships', 'activityLog', 'ssiScores',
+    'connections', 'postInteractions', 'relationships', 'activityLog', 'ssiScores', 'discoveredLinks',
   ]);
   const ts = new Date().toISOString().slice(0, 16).replace('T', '-').replace(':', '');
-  // ts = 'YYYYMMDD-HHMM' (e.g. '20260503-1255')
 
   const conns = [...(data.connections || [])].sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt));
   downloadCsvFromSW(`connections-${ts}.csv`,
@@ -422,16 +421,22 @@ async function exportAllCsvs() {
 
   const logs = [...(data.activityLog || [])].reverse();
   downloadCsvFromSW(`activity-log-${ts}.csv`,
-    ['Date', 'Level', 'Message'],
-    logs.map(e => [e.ts, e.level || 'info', e.msg || '']));
+    ['Date', 'Level', 'Script', 'Message'],
+    logs.map(e => [e.ts, e.level || 'info', e.script || '', e.msg || '']));
 
   const ssi = [...(data.ssiScores || [])].sort((a, b) => new Date(b.capturedAt) - new Date(a.capturedAt));
   downloadCsvFromSW(`ssi-scores-${ts}.csv`,
     ['Date', 'CapturedAt', 'Total', 'Brand', 'People', 'Insights', 'Relationships'],
-    ssi.map(s => [s.date || (s.capturedAt || today).slice(0, 10), s.capturedAt,
+    ssi.map(s => [s.date || (s.capturedAt || '').slice(0, 10), s.capturedAt,
       s.total ?? '', s.brand ?? '', s.people ?? '', s.insights ?? '', s.relationships ?? '']));
 
-  await log('Auto-CSV export complete → Downloads/link_ssi/output/', 'success');
+  // Links discovered — for human validation
+  const links = [...(data.discoveredLinks || [])].sort((a, b) => new Date(b.ts) - new Date(a.ts));
+  downloadCsvFromSW(`discovered-links-${ts}.csv`,
+    ['Date', 'Context', 'URL', 'Profile ID', 'Name'],
+    links.map(l => [l.ts, l.context || '', l.url || '', l.profileId || '', l.name || '']));
+
+  await log(`Auto-CSV export complete — ${links.length} links, ${logs.length} log entries → Downloads/link_ssi/output/`, 'success');
 }
 
 // ─── Manual trigger (popup „Run Now“ / per-task buttons) ──────────────────────
@@ -471,6 +476,17 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       await log(`[Manual] Task complete: ${task}.`, 'success');
       sendResponse({ done: true });
     });
+    return true;
+  }
+
+  // Content scripts request CSV export after each run (logs go to output/ immediately)
+  if (message.action === 'EXPORT_LOGS') {
+    exportAllCsvs()
+      .then(() => sendResponse({ exported: true }))
+      .catch(async (err) => {
+        await log(`[EXPORT_LOGS] error: ${err.message}`, 'error');
+        sendResponse({ error: err.message });
+      });
     return true;
   }
 });
