@@ -27,6 +27,7 @@ async function contentLog(msg, level = 'info') {
  * Fallback to 9 (minimum of the 7-day cycle) if not provided.
  */
 let SESSION_CAP = 9;
+let VIEW_ONLY_MODE = false; // true when dailyCap=0 — browse profiles for SSI "Localizar as pessoas certas", no connections sent
 
 const CONNECTION_NOTE =
   "Hi {firstName}, let's connect! " +
@@ -42,6 +43,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     // Read the daily cap sent by the service worker
     if (typeof message.dailyCap === 'number') {
       SESSION_CAP = message.dailyCap;
+      VIEW_ONLY_MODE = SESSION_CAP === 0;
     }
     prospectRecruiters().then((result) => {
       sendResponse({ success: true, ...result });
@@ -87,22 +89,36 @@ async function prospectRecruiters() {
   let sent = 0;
 
   for (const card of results) {
-    if (sent >= SESSION_CAP) break;
+    if (!VIEW_ONLY_MODE && sent >= SESSION_CAP) break;
 
     const profileId = extractProfileId(card);
     if (!profileId) continue;
 
     const profileUrl = extractProfileUrl(card) || `/in/${profileId}`;
+
+    // VIEW_ONLY_MODE: scroll each card — signals "Find Right People" to LinkedIn SSI
+    if (VIEW_ONLY_MODE) {
+      await scrollIntoViewAndPause(card);
+      await randomWait(2000, 4500);
+      await contentLog(`👁 ${profileUrl} — viewed (SSI: localizar as pessoas certas)`);
+      continue;
+    }
+
     const locked = await isRecruiterLocked(profileId);
     if (locked) {
+      // Scroll into view even when locked — SSI counts profile impressions from search
+      await scrollIntoViewAndPause(card);
+      await randomWait(1500, 3000);
       console.log(`[Recruiter Prospector] Skipping ${profileId} — within 7-day lock.`);
-      await contentLog(`↷ ${profileUrl} — locked (7-day)`);
+      await contentLog(`↷ ${profileUrl} — locked (7-day, viewed)`);
       continue;
     }
 
     const connectButton = getConnectButton(card);
     if (!connectButton) {
-      await contentLog(`↷ ${profileUrl} — no connect button`);
+      await scrollIntoViewAndPause(card);
+      await randomWait(1000, 2500);
+      await contentLog(`↷ ${profileUrl} — no connect button (viewed)`);
       continue;
     }
 

@@ -25,7 +25,7 @@ async function contentLog(msg, level = 'info') {
   } catch (e) { console.warn('[contentLog]', e); }
 }
 
-const CAPS = { likes: 5, comments: 2 };
+const CAPS = { likes: 8, comments: 4 };
 
 /**
  * Comment templates written for posts about PM/Delivery/Agile/LATAM topics.
@@ -84,7 +84,7 @@ async function engageWithPosts() {
   let likesGiven = 0;
   let commentsMade = 0;
   let scrollRounds = 0;
-  const MAX_SCROLL_ROUNDS = 5;
+  const MAX_SCROLL_ROUNDS = 8;
 
   while (
     (likesGiven < CAPS.likes || commentsMade < CAPS.comments) &&
