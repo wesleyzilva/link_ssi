@@ -195,11 +195,12 @@ function detectCardType(card) {
   // If the service worker told us which page we're on, trust it
   if (PAGE_TYPE === 'birthday')     return 'birthday';
   if (PAGE_TYPE === 'anniversary')  return 'anniversary';
+  if (PAGE_TYPE === 'new_job')      return 'new_job';
   // Fallback: infer from card text (catch-up/all/ or manual trigger)
   const text = card.textContent.toLowerCase();
   if (text.includes('birthday') || text.includes('born') || text.includes('happy birthday')) return 'birthday';
   if (text.includes('anniversary') || text.includes('years at')) return 'anniversary';
-  if (text.includes('new job') || text.includes('started') || text.includes('joined')) return 'new_job';
+  if (text.includes('new job') || text.includes('new role') || text.includes('started') || text.includes('joined') || text.includes('promoted')) return 'new_job';
   return null;
 }
 

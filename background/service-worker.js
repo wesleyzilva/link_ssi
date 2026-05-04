@@ -130,9 +130,10 @@ async function runDailySequence(targetWindow, dailyCap) {
     await openTabAndWait(postEngageUrl, 'post-engager', {});
     await advanceExprQueue();
 
-    await log('Step 4/5 — Building relationships (birthdays + anniversaries)…');
+    await log('Step 4/5 — Building relationships (birthdays + anniversaries + job changes)…');
     await openTabAndWait('https://www.linkedin.com/mynetwork/catch-up/birthday/', 'relationship-builder', { pageType: 'birthday' });
     await openTabAndWait('https://www.linkedin.com/mynetwork/catch-up/work_anniversaries/', 'relationship-builder', { pageType: 'anniversary' });
+    await openTabAndWait('https://www.linkedin.com/mynetwork/catch-up/job_changes/', 'relationship-builder', { pageType: 'new_job' });
 
     await log('Step 5/6 — Tracking accepted connections…');
     await openTabAndWait('https://www.linkedin.com/mynetwork/invitation-manager/sent/', 'connection-tracker', {});
