@@ -1,0 +1,37 @@
+﻿Date,Level,Message
+2026-05-03T20:58:12.989Z,success,Daily routine complete. Cap used: 15. Window: US_EU.
+2026-05-03T20:58:12.968Z,info,■ relationship-builder done | 0 touched
+2026-05-03T20:57:20.127Z,info,▶ relationship-builder started | https://www.linkedin.com/mynetwork/catch-up/work_anniversaries/
+2026-05-03T20:57:15.962Z,info,■ relationship-builder done | 0 touched
+2026-05-03T20:56:15.764Z,info,▶ relationship-builder started | https://www.linkedin.com/mynetwork/catch-up/birthday/
+2026-05-03T20:56:11.985Z,info,Step 4/4 — Building relationships (birthdays + anniversaries)…
+2026-05-03T20:56:11.961Z,info,■ post-engager done | 0 likes / 0 comments
+2026-05-03T20:55:32.414Z,info,▶ post-engager started | https://www.linkedin.com/search/results/content/?keywords=%22project%20manager%22%20latam&sortBy=%22relevance%22&datePosted=%22past-week%22
+2026-05-03T20:55:28.032Z,info,"Keyword 1/15: """"project manager"" latam"""
+2026-05-03T20:55:28.028Z,info,Step 3/4 — Engaging with targeted content search posts…
+2026-05-03T20:55:27.989Z,info,■ recruiter-prospector done | 0 sent / 17 checked
+2026-05-03T20:55:27.988Z,info,↷ https://www.linkedin.com/in/sammy-nama-801b34227/ — no connect button
+2026-05-03T20:55:27.988Z,info,↷ https://www.linkedin.com/in/shagufa-anam-08b849235/ — no connect button
+2026-05-03T20:55:27.987Z,info,↷ https://www.linkedin.com/in/alan-fernandes-29b45517/en/ — no connect button
+2026-05-03T20:55:27.986Z,info,↷ https://www.linkedin.com/in/jessicalobrigatti/ — no connect button
+2026-05-03T20:55:27.985Z,info,↷ https://www.linkedin.com/in/milaorrico/ — no connect button
+2026-05-03T20:55:27.985Z,info,↷ https://www.linkedin.com/in/troy-sutter-7b114915/ — no connect button
+2026-05-03T20:55:27.984Z,info,↷ https://www.linkedin.com/in/jriek/ — no connect button
+2026-05-03T20:55:27.984Z,info,↷ https://www.linkedin.com/in/shlott/ — no connect button
+2026-05-03T20:55:27.983Z,info,↷ https://www.linkedin.com/in/nelsonsthoughts/ — no connect button
+2026-05-03T20:55:27.983Z,info,↷ https://www.linkedin.com/in/graju/ — no connect button
+2026-05-03T20:55:27.982Z,info,↷ https://www.linkedin.com/in/georgiawellman/ — no connect button
+2026-05-03T20:55:27.982Z,info,↷ https://www.linkedin.com/in/ana-laurentino/ — no connect button
+2026-05-03T20:55:27.981Z,info,↷ https://www.linkedin.com/in/ankit-mishra-42036825b/ — no connect button
+2026-05-03T20:55:27.981Z,info,↷ https://www.linkedin.com/in/andreapolito/ — no connect button
+2026-05-03T20:55:27.980Z,info,↷ https://www.linkedin.com/in/lucassieverding/ — no connect button
+2026-05-03T20:55:27.980Z,info,↷ https://www.linkedin.com/in/rafael-sanches-24a2b034/en/ — no connect button
+2026-05-03T20:55:27.979Z,info,↷ https://www.linkedin.com/in/filipe-pimentel-43210a85/ — no connect button
+2026-05-03T20:55:27.977Z,info,recruiter-prospector — 17 cards found
+2026-05-03T20:55:22.616Z,info,▶ recruiter-prospector started | https://www.linkedin.com/search/results/people/?keywords=Tech%20Recruiter%20Information%20Technology&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%5D
+2026-05-03T20:55:17.981Z,info,Step 2/4 — Prospecting Tech Recruiters (cap: 15)…
+2026-05-03T20:55:17.963Z,success,■ ssi-monitor done | total:51 brand:51 people:14 insights:14 rel:7
+2026-05-03T20:55:10.016Z,info,▶ ssi-monitor started | https://www.linkedin.com/sales/ssi
+2026-05-03T20:55:06.552Z,info,Step 1/4 — Capturing SSI scores…
+2026-05-03T20:55:06.552Z,warn,[Manual] Full sequence triggered. Cap today: 15.
+2026-05-03T20:55:01.848Z,success,Extension installed. Daily alarms registered.

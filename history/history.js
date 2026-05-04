@@ -316,34 +316,43 @@ document.getElementById('btn-csv-ssi').addEventListener('click', async () => {
 document.getElementById('btn-export-all-csv').addEventListener('click', async () => {
   const data = await chrome.storage.local.get([
     'connections', 'postInteractions', 'relationships', 'activityLog', 'ssiScores',
+    'acceptedConnections', 'extractedEmails', 'discoveredLinks',
   ]);
   const ts = new Date().toISOString().slice(0, 16).replace('T', '-').replace(':', '');
-  // ts = 'YYYYMMDD-HHMM'
 
-  const sorted_c = [...(data.connections || [])].sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt));
-  downloadCsv(`connections-${ts}.csv`,
-    ['Date', 'Name', 'Profile URL', 'Profile ID'],
-    sorted_c.map(c => [c.sentAt, c.name || c.profileId, c.profileUrl || `https://www.linkedin.com/in/${c.profileId}/`, c.profileId]));
+  const HEADERS = ['Category', 'Date', 'Type', 'Name', 'Detail', 'URL'];
+  const rows = [];
 
-  const sorted_p = [...(data.postInteractions || [])].sort((a, b) => new Date(b.interactedAt) - new Date(a.interactedAt));
-  downloadCsv(`post-interactions-${ts}.csv`,
-    ['Date', 'Action', 'Post URL', 'Post ID'],
-    sorted_p.map(p => [p.interactedAt, p.action || 'like', p.postUrl || '', p.postId]));
+  for (const c of (data.connections || [])) {
+    rows.push(['Connection', c.sentAt || '', 'connection-sent', c.name || c.profileId || '', c.profileId || '', c.profileUrl || `https://www.linkedin.com/in/${c.profileId}/`]);
+  }
+  for (const p of (data.postInteractions || [])) {
+    rows.push(['Post', p.interactedAt || '', p.action || 'like', '', p.postId || '', p.postUrl || '']);
+  }
+  for (const r of (data.relationships || [])) {
+    rows.push(['Relationship', r.touchedAt || '', r.eventType || '', r.name || r.profileId || '', r.messageSent || '', r.profileUrl || `https://www.linkedin.com/in/${r.profileId}/`]);
+  }
+  for (const e of [...(data.activityLog || [])]) {
+    rows.push(['Log', e.ts || '', e.level || 'info', e.script || '', e.msg || '', '']);
+  }
+  for (const s of (data.ssiScores || [])) {
+    const detail = `total:${s.total ?? '?'} brand:${s.brand ?? '?'} people:${s.people ?? '?'} insights:${s.insights ?? '?'} rel:${s.relationships ?? '?'}`;
+    rows.push(['SSI', s.capturedAt || s.date || '', 'ssi-score', '', detail, '']);
+  }
+  for (const a of (data.acceptedConnections || [])) {
+    rows.push(['AcceptedConn', a.acceptedAt || '', 'accepted', a.name || '', a.followUpSent ? 'follow-up-sent' : 'pending', a.profileUrl || `https://www.linkedin.com/in/${a.profileId}/`]);
+  }
+  for (const em of (data.extractedEmails || [])) {
+    rows.push(['Email', em.foundAt || '', 'email-found', em.email || '', em.postId || '', em.postUrl || '']);
+  }
+  for (const l of (data.discoveredLinks || [])) {
+    rows.push(['Link', l.ts || '', 'link-discovered', l.context || '', l.name || '', l.url || '']);
+  }
 
-  const sorted_r = [...(data.relationships || [])].sort((a, b) => new Date(b.touchedAt) - new Date(a.touchedAt));
-  downloadCsv(`relationships-${ts}.csv`,
-    ['Date', 'Name', 'Event Type', 'Message Sent', 'Profile URL', 'Profile ID'],
-    sorted_r.map(r => [r.touchedAt, r.name || r.profileId, r.eventType, r.messageSent || '', r.profileUrl || `https://www.linkedin.com/in/${r.profileId}/`, r.profileId]));
+  // Sort chronologically descending
+  rows.sort((a, b) => new Date(b[1]) - new Date(a[1]));
 
-  const sorted_l = [...(data.activityLog || [])].reverse();
-  downloadCsv(`activity-log-${ts}.csv`,
-    ['Date', 'Level', 'Message'],
-    sorted_l.map(e => [e.ts, e.level || 'info', e.msg || '']));
-
-  const sorted_s = [...(data.ssiScores || [])].sort((a, b) => new Date(b.capturedAt) - new Date(a.capturedAt));
-  downloadCsv(`ssi-scores-${ts}.csv`,
-    ['Date', 'CapturedAt', 'Total', 'Brand', 'People', 'Insights', 'Relationships'],
-    sorted_s.map(s => [s.date || s.capturedAt.slice(0, 10), s.capturedAt, s.total ?? '', s.brand ?? '', s.people ?? '', s.insights ?? '', s.relationships ?? '']));
+  downloadCsv(`activity-history-${ts}.csv`, HEADERS, rows);
 });
 
 document.getElementById('btn-clear-all').addEventListener('click', async () => {

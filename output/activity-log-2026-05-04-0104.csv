@@ -1,0 +1,82 @@
+﻿Date,Level,Script,Message
+2026-05-04T01:04:49.943Z,success,post-engager,■ post-engager DONE | likes=0/8 comments=0/4 follows=0/6 linksFound=0
+2026-05-04T01:04:49.941Z,info,post-engager,↓ scroll round 8/8 | likes=0 comments=0 follows=0
+2026-05-04T01:04:44.949Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:04:44.947Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:04:44.946Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:04:44.943Z,info,post-engager,↓ scroll round 7/8 | likes=0 comments=0 follows=0
+2026-05-04T01:04:38.944Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:04:38.942Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:04:38.941Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:04:38.938Z,info,post-engager,↓ scroll round 6/8 | likes=0 comments=0 follows=0
+2026-05-04T01:04:32.943Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:04:32.941Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:04:32.940Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:04:32.937Z,info,post-engager,↓ scroll round 5/8 | likes=0 comments=0 follows=0
+2026-05-04T01:04:27.222Z,warn,,[recruiter-prospector] content script did not respond after 15 retries — skipping
+2026-05-04T01:04:26.948Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:04:26.946Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:04:26.945Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:04:26.942Z,info,post-engager,↓ scroll round 4/8 | likes=0 comments=0 follows=0
+2026-05-04T01:04:20.950Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:04:20.949Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:04:20.948Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:04:20.945Z,info,post-engager,↓ scroll round 3/8 | likes=0 comments=0 follows=0
+2026-05-04T01:04:14.952Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:04:14.951Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:04:14.949Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:04:14.947Z,info,post-engager,↓ scroll round 2/8 | likes=0 comments=0 follows=0
+2026-05-04T01:04:10.943Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:04:10.942Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:04:10.940Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:04:10.938Z,info,post-engager,↓ scroll round 1/8 | likes=0 comments=0 follows=0
+2026-05-04T01:04:05.947Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:04:05.946Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:04:05.944Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:03:46.891Z,info,post-engager,▶ post-engager started | url=https://www.linkedin.com/search/results/content/?keywords=project%20delivery&origin=GLOBAL_SEARCH_HEADER&datePosted=%5B%22past-month%22%5D&authorIndustry=%5B%226%22%5D
+2026-05-04T01:03:46.889Z,info,post-engager,▶ post-engager START message received
+2026-05-04T01:03:42.095Z,info,,"Keyword 1/17: ""project delivery"""
+2026-05-04T01:03:42.092Z,info,,Step 3/5 — Engaging with targeted content search posts…
+2026-05-04T01:03:42.046Z,warn,,[recruiter-prospector] timed out after 90 s — continuing sequence
+2026-05-04T01:03:41.950Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/victorabussafi/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:03:34.947Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/abi-s-lima/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:03:29.947Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/maiotto/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:03:22.941Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/alexccampos/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:03:16.949Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/patriciaxavierlimaiwashita/en/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:03:10.951Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/rodrigobautista/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:03:05.942Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/dario-melro-andrade/en/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:02:58.948Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/elizangela-nascimento-souza/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:02:57.124Z,warn,,[recruiter-prospector] content script did not respond after 15 retries — skipping
+2026-05-04T01:02:51.940Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/silmara-souza-bilingual-talent-acquisition-5a2370b/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:02:44.952Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/danielmreis/en/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:02:38.951Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/eduardo-gouv%C3%AAa-757a4a4b/en/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:02:33.943Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/rodrigopoulis/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:02:29.943Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/victor-bensadon-55a5a8133/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:02:22.950Z,info,recruiter-prospector,recruiter-prospector — 18 cards found
+2026-05-04T01:02:16.443Z,info,recruiter-prospector,▶ recruiter-prospector started | https://www.linkedin.com/search/results/people/?keywords=IT%20Manager%20remote%20brazil
+2026-05-04T01:02:12.029Z,info,,Step 2b/5 — Browsing people search (SSI: Localizar as pessoas certas)…
+2026-05-04T01:02:11.991Z,warn,,[recruiter-prospector] timed out after 90 s — continuing sequence
+2026-05-04T01:02:10.948Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/shagufa-anam-08b849235/ — no connect button (viewed)
+2026-05-04T01:02:05.948Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/alan-fernandes-29b45517/ — no connect button (viewed)
+2026-05-04T01:02:00.947Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/jessicalobrigatti/ — no connect button (viewed)
+2026-05-04T01:01:54.948Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/milaorrico/ — no connect button (viewed)
+2026-05-04T01:01:50.941Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/troy-sutter-7b114915/ — no connect button (viewed)
+2026-05-04T01:01:45.942Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/jriek/ — no connect button (viewed)
+2026-05-04T01:01:41.947Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/shlott/ — no connect button (viewed)
+2026-05-04T01:01:37.948Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/nelsonsthoughts/ — no connect button (viewed)
+2026-05-04T01:01:33.936Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/graju/ — no connect button (viewed)
+2026-05-04T01:01:27.949Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/georgiawellman/ — no connect button (viewed)
+2026-05-04T01:01:22.949Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/ana-laurentino/ — no connect button (viewed)
+2026-05-04T01:01:17.947Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/ankit-mishra-42036825b/ — no connect button (viewed)
+2026-05-04T01:01:13.936Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/andreapolito/ — no connect button (viewed)
+2026-05-04T01:01:07.945Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/lucassieverding/ — no connect button (viewed)
+2026-05-04T01:01:03.939Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/rafael-sanches-24a2b034/ — no connect button (viewed)
+2026-05-04T01:00:58.942Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/filipe-pimentel-43210a85/ — no connect button (viewed)
+2026-05-04T01:00:55.947Z,info,recruiter-prospector,recruiter-prospector — 17 cards found
+2026-05-04T01:00:46.564Z,info,recruiter-prospector,▶ recruiter-prospector started | https://www.linkedin.com/search/results/people/?keywords=Tech%20Recruiter%20Information%20Technology&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%5D
+2026-05-04T01:00:41.976Z,info,,Step 2/5 — Prospecting Tech Recruiters (cap: 15)…
+2026-05-04T01:00:41.953Z,success,,■ ssi-monitor done | total:51 brand:51 people:14 insights:14 rel:7
+2026-05-04T01:00:32.912Z,info,,▶ ssi-monitor started | https://www.linkedin.com/sales/ssi
+2026-05-04T01:00:29.294Z,info,,Step 1/5 — Capturing SSI scores…
+2026-05-04T01:00:29.293Z,warn,,[Manual] Full sequence triggered. Cap today: 15.
+2026-05-04T01:00:22.787Z,success,,Extension installed. Daily alarms registered.

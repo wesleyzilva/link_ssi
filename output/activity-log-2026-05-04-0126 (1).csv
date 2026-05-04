@@ -1,0 +1,87 @@
+﻿Date,Level,Script,Message
+2026-05-04T01:26:50.961Z,success,,Daily routine complete. Cap used: 15. Window: US_EU.
+2026-05-04T01:26:50.942Z,info,follow-up-sender,■ follow-up-sender DONE | no candidates ready
+2026-05-04T01:26:50.941Z,info,follow-up-sender,📬 follow-up candidates: 0
+2026-05-04T01:26:44.490Z,info,follow-up-sender,▶ follow-up-sender started | https://www.linkedin.com/messaging/thread/2-NWFhNjIwM2MtYWJjNS00ZWY5LTg1MWYtZmRlOTNlNjJlZTNjXzEwMA==/
+2026-05-04T01:26:39.986Z,info,,Step 6/6 — Sending follow-up messages to accepted connections (≥24h)…
+2026-05-04T01:26:39.960Z,success,,"Auto-CSV export complete — 18 links, 0 accepted, 0 emails, 80 log entries → Downloads/link_ssi/output/"
+2026-05-04T01:26:39.953Z,success,connection-tracker,■ connection-tracker DONE | +0 accepted | total: 0/0 (0%)
+2026-05-04T01:26:39.951Z,info,connection-tracker,📋 pending invitations on page: 0
+2026-05-04T01:26:25.931Z,info,connection-tracker,▶ connection-tracker started | https://www.linkedin.com/mynetwork/invitation-manager/sent/
+2026-05-04T01:26:21.960Z,info,,Step 5/6 — Tracking accepted connections…
+2026-05-04T01:26:21.942Z,info,,■ relationship-builder done | 0 touched
+2026-05-04T01:25:28.098Z,info,,▶ relationship-builder started | https://www.linkedin.com/mynetwork/catch-up/work_anniversaries/
+2026-05-04T01:25:23.952Z,info,,■ relationship-builder done | 0 touched
+2026-05-04T01:24:24.812Z,info,,▶ relationship-builder started | https://www.linkedin.com/mynetwork/catch-up/birthday/
+2026-05-04T01:24:21.028Z,info,,Step 4/5 — Building relationships (birthdays + anniversaries)…
+2026-05-04T01:24:20.963Z,info,post-engager,📁 CSV export triggered → output/
+2026-05-04T01:24:20.961Z,success,,"Auto-CSV export complete — 18 links, 0 accepted, 0 emails, 69 log entries → Downloads/link_ssi/output/"
+2026-05-04T01:24:20.952Z,success,post-engager,■ post-engager DONE | likes=0/8 comments=0/4 follows=0/6 linksFound=0
+2026-05-04T01:24:20.950Z,info,post-engager,↓ scroll round 8/8 | likes=0 comments=0 follows=0
+2026-05-04T01:24:15.942Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:24:15.941Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:24:15.940Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:24:15.937Z,info,post-engager,↓ scroll round 7/8 | likes=0 comments=0 follows=0
+2026-05-04T01:24:10.946Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:24:10.945Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:24:10.944Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:24:10.941Z,info,post-engager,↓ scroll round 6/8 | likes=0 comments=0 follows=0
+2026-05-04T01:24:04.943Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:24:04.942Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:24:04.940Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:24:04.937Z,info,post-engager,↓ scroll round 5/8 | likes=0 comments=0 follows=0
+2026-05-04T01:24:03.173Z,warn,,[recruiter-prospector] content script did not respond after 15 retries — skipping
+2026-05-04T01:23:58.951Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:23:58.950Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:23:58.949Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:23:58.946Z,info,post-engager,↓ scroll round 4/8 | likes=0 comments=0 follows=0
+2026-05-04T01:23:53.947Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:23:53.946Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:23:53.945Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:23:53.943Z,info,post-engager,↓ scroll round 3/8 | likes=0 comments=0 follows=0
+2026-05-04T01:23:49.956Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:23:49.956Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:23:49.955Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:23:49.952Z,info,post-engager,↓ scroll round 2/8 | likes=0 comments=0 follows=0
+2026-05-04T01:23:43.942Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:23:43.941Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:23:43.940Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:23:43.938Z,info,post-engager,↓ scroll round 1/8 | likes=0 comments=0 follows=0
+2026-05-04T01:23:38.942Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:23:38.942Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:23:38.940Z,info,post-engager,⚠ post with no id found — skipped
+2026-05-04T01:23:22.736Z,info,post-engager,▶ post-engager started | url=https://www.linkedin.com/search/results/content/?keywords=project%20delivery&origin=GLOBAL_SEARCH_HEADER&datePosted=%5B%22past-month%22%5D&authorIndustry=%5B%226%22%5D
+2026-05-04T01:23:22.735Z,info,post-engager,▶ post-engager START message received
+2026-05-04T01:23:18.037Z,info,,"Keyword 1/21: ""project delivery"""
+2026-05-04T01:23:18.035Z,info,,Step 3/5 — Engaging with targeted content search posts…
+2026-05-04T01:23:18.001Z,warn,,[recruiter-prospector] timed out after 90 s — continuing sequence
+2026-05-04T01:23:12.949Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/maiotto/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:23:04.950Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/alexccampos/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:22:56.938Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/patriciaxavierlimaiwashita/en/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:22:49.939Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/rodrigobautista/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:22:41.948Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/dario-melro-andrade/en/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:22:37.950Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/elizangela-nascimento-souza/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:22:33.101Z,warn,,[recruiter-prospector] content script did not respond after 15 retries — skipping
+2026-05-04T01:22:29.943Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/silmara-souza-bilingual-talent-acquisition-5a2370b/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:22:22.947Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/danielmreis/en/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:22:16.938Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/eduardo-gouv%C3%AAa-757a4a4b/en/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:22:10.951Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/rodrigopoulis/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:22:04.946Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/victor-bensadon-55a5a8133/ — viewed (SSI: localizar as pessoas certas)
+2026-05-04T01:21:57.952Z,info,recruiter-prospector,recruiter-prospector — 18 cards found
+2026-05-04T01:21:52.433Z,info,recruiter-prospector,▶ recruiter-prospector started | https://www.linkedin.com/search/results/people/?keywords=IT%20Manager%20remote%20brazil
+2026-05-04T01:21:47.997Z,info,,Step 2b/5 — Browsing people search (SSI: Localizar as pessoas certas)…
+2026-05-04T01:21:47.982Z,warn,,[recruiter-prospector] timed out after 90 s — continuing sequence
+2026-05-04T01:21:43.946Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/ana-laurentino/ — no connect button (viewed)
+2026-05-04T01:21:29.942Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/ankit-mishra-42036825b/ — no connect button (viewed)
+2026-05-04T01:21:16.936Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/andreapolito/ — no connect button (viewed)
+2026-05-04T01:21:04.724Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/lucassieverding/ — no connect button (viewed)
+2026-05-04T01:20:51.936Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/rafael-sanches-24a2b034/en/ — no connect button (viewed)
+2026-05-04T01:20:40.946Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/filipe-pimentel-43210a85/ — no connect button (viewed)
+2026-05-04T01:20:28.940Z,info,recruiter-prospector,recruiter-prospector — 17 cards found
+2026-05-04T01:20:22.689Z,info,recruiter-prospector,▶ recruiter-prospector started | https://www.linkedin.com/search/results/people/?keywords=Tech%20Recruiter%20Information%20Technology&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%5D
+2026-05-04T01:20:17.970Z,info,,Step 2/5 — Prospecting Tech Recruiters (cap: 15)…
+2026-05-04T01:20:17.953Z,success,,■ ssi-monitor done | total:51 brand:51 people:14 insights:14 rel:7
+2026-05-04T01:20:11.253Z,info,,▶ ssi-monitor started | https://www.linkedin.com/sales/ssi
+2026-05-04T01:20:07.745Z,info,,Step 1/5 — Capturing SSI scores…
+2026-05-04T01:20:07.744Z,warn,,[Manual] Full sequence triggered. Cap today: 15.
+2026-05-04T01:20:03.165Z,success,,Extension installed. Daily alarms registered.

@@ -1,0 +1,19 @@
+﻿Date,Level,Message
+2026-05-03T19:13:41.987Z,success,Daily routine complete. Cap used: 15. Window: US_EU.
+2026-05-03T19:13:41.961Z,info,■ relationship-builder done | 0 touched
+2026-05-03T19:13:36.202Z,info,▶ relationship-builder started | https://www.linkedin.com/mynetwork/catch-up/work_anniversaries/
+2026-05-03T19:13:31.964Z,info,■ relationship-builder done | 0 touched
+2026-05-03T19:13:28.151Z,info,▶ relationship-builder started | https://www.linkedin.com/mynetwork/catch-up/birthday/
+2026-05-03T19:13:24.055Z,info,Step 4/4 — Building relationships (birthdays + anniversaries)…
+2026-05-03T19:13:24.021Z,warn,[post-engager] timed out after 90 s — continuing sequence
+2026-05-03T19:11:58.453Z,info,▶ post-engager started | https://www.linkedin.com/search/results/content/?keywords=%22project%20manager%22%20latam&sortBy=%22relevance%22&datePosted=%22past-week%22
+2026-05-03T19:11:54.014Z,info,"Keyword 1/15: """"project manager"" latam"""
+2026-05-03T19:11:54.010Z,info,Step 3/4 — Engaging with targeted content search posts…
+2026-05-03T19:11:53.965Z,warn,✗ recruiter-prospector — no search result cards found (waited 20 s)
+2026-05-03T19:11:23.719Z,info,▶ recruiter-prospector started | https://www.linkedin.com/search/results/people/?keywords=Tech%20Recruiter%20Information%20Technology&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%5D
+2026-05-03T19:11:18.983Z,info,Step 2/4 — Prospecting Tech Recruiters (cap: 15)…
+2026-05-03T19:11:18.965Z,success,■ ssi-monitor done | total:51 brand:51 people:14 insights:14 rel:7
+2026-05-03T19:11:09.429Z,info,▶ ssi-monitor started | https://www.linkedin.com/sales/ssi
+2026-05-03T19:11:05.905Z,info,Step 1/4 — Capturing SSI scores…
+2026-05-03T19:11:05.905Z,warn,[Manual] Full sequence triggered. Cap today: 15.
+2026-05-03T19:11:01.588Z,success,Extension installed. Daily alarms registered.

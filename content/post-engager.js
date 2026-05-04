@@ -410,19 +410,60 @@ function getFeedPosts() {
 }
 
 function extractPostId(post) {
-  // Direct URN attribute
-  const direct = post.getAttribute('data-urn') || post.getAttribute('data-id') || post.getAttribute('data-chameleon-result-urn');
+  // Direct URN attribute — all known variants
+  const direct =
+    post.getAttribute('data-urn') ||
+    post.getAttribute('data-id') ||
+    post.getAttribute('data-chameleon-result-urn') ||
+    post.getAttribute('data-entity-urn');
   if (direct) return direct;
 
-  // Walk up the DOM — reaction-button fallback may land on a wrapper element
-  const ancestor = post.closest('[data-urn], [data-id], [data-chameleon-result-urn]');
-  if (ancestor) return ancestor.getAttribute('data-urn') || ancestor.getAttribute('data-id') || ancestor.getAttribute('data-chameleon-result-urn');
+  // Walk up the DOM — covers reaction-button fallback landing on a child element
+  const ancestor = post.closest(
+    '[data-urn], [data-id], [data-chameleon-result-urn], [data-entity-urn]'
+  );
+  if (ancestor) {
+    return (
+      ancestor.getAttribute('data-urn') ||
+      ancestor.getAttribute('data-id') ||
+      ancestor.getAttribute('data-chameleon-result-urn') ||
+      ancestor.getAttribute('data-entity-urn')
+    );
+  }
 
-  // Nested element carrying the URN (e.g. feed-shared-update-v2 inside a search li)
-  const nested = post.querySelector('[data-urn], [data-id]');
-  if (nested) return nested.getAttribute('data-urn') || nested.getAttribute('data-id');
+  // Nested URN element (feed-shared-update-v2 or any card inside a search li)
+  const nested = post.querySelector(
+    '[data-urn], [data-id], [data-entity-urn], [data-chameleon-result-urn]'
+  );
+  if (nested) {
+    return (
+      nested.getAttribute('data-urn') ||
+      nested.getAttribute('data-id') ||
+      nested.getAttribute('data-entity-urn') ||
+      nested.getAttribute('data-chameleon-result-urn')
+    );
+  }
 
-  // Link-based fallback — also handles URL-encoded URNs (urn%3Ali%3A)
+  // Activity-URN nested in any attribute value containing a known URN pattern
+  // (covers data-entity-urn="urn:li:activity:123..." deep inside the card)
+  const urnEl = post.querySelector(
+    '[data-entity-urn*=":activity:"], [data-entity-urn*=":ugcPost:"], [data-entity-urn*=":share:"],' +
+    '[data-chameleon-result-urn*=":activity:"], [data-chameleon-result-urn*=":ugcPost:"]'
+  );
+  if (urnEl) {
+    return (
+      urnEl.getAttribute('data-entity-urn') ||
+      urnEl.getAttribute('data-chameleon-result-urn')
+    );
+  }
+
+  // Link-based fallback — unencoded URNs in href (most reliable on content-search pages)
+  const urnLink = post.querySelector(
+    'a[href*="urn:li:activity:"], a[href*="urn:li:ugcPost:"], a[href*="urn:li:share:"]'
+  );
+  if (urnLink) return urnLink.href.split('?')[0];
+
+  // Link-based fallback — standard /feed/update/ and /posts/ paths
   const link =
     post.querySelector('a[href*="/feed/update/"]') ||
     post.querySelector('a[href*="/posts/"]') ||

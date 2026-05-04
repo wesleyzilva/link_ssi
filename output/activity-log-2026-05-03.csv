@@ -1,0 +1,14 @@
+﻿Date,Level,Message
+2026-05-03T15:49:07.705Z,success,Daily routine complete. Cap used: 15. Window: US_EU.
+2026-05-03T15:49:07.665Z,warn,[relationship-builder] content script unavailable: Could not establish connection. Receiving end does not exist.
+2026-05-03T15:48:49.510Z,warn,[relationship-builder] content script unavailable: Could not establish connection. Receiving end does not exist.
+2026-05-03T15:48:31.708Z,info,Step 4/4 — Building relationships (birthdays + anniversaries)…
+2026-05-03T15:48:31.645Z,warn,[post-engager] content script unavailable: Could not establish connection. Receiving end does not exist.
+2026-05-03T15:48:13.298Z,info,"Keyword 1/15: """"project manager"" latam"""
+2026-05-03T15:48:13.295Z,info,Step 3/4 — Engaging with targeted content search posts…
+2026-05-03T15:48:13.249Z,warn,[recruiter-prospector] content script unavailable: Could not establish connection. Receiving end does not exist.
+2026-05-03T15:47:54.240Z,info,Step 2/4 — Prospecting Tech Recruiters (cap: 15)…
+2026-05-03T15:47:54.213Z,warn,[ssi-monitor] content script unavailable: Could not establish connection. Receiving end does not exist.
+2026-05-03T15:47:36.533Z,info,Step 1/4 — Capturing SSI scores…
+2026-05-03T15:47:36.532Z,warn,[Manual] Full sequence triggered. Cap today: 15.
+2026-05-03T15:47:31.703Z,success,Extension installed. Daily alarms registered.

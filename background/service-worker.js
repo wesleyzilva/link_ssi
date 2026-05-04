@@ -117,7 +117,7 @@ async function runDailySequence(targetWindow, dailyCap) {
     await openTabAndWait('https://www.linkedin.com/sales/ssi', 'ssi-monitor', {});
 
     await log(`Step 2/5 — Prospecting Tech Recruiters (cap: ${dailyCap})…`);
-    await openTabAndWait(buildSearchUrl(targetWindow), 'recruiter-prospector', { dailyCap });
+    await openTabAndWait(await buildSearchUrl(targetWindow), 'recruiter-prospector', { dailyCap });
 
     await log('Step 2b/5 — Browsing people search (SSI: Localizar as pessoas certas)…');
     const peopleUrl = await getNextPeopleSearchUrl();
@@ -350,20 +350,65 @@ function buildPostEngageUrl() {
   );
 }
 
-function buildSearchUrl(targetWindow) {
-  // Target: Tech / IT Recruiters specifically in the technology sector
-  const keywords = encodeURIComponent('Tech Recruiter Information Technology');
+/**
+ * Pool of recruiter-search keywords per target window.
+ * Rotated each run via chrome.storage.local so LinkedIn sees organic,
+ * varied search behaviour — and we reach LATAM-focused hiring managers
+ * who use different terminology.
+ */
+const RECRUITER_SEARCH_POOL = {
+  US_EU: [
+    'Tech Recruiter Information Technology',
+    'IT Recruiter LATAM nearshore',
+    'Technical Recruiter remote latin america',
+    'Talent Acquisition IT remote LATAM',
+    'Engineering Recruiter nearshore Brazil',
+    'IT Staffing remote latin america',
+    'Head of Talent technology nearshore',
+    'Software Engineer Recruiter LATAM',
+    'Remote IT Recruiter south america',
+    'Talent Acquisition Manager nearshore',
+    'Technical Recruiter offshore brazil',
+    'IT Recruiter nearshore remote',
+    'Recruiter Information Technology remote',
+    'Staff Augmentation Recruiter LATAM',
+    'Offshore IT Recruiter latin america',
+  ],
+  APAC: [
+    'Tech Recruiter Information Technology',
+    'IT Recruiter remote APAC',
+    'Technical Recruiter nearshore',
+    'Talent Acquisition IT remote',
+    'Engineering Recruiter APAC nearshore',
+    'Head of Talent technology APAC',
+    'Remote IT Recruiter australia',
+    'Staff Augmentation Recruiter APAC',
+  ],
+};
+
+async function buildSearchUrl(targetWindow) {
+  const storageKey = `recruiterSearchIndex_${targetWindow}`;
+  const stored = await chrome.storage.local.get(storageKey);
+  const idx = stored[storageKey] || 0;
+
+  const pool = RECRUITER_SEARCH_POOL[targetWindow] || RECRUITER_SEARCH_POOL.US_EU;
+  const keyword = pool[idx % pool.length];
+  const keywords = encodeURIComponent(keyword);
+
+  // Advance the index for the next run
+  await chrome.storage.local.set({ [storageKey]: (idx + 1) % pool.length });
+  console.log(
+    `[SSI Optimizer] Recruiter search keyword ${(idx % pool.length) + 1}/${pool.length}: "${keyword}" | window: ${targetWindow}`
+  );
+
   const geoMap = {
     US_EU: '103644278,101165590',   // USA + United Kingdom URNs
     APAC: '102257491,101452733',    // Australia + Singapore URNs
   };
   const geo = geoMap[targetWindow] || geoMap.US_EU;
-  // industry URN IDs: 4 = IT Services, 96 = Software, 6 = Internet
-  const industry = encodeURIComponent('["4","96","6"]');
   return (
     `https://www.linkedin.com/search/results/people/?keywords=${keywords}` +
     `&geoUrn=%5B${geo}%5D` +
-    `&industryFilter=${industry}` +
     `&network=%5B%22S%22%2C%22O%22%5D`
   );
 }
@@ -416,61 +461,77 @@ function downloadCsvFromSW(filename, headers, rows) {
   chrome.downloads.download({ url: dataUrl, filename: `link_ssi/output/${filename}`, saveAs: false });
 }
 
+/**
+ * Exports ALL activity data into a single chronological CSV.
+ *
+ * Headers: Category | Date | Type | Name | Detail | URL
+ *   Connection   → type=connection-sent | name=person name | detail=profileId | url=profileUrl
+ *   Post         → type=like/comment/follow | name='' | detail=postId | url=postUrl
+ *   Relationship → type=birthday/anniversary | name=person name | detail=message | url=profileUrl
+ *   Log          → type=info/warn/error/success | name=script | detail=message | url=''
+ *   SSI          → type=ssi-score | name='' | detail=total:X brand:X people:X insights:X rel:X | url=''
+ *   AcceptedConn → type=accepted | name=person name | detail=followUpSent | url=profileUrl
+ *   Email        → type=email-found | name=email | detail=postId | url=postUrl
+ *   Link         → type=link-discovered | name=context | detail='' | url=url
+ */
 async function exportAllCsvs() {
   const data = await chrome.storage.local.get([
-    'connections', 'postInteractions', 'relationships', 'activityLog', 'ssiScores', 'discoveredLinks',
-    'acceptedConnections', 'lastConnectionTracking', 'lastFollowUp',
+    'connections', 'postInteractions', 'relationships', 'activityLog', 'ssiScores',
+    'discoveredLinks', 'acceptedConnections', 'extractedEmails',
   ]);
   const ts = new Date().toISOString().slice(0, 16).replace('T', '-').replace(':', '');
 
-  const conns = [...(data.connections || [])].sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt));
-  downloadCsvFromSW(`connections-${ts}.csv`,
-    ['Date', 'Name', 'Profile URL', 'Profile ID'],
-    conns.map(c => [c.sentAt, c.name || c.profileId, c.profileUrl || `https://www.linkedin.com/in/${c.profileId}/`, c.profileId]));
+  const HEADERS = ['Category', 'Date', 'Type', 'Name', 'Detail', 'URL'];
+  const rows = [];
 
-  const posts = [...(data.postInteractions || [])].sort((a, b) => new Date(b.interactedAt) - new Date(a.interactedAt));
-  downloadCsvFromSW(`post-interactions-${ts}.csv`,
-    ['Date', 'Action', 'Post URL', 'Post ID'],
-    posts.map(p => [p.interactedAt, p.action || 'like', p.postUrl || '', p.postId]));
+  for (const c of (data.connections || [])) {
+    rows.push(['Connection', c.sentAt || '', 'connection-sent', c.name || c.profileId || '', c.profileId || '', c.profileUrl || `https://www.linkedin.com/in/${c.profileId}/`]);
+  }
 
-  const rels = [...(data.relationships || [])].sort((a, b) => new Date(b.touchedAt) - new Date(a.touchedAt));
-  downloadCsvFromSW(`relationships-${ts}.csv`,
-    ['Date', 'Name', 'Event Type', 'Message Sent', 'Profile URL', 'Profile ID'],
-    rels.map(r => [r.touchedAt, r.name || r.profileId, r.eventType, r.messageSent || '',
-      r.profileUrl || `https://www.linkedin.com/in/${r.profileId}/`, r.profileId]));
+  for (const p of (data.postInteractions || [])) {
+    rows.push(['Post', p.interactedAt || '', p.action || 'like', '', p.postId || '', p.postUrl || '']);
+  }
 
-  const logs = [...(data.activityLog || [])].reverse();
-  downloadCsvFromSW(`activity-log-${ts}.csv`,
-    ['Date', 'Level', 'Script', 'Message'],
-    logs.map(e => [e.ts, e.level || 'info', e.script || '', e.msg || '']));
+  for (const r of (data.relationships || [])) {
+    rows.push(['Relationship', r.touchedAt || '', r.eventType || '', r.name || r.profileId || '', r.messageSent || '', r.profileUrl || `https://www.linkedin.com/in/${r.profileId}/`]);
+  }
 
-  const ssi = [...(data.ssiScores || [])].sort((a, b) => new Date(b.capturedAt) - new Date(a.capturedAt));
-  downloadCsvFromSW(`ssi-scores-${ts}.csv`,
-    ['Date', 'CapturedAt', 'Total', 'Brand', 'People', 'Insights', 'Relationships'],
-    ssi.map(s => [s.date || (s.capturedAt || '').slice(0, 10), s.capturedAt,
-      s.total ?? '', s.brand ?? '', s.people ?? '', s.insights ?? '', s.relationships ?? '']));
+  for (const e of [...(data.activityLog || [])]) {
+    rows.push(['Log', e.ts || '', e.level || 'info', e.script || '', e.msg || '', '']);
+  }
 
-  // Links discovered — for human validation
-  const links = [...(data.discoveredLinks || [])].sort((a, b) => new Date(b.ts) - new Date(a.ts));
-  downloadCsvFromSW(`discovered-links-${ts}.csv`,
-    ['Date', 'Context', 'URL', 'Profile ID', 'Name'],
-    links.map(l => [l.ts, l.context || '', l.url || '', l.profileId || '', l.name || '']));
+  for (const s of (data.ssiScores || [])) {
+    const detail = `total:${s.total ?? '?'} brand:${s.brand ?? '?'} people:${s.people ?? '?'} insights:${s.insights ?? '?'} rel:${s.relationships ?? '?'}`;
+    rows.push(['SSI', s.capturedAt || s.date || '', 'ssi-score', '', detail, '']);
+  }
 
-  // Accepted connections — for ROI tracking and outreach review
-  const accepted = [...(data.acceptedConnections || [])].sort((a, b) => new Date(b.acceptedAt) - new Date(a.acceptedAt));
-  downloadCsvFromSW(`accepted-connections-${ts}.csv`,
-    ['AcceptedAt', 'Name', 'Profile URL', 'Profile ID', 'SentAt', 'FollowUpSent', 'FollowUpAt'],
-    accepted.map(a => [a.acceptedAt, a.name || '', a.profileUrl || '', a.profileId || '',
-      a.sentAt || '', a.followUpSent ? 'yes' : 'no', a.followUpAt || '']));
+  for (const a of (data.acceptedConnections || [])) {
+    rows.push(['AcceptedConn', a.acceptedAt || '', 'accepted', a.name || '', a.followUpSent ? 'follow-up-sent' : 'pending', a.profileUrl || `https://www.linkedin.com/in/${a.profileId}/`]);
+  }
 
-  // Extracted recruiter emails — harvested from post text by post-engager
-  const { extractedEmails = [] } = await chrome.storage.local.get('extractedEmails');
-  const emails = [...extractedEmails].sort((a, b) => new Date(b.foundAt) - new Date(a.foundAt));
-  downloadCsvFromSW(`extracted-emails-${ts}.csv`,
-    ['FoundAt', 'Email', 'Post URL', 'Post ID'],
-    emails.map(e => [e.foundAt, e.email, e.postUrl || '', e.postId || '']));
+  for (const em of (data.extractedEmails || [])) {
+    rows.push(['Email', em.foundAt || '', 'email-found', em.email || '', em.postId || '', em.postUrl || '']);
+  }
 
-  await log(`Auto-CSV export complete — ${links.length} links, ${accepted.length} accepted, ${emails.length} emails, ${logs.length} log entries → Downloads/link_ssi/output/`, 'success');
+  for (const l of (data.discoveredLinks || [])) {
+    rows.push(['Link', l.ts || '', 'link-discovered', l.context || '', l.name || '', l.url || '']);
+  }
+
+  // Sort all rows chronologically (column index 1 = Date)
+  rows.sort((a, b) => new Date(b[1]) - new Date(a[1]));
+
+  downloadCsvFromSW(`activity-history-${ts}.csv`, HEADERS, rows);
+
+  const counts = {
+    links: (data.discoveredLinks || []).length,
+    accepted: (data.acceptedConnections || []).length,
+    emails: (data.extractedEmails || []).length,
+    logs: (data.activityLog || []).length,
+  };
+  await log(
+    `Auto-CSV export complete — ${counts.links} links, ${counts.accepted} accepted, ${counts.emails} emails, ${counts.logs} log entries → Downloads/link_ssi/output/`,
+    'success'
+  );
 }
 
 // ─── Manual trigger (popup „Run Now“ / per-task buttons) ──────────────────────
@@ -500,7 +561,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     getDailyConnectionCap().then(async (cap) => {
       await log(`[Manual] Single task triggered: ${task}.`, 'warn');
       const url = task === 'recruiter-prospector'
-        ? buildSearchUrl(TARGET_WINDOWS.US_EU)
+        ? await buildSearchUrl(TARGET_WINDOWS.US_EU)
         : TASK_URLS[task];
       if (!url) {
         await log(`[Manual] Unknown task: ${task}`, 'error');
