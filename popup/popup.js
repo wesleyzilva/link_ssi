@@ -179,7 +179,17 @@ async function renderNextAlarm() {
   const el = document.getElementById('next-alarm');
 
   if (!alarms.length) {
-    el.textContent = 'No alarms scheduled.';
+    // Auto-reschedule silently — service worker may have been killed by Chrome
+    try {
+      await chrome.runtime.sendMessage({ action: 'SCHEDULE_ALARMS' });
+    } catch { /* service worker restarting — alarms registered on wake */ }
+
+    el.innerHTML =
+      'No alarms found. <button id="btn-fix-alarms" style="margin-left:6px;padding:2px 8px;font-size:11px;cursor:pointer;">📅 Fix</button>';
+    document.getElementById('btn-fix-alarms')?.addEventListener('click', async () => {
+      try { await chrome.runtime.sendMessage({ action: 'SCHEDULE_ALARMS' }); } catch { /* ok */ }
+      await renderNextAlarm();
+    });
     return;
   }
 

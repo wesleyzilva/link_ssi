@@ -749,4 +749,11 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     });
     return true;
   }
+
+  if (message.action === 'SCHEDULE_ALARMS') {
+    scheduleAlarms();
+    log('Alarms rescheduled via popup.', 'info');
+    sendResponse({ scheduled: true });
+    return true;
+  }
 });
