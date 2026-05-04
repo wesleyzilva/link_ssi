@@ -446,16 +446,27 @@ async function saveExtractedEmails(emails, postId, postUrl) {
 
 function getFeedPosts() {
   // Strategy 0: Content-search page (/search/results/content/) — result li containers
-  // These are the actual post-result wrappers; checked first so the reaction-button
-  // fallback (which can match sidebar widgets) never runs on content-search pages.
+  // IMPORTANT: do NOT add `|| el.querySelector('button')` here — LinkedIn renders skeleton
+  // li elements (with buttons but no real content) before the posts load.  Accepting those
+  // causes waitForElements to return immediately and extractPostId gets empty containers.
   const s0 = Array.from(document.querySelectorAll(
     'li.reusable-search__result-container,' +
     'li[class*="reusable-search__result"]'
   )).filter(el =>
-    el.querySelector('a[href*="/feed/update/"], a[href*="/posts/"], a[href*="urn:li:activity:"]') ||
-    el.querySelector('button')
+    el.querySelector('[data-chameleon-result-urn],[data-entity-urn],[data-urn*=":activity:"],[data-id*=":activity:"]') ||
+    el.querySelector('a[href*="/feed/update/"], a[href*="/posts/"]')
   );
   if (s0.length) { console.log(`[Post Engager] ${s0.length} posts via content-search li`); return s0; }
+
+  // Strategy 0b: LinkedIn 2026 content-search — inner card element with data-chameleon-result-urn.
+  // When the outer li doesn't carry URN attributes, the inner artdeco card does.
+  const s0b = Array.from(document.querySelectorAll(
+    'li.reusable-search__result-container [data-chameleon-result-urn],' +
+    'li[class*="reusable-search__result"] [data-chameleon-result-urn],' +
+    'li.reusable-search__result-container [data-entity-urn*=":activity:"],' +
+    'li[class*="reusable-search__result"] [data-entity-urn*=":activity:"]'
+  ));
+  if (s0b.length) { console.log(`[Post Engager] ${s0b.length} posts via content-search inner-urn (s0b)`); return s0b; }
 
   // LinkedIn 2026: data-occludable-entity-urn (new feed layout)
   const s1a = Array.from(document.querySelectorAll(
@@ -644,6 +655,17 @@ function extractPostId(post) {
       return `synthetic:${authorSlug}:${hash}`;
     } catch (_) { /* ignore URL parse errors */ }
   }
+
+  // Diagnostic: fire-and-forget log so future failures are visible in the activity log.
+  // Logs tag name, class, first 5 attribute names, and first 3 link hrefs.
+  const diagAttrs = Array.from(post.attributes || []).slice(0, 5)
+    .map(a => `${a.name}=${String(a.value).slice(0, 30)}`).join(' | ');
+  const diagLinks = Array.from(post.querySelectorAll('a[href]')).slice(0, 3)
+    .map(a => a.getAttribute('href')).join(', ');
+  contentLog(
+    `[Diag] extractPostId null — <${post.tagName} class="${(post.className || '').slice(0, 60)}"> | attrs: ${diagAttrs || 'none'} | links: ${diagLinks || 'none'}`,
+    'warn'
+  );
 
   return null;
 }

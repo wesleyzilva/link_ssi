@@ -134,6 +134,11 @@ async function prospectRecruiters() {
 
     if (!connectButton) {
       await randomWait(1000, 2500);
+      // Diagnostic: log all button texts/aria-labels in this card so we can tune selectors
+      const btns = Array.from(card.querySelectorAll('button'))
+        .map(b => `"${b.textContent.trim().slice(0,30)}" aria="${(b.getAttribute('aria-label')||'').slice(0,50)}"`)
+        .join(' | ');
+      await contentLog(`[Diag] no connect btn found | card buttons: ${btns || 'none'}`, 'warn');
       await contentLog(`↷ ${profileUrl} — no connect button (viewed)`);
       continue;
     }
@@ -255,10 +260,15 @@ function getConnectButton(card) {
     const label = (b.getAttribute('aria-label') || '').toLowerCase();
     return text === 'connect' ||
            text === 'conectar' ||
-           /^connect$/i.test(label) ||
-           /^conectar$/i.test(label) ||
+           text === 'conectar-se' ||
+           text.startsWith('connect') ||
+           text.startsWith('conectar') ||
+           /^connect/i.test(label) ||
+           /^conectar/i.test(label) ||
+           /^convidar/i.test(label) ||
+           (/convidar/i.test(label) && /conectar/i.test(label)) ||
            /^invite .+ to connect/i.test(label) ||
-           /^convidar .+ para se conectar/i.test(label);
+           /^convidar .+ para se? conectar/i.test(label);
   }) || null;
 }
 
