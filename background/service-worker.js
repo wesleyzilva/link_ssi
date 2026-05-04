@@ -12,8 +12,9 @@ import { checkGlobalTime, TARGET_WINDOWS } from '../utils/time-checker.js';
 import { log } from '../utils/logger.js';
 
 const ALARM_NAMES = {
-  MORNING: 'ssi-routine-morning',   // 11:00 BRT — US East + Europe
-  EVENING: 'ssi-routine-evening',   // 21:00 BRT — APAC + US West
+  MORNING:  'ssi-routine-morning',   // 11:00 BRT — US East + Europe
+  EVENING:  'ssi-routine-evening',   // 21:00 BRT — APAC + US West
+  INTERVAL: 'ssi-routine-interval',  // Repeating interval (configured by user)
 };
 
 /**
@@ -40,10 +41,30 @@ const SEED_POST_URLS = [
 
 chrome.runtime.onInstalled.addListener(async () => {
   scheduleAlarms();
+  await restoreIntervalAlarm();
   log('Extension installed. Daily alarms registered.', 'success');
   console.log('[SSI Optimizer] Installed. Daily alarms registered.');
   await seedPostQueue();
 });
+
+/**
+ * Re-creates the interval alarm from storage after service-worker restart.
+ * Chrome clears all alarms when the service worker is killed.
+ */
+async function restoreIntervalAlarm() {
+  const { intervalMinutes = 0 } = await chrome.storage.local.get('intervalMinutes');
+  if (intervalMinutes > 0) {
+    chrome.alarms.get(ALARM_NAMES.INTERVAL, (existing) => {
+      if (!existing) {
+        chrome.alarms.create(ALARM_NAMES.INTERVAL, {
+          delayInMinutes: intervalMinutes,
+          periodInMinutes: intervalMinutes,
+        });
+        log(`[Interval] Alarm restored: every ${intervalMinutes} min.`, 'info');
+      }
+    });
+  }
+}
 
 /**
  * Adds SEED_POST_URLS to `specificPostQueue` if not already present.
@@ -74,6 +95,7 @@ async function seedPostQueue() {
 
 chrome.runtime.onStartup.addListener(() => {
   scheduleAlarms();
+  restoreIntervalAlarm();
   log('Extension started. Alarms refreshed.');
 });
 
@@ -117,6 +139,15 @@ function getNextAlarmTime(hours, minutes) {
 // ─── Alarm handler ───────────────────────────────────────────────────────────
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
+  // ── Interval alarm (no time-window check — user opted in deliberately) ──
+  if (alarm.name === ALARM_NAMES.INTERVAL) {
+    const dailyCap = await getDailyConnectionCap();
+    await log(`[Interval] Run started. Cap today: ${dailyCap}.`, 'warn');
+    await runDailySequence(TARGET_WINDOWS.US_EU, dailyCap);
+    await advanceDayCycle();
+    return;
+  }
+
   if (alarm.name !== ALARM_NAMES.MORNING && alarm.name !== ALARM_NAMES.EVENING) return;
 
   const window = alarm.name === ALARM_NAMES.MORNING
@@ -754,6 +785,33 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     scheduleAlarms();
     log('Alarms rescheduled via popup.', 'info');
     sendResponse({ scheduled: true });
+    return true;
+  }
+
+  if (message.action === 'SCHEDULE_INTERVAL') {
+    const { minutes } = message;
+    chrome.alarms.clear(ALARM_NAMES.INTERVAL, () => {
+      if (minutes > 0) {
+        chrome.alarms.create(ALARM_NAMES.INTERVAL, {
+          delayInMinutes: minutes,
+          periodInMinutes: minutes,
+        });
+        chrome.storage.local.set({ intervalMinutes: minutes });
+        log(`[Interval] Scheduled every ${minutes} min.`, 'success');
+        sendResponse({ scheduled: true, minutes });
+      } else {
+        chrome.storage.local.remove('intervalMinutes');
+        log('[Interval] Interval schedule cleared.', 'info');
+        sendResponse({ scheduled: false });
+      }
+    });
+    return true;
+  }
+
+  if (message.action === 'GET_INTERVAL') {
+    chrome.alarms.get(ALARM_NAMES.INTERVAL, (alarm) => {
+      sendResponse({ alarm: alarm ?? null });
+    });
     return true;
   }
 });

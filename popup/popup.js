@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await safeRun(renderActivityLog);
   await safeRun(renderAnalytics);
   await safeRun(renderNextAlarm);
+  await safeRun(renderIntervalSchedule);
   await safeRun(renderLiveLog);
   await safeRun(renderPostQueue);
   wireButtons();
@@ -207,6 +208,36 @@ async function renderNextAlarm() {
   el.textContent = `${windowLabel} · ${brtLabel}`;
 }
 
+async function renderIntervalSchedule() {
+  // Load the saved interval from storage
+  const { intervalMinutes = 0 } = await chrome.storage.local.get('intervalMinutes');
+  const select = document.getElementById('select-interval');
+  if (!select) return;
+
+  // Pre-select the current value (or Off if none)
+  const opt = select.querySelector(`option[value="${intervalMinutes}"]`);
+  if (opt) opt.selected = true;
+
+  // Render status line
+  const status = document.getElementById('interval-status');
+  if (intervalMinutes > 0) {
+    let resp = null;
+    try { resp = await chrome.runtime.sendMessage({ action: 'GET_INTERVAL' }); } catch { /* ok */ }
+    const alarm = resp?.alarm;
+    if (alarm) {
+      const nextRun = formatDateTimeShort(new Date(alarm.scheduledTime).toISOString());
+      status.textContent = `⏱ Running every ${intervalMinutes} min · next: ${nextRun}`;
+      status.className = 'interval-status interval-status--on';
+    } else {
+      status.textContent = `Saved: every ${intervalMinutes} min (alarm not found — will restore on next reload)`;
+      status.className = 'interval-status';
+    }
+  } else {
+    status.textContent = 'No repeat interval set — runs at 11:00 and 21:00 BRT only.';
+    status.className = 'interval-status';
+  }
+}
+
 // ─── Formatting helpers ───────────────────────────────────────────────────────
 
 function formatRelativeTime(isoString) {
@@ -369,6 +400,24 @@ function wireButtons() {
       btn.disabled = false;
       btn.textContent = '▶ Run queue now';
     }, 10000);
+  });
+
+  document.getElementById('btn-save-interval').addEventListener('click', async () => {
+    const select  = document.getElementById('select-interval');
+    const minutes = parseInt(select.value, 10);
+    const btn     = document.getElementById('btn-save-interval');
+    btn.disabled  = true;
+    try {
+      await chrome.runtime.sendMessage({ action: 'SCHEDULE_INTERVAL', minutes });
+    } catch { /* service worker may be waking */ }
+    // Persist locally even if SW message failed (restoreIntervalAlarm will pick it up)
+    if (minutes > 0) {
+      await chrome.storage.local.set({ intervalMinutes: minutes });
+    } else {
+      await chrome.storage.local.remove('intervalMinutes');
+    }
+    await renderIntervalSchedule();
+    btn.disabled = false;
   });
 
   document.getElementById('open-history').addEventListener('click', (e) => {
