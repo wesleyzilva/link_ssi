@@ -73,6 +73,20 @@ function isRecruiterPost(post) {
   return hasRecruiterTitle || hasJobKeyword;
 }
 
+const DELIVERY_KEYWORDS = [
+  'delivery', 'software delivery', 'product delivery', 'on-time delivery', 'delivery team',
+  'delivery lead', 'delivery manager', 'delivery excellence', 'delivery pipeline',
+  'nearshore delivery', 'offshore delivery', 'distributed delivery',
+  'sprint delivery', 'release delivery', 'continuous delivery', 'cd pipeline',
+  'ship it', 'shipped', 'time-to-market', 'fast delivery', 'delivery velocity',
+  'entrega', 'entrega de software', 'entrega ágil', 'entrega contínua',
+];
+
+function isDeliveryPost(post) {
+  const text = (post.textContent || '').toLowerCase();
+  return DELIVERY_KEYWORDS.some(kw => text.includes(kw));
+}
+
 // ─── Comment templates (short, direct, no emojis that trigger spam filters) ──
 
 const COMMENT_TEMPLATES = [
@@ -92,6 +106,13 @@ const COMMENT_TEMPLATES = [
 const RECRUITER_COMMENT_TEMPLATES = [
   "Let's connect! https://wesleyzilva.github.io/portfolioNearshoreWesIA/",
   "Interested — Let's connect! https://wesleyzilva.github.io/portfolioNearshoreWesIA/",
+];
+
+// Delivery-focused post comment
+const DELIVERY_COMMENT_TEMPLATES = [
+  "Let's connect and deliver! 🚀 https://wesleyzilva.github.io/portfolioNearshoreWesIA/",
+  "Delivery excellence is exactly what nearshore teams specialise in. Let's connect! https://wesleyzilva.github.io/portfolioNearshoreWesIA/",
+  "14+ yrs accelerating software delivery from Brazil. Let's connect! https://wesleyzilva.github.io/portfolioNearshoreWesIA/",
 ];
 
 // ─── Message listener ────────────────────────────────────────────────────────
@@ -247,14 +268,15 @@ async function engageWithPosts() {
       }
 
       const isRecruiter = isRecruiterPost(post);
+      const isDelivery  = !isRecruiter && isDeliveryPost(post);
       const commentCount = getCommentCount(post);
       const priority = getPriority(commentCount);
 
       await contentLog(
-        `📌 post ${postId.slice(-18)} | recruiter=${isRecruiter} | comments=${commentCount} | priority=${priority} | url=${postUrl || 'none'}`
+        `📌 post ${postId.slice(-18)} | recruiter=${isRecruiter} | delivery=${isDelivery} | comments=${commentCount} | priority=${priority} | url=${postUrl || 'none'}`
       );
 
-      if (priority === 'SKIP' && !isRecruiter) continue;
+      if (priority === 'SKIP' && !isRecruiter && !isDelivery) continue;
 
       // Dedup checks — both use postInteractions (no db.js dependency)
       let alreadyLiked, alreadyCommented;
@@ -295,12 +317,14 @@ async function engageWithPosts() {
         }
       }
 
-      // ── 2. COMMENT — recruiter/job posts get priority, else HIGH only ──
+      // ── 2. COMMENT — recruiter/delivery posts get priority, else HIGH only ──
       const shouldComment = commentsMade < CAPS.comments && !alreadyCommented &&
-        (isRecruiter || priority === 'HIGH');
+        (isRecruiter || isDelivery || priority === 'HIGH');
       if (shouldComment) {
         try {
-          const templates = isRecruiter ? RECRUITER_COMMENT_TEMPLATES : COMMENT_TEMPLATES;
+          const templates = isRecruiter ? RECRUITER_COMMENT_TEMPLATES
+                          : isDelivery  ? DELIVERY_COMMENT_TEMPLATES
+                          :               COMMENT_TEMPLATES;
           const commented = await commentOnPost(post, templates);
           if (commented) {
             commentsMade++;

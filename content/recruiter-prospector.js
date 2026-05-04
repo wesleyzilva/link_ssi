@@ -396,15 +396,21 @@ async function handleConnectionModal(card, profileId) {
  * Logs everything for debugging.
  */
 async function handleConnectionModalNoNote() {
-  // Wait up to 5s for any modal to appear
+  // Wait up to 6s for any modal to appear — LinkedIn 2026 modal is slower to paint
   const modal = await new Promise(resolve => {
-    const deadline = Date.now() + 5000;
+    const deadline = Date.now() + 6000;
     const tick = setInterval(() => {
       const m =
-        document.querySelector('div[data-test-modal-id="send-invite-modal"]') ||
+        // LinkedIn 2026: "Add a note to your invitation?" dialog
+        document.querySelector('[data-test-modal-id="send-invite-modal"]') ||
+        document.querySelector('[data-test-modal-id="send-connections-modal"]') ||
+        document.querySelector('div[aria-label*="Add a note"]') ||
+        document.querySelector('div[aria-label*="invitation"]') ||
+        // Classic selectors
         document.querySelector('.send-invite') ||
         document.querySelector('[data-test-modal]') ||
-        document.querySelector('.artdeco-modal[role="dialog"]');
+        document.querySelector('.artdeco-modal[role="dialog"]') ||
+        document.querySelector('div[role="dialog"]');
       if (m || Date.now() >= deadline) { clearInterval(tick); resolve(m || null); }
     }, 300);
   });
@@ -417,11 +423,15 @@ async function handleConnectionModalNoNote() {
 
   await contentLog('📋 connection modal appeared — looking for send-without-note button');
 
-  // Priority: "Send without a note" button
+  // Priority: "Send without a note" — LinkedIn 2026 uses both aria-label and data-control-name
   const sendWithoutNote =
     modal.querySelector('[aria-label="Send without a note"]') ||
+    modal.querySelector('[data-control-name="connect.send_without_note"]') ||
+    modal.querySelector('button[data-control-name*="without"]') ||
     Array.from(modal.querySelectorAll('button')).find(
-      b => /send without/i.test(b.textContent) || /send$/i.test(b.textContent.trim())
+      b => /send without/i.test(b.textContent) ||
+           /sem nota/i.test(b.textContent) ||
+           /without a note/i.test(b.getAttribute('aria-label') || '')
     );
 
   if (sendWithoutNote) {
