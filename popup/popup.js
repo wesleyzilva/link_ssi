@@ -251,6 +251,39 @@ function wireButtons() {
     renderLiveLog();
   });
 
+  document.getElementById('btn-comment-post').addEventListener('click', async () => {
+    const input  = document.getElementById('input-post-url');
+    const status = document.getElementById('comment-post-status');
+    const postUrl = (input.value || '').trim();
+
+    if (!postUrl.startsWith('https://www.linkedin.com/')) {
+      status.textContent = '⚠ Enter a valid LinkedIn post URL.';
+      status.className = 'comment-post-status comment-post-status--error';
+      return;
+    }
+
+    const btn = document.getElementById('btn-comment-post');
+    btn.disabled = true;
+    status.textContent = '⏳ Opening post and commenting…';
+    status.className = 'comment-post-status';
+
+    try {
+      const resp = await chrome.runtime.sendMessage({ action: 'COMMENT_POST', postUrl });
+      if (resp?.done) {
+        status.textContent = '✓ Comment sent successfully.';
+        status.className = 'comment-post-status comment-post-status--success';
+        input.value = '';
+      } else {
+        status.textContent = `⚠ ${resp?.error || 'Comment may not have been sent — check Activity Log.'}`;
+        status.className = 'comment-post-status comment-post-status--error';
+      }
+    } catch (e) {
+      status.textContent = '⚠ Could not reach service worker — try again.';
+      status.className = 'comment-post-status comment-post-status--error';
+    }
+    setTimeout(() => { btn.disabled = false; }, 8000);
+  });
+
   document.getElementById('open-history').addEventListener('click', (e) => {
     e.preventDefault();
     chrome.tabs.create({ url: chrome.runtime.getURL('history/history.html') });

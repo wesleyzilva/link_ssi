@@ -98,14 +98,26 @@ const RECRUITER_COMMENT_TEMPLATES = [
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action === 'START' && message.task === 'post-engager') {
-    contentLog('▶ post-engager START message received').then(() =>
-      engageWithPosts()
-    ).then((result) => {
-      sendResponse({ success: true, ...result });
-    }).catch((error) => {
-      contentLog(`✗ post-engager fatal error: ${error.message}`, 'error');
-      sendResponse({ success: false, error: error.message });
-    });
+    if (message.singlePost) {
+      // Single-post comment mode: find the post on this page and comment once
+      contentLog(`▶ post-engager COMMENT_SINGLE | url=${window.location.href}`).then(() =>
+        commentSinglePost(message.commentTemplate)
+      ).then((result) => {
+        sendResponse({ success: true, ...result });
+      }).catch((error) => {
+        contentLog(`✗ commentSinglePost fatal: ${error.message}`, 'error');
+        sendResponse({ success: false, error: error.message });
+      });
+    } else {
+      contentLog('▶ post-engager START message received').then(() =>
+        engageWithPosts()
+      ).then((result) => {
+        sendResponse({ success: true, ...result });
+      }).catch((error) => {
+        contentLog(`✗ post-engager fatal error: ${error.message}`, 'error');
+        sendResponse({ success: false, error: error.message });
+      });
+    }
     return true;
   }
 });
@@ -120,6 +132,64 @@ async function waitForElements(queryFn, maxWait = 20000, interval = 2000) {
     await new Promise(r => setTimeout(r, interval));
   }
   return queryFn();
+}
+
+// ─── Single-post comment (manual trigger from popup) ──────────────────────────
+
+/**
+ * Opens on a direct post URL, finds the post, checks dedup, comments once.
+ * Used when the user manually queues a specific post for commenting via the popup.
+ *
+ * @param {string} [overrideTemplate] - specific comment text; falls back to RECRUITER_COMMENT_TEMPLATES
+ */
+async function commentSinglePost(overrideTemplate) {
+  await randomWait(3000, 6000);
+  await simulatePageReading(randomInt(5000, 10000));
+
+  let posts;
+  try {
+    posts = await waitForElements(getFeedPosts, 20000);
+  } catch (e) {
+    await contentLog(`✗ commentSinglePost: waitForElements error: ${e.message}`, 'error');
+    return { commented: false, reason: 'waitForElements failed' };
+  }
+
+  if (!posts.length) {
+    await contentLog('⚠ commentSinglePost: no post container found on this page', 'warn');
+    return { commented: false, reason: 'no post found' };
+  }
+
+  // Use the first (main) post — on a direct post URL this is the target post
+  const post = posts[0];
+  const postId  = extractPostId(post);
+  const postUrl = extractPostUrl(post) || window.location.href;
+
+  if (!postId) {
+    await contentLog(`⚠ commentSinglePost: could not extract post ID from ${postUrl}`, 'warn');
+    return { commented: false, reason: 'no post ID' };
+  }
+
+  const alreadyCommented = await hasCommentedOnPostRecord(postId);
+  if (alreadyCommented) {
+    await contentLog(`ℹ commentSinglePost: already commented on ${postId} — skipped`, 'warn');
+    return { commented: false, reason: 'already commented' };
+  }
+
+  await scrollIntoViewAndPause(post);
+  await readBeforeActing(post, 3000, 6000);
+
+  const templates = overrideTemplate ? [overrideTemplate] : RECRUITER_COMMENT_TEMPLATES;
+  const commented = await commentOnPost(post, templates);
+
+  if (commented) {
+    await saveInteraction(postId, postUrl, 'comment');
+    if (postUrl) await logLink(postUrl, 'commented');
+    await contentLog(`✓ commentSinglePost: commented on ${postUrl}`, 'success');
+    return { commented: true, postId, postUrl };
+  } else {
+    await contentLog(`⚠ commentSinglePost: comment action failed on ${postUrl}`, 'warn');
+    return { commented: false, reason: 'commentOnPost returned false' };
+  }
 }
 
 // ─── Core ─────────────────────────────────────────────────────────────────────
@@ -358,33 +428,42 @@ function getFeedPosts() {
     'li.reusable-search__result-container,' +
     'li[class*="reusable-search__result"]'
   )).filter(el =>
-    el.querySelector('a[href*="/feed/update/"], a[href*="/posts/"]') ||
-    el.querySelector('button[aria-label*="Like"], button[aria-label*="React"]')
+    el.querySelector('a[href*="/feed/update/"], a[href*="/posts/"], a[href*="urn:li:activity:"]') ||
+    el.querySelector('button')
   );
   if (s0.length) { console.log(`[Post Engager] ${s0.length} posts via content-search li`); return s0; }
 
+  // LinkedIn 2026: data-occludable-entity-urn (new feed layout)
+  const s1a = Array.from(document.querySelectorAll(
+    '[data-occludable-entity-urn*=":activity:"],[data-occludable-entity-urn*=":ugcPost:"]'
+  ));
+  if (s1a.length) { console.log(`[Post Engager] ${s1a.length} posts via data-occludable-entity-urn`); return s1a; }
+
   const s1 = Array.from(document.querySelectorAll(
-    'div[data-id*=":activity:"], div[data-id*=":ugcPost:"], div[data-id*=":share:"]'
+    '[data-id*=":activity:"],[data-id*=":ugcPost:"],[data-id*=":share:"]'
   ));
   if (s1.length) { console.log(`[Post Engager] ${s1.length} posts via data-id urn`); return s1; }
 
-  const s2 = Array.from(document.querySelectorAll('.feed-shared-update-v2'));
-  if (s2.length) { console.log(`[Post Engager] ${s2.length} posts via .feed-shared-update-v2`); return s2; }
+  const s2 = Array.from(document.querySelectorAll(
+    '.feed-shared-update-v2,.social-feed-update,article[data-urn]'
+  ));
+  if (s2.length) { console.log(`[Post Engager] ${s2.length} posts via feed-shared/social-feed`); return s2; }
 
   const s3 = Array.from(document.querySelectorAll(
     '[data-view-name="search-entity-result-universal-template"],' +
+    '[data-view-name="feed-shared-update"],' +
     '.search-results-container .occludable-update,' +
     '.entity-result[data-urn]'
   ));
-  if (s3.length) { console.log(`[Post Engager] ${s3.length} posts via search selectors`); return s3; }
+  if (s3.length) { console.log(`[Post Engager] ${s3.length} posts via search/view-name selectors`); return s3; }
 
   const s4 = Array.from(document.querySelectorAll(
-    '[data-urn*=":activity:"], [data-urn*=":ugcPost:"], [data-urn*=":share:"]'
+    '[data-urn*=":activity:"],[data-urn*=":ugcPost:"],[data-urn*=":share:"]'
   ));
   if (s4.length) { console.log(`[Post Engager] ${s4.length} posts via data-urn`); return s4; }
 
   const s5 = Array.from(document.querySelectorAll(
-    '.occludable-update, .artdeco-card[data-id], .artdeco-card[data-urn]'
+    '.occludable-update,.artdeco-card[data-id],.artdeco-card[data-urn]'
   ));
   if (s5.length) { console.log(`[Post Engager] ${s5.length} posts via artdeco`); return s5; }
 
@@ -392,42 +471,79 @@ function getFeedPosts() {
     'ul.reusable-search__entity-result-list > li,' +
     '.search-results-container li,' +
     'li.search-content-result__wrapper'
-  )).filter(el => el.querySelector('[aria-label*="Like"], [data-urn], [data-id]'));
+  )).filter(el => el.querySelector('[data-urn],[data-id],a[href*="/feed/update/"]'));
   if (s6.length) { console.log(`[Post Engager] ${s6.length} posts via search-li`); return s6; }
 
-  const byReaction = Array.from(document.querySelectorAll(
-    'button[aria-label*="Like"], button[aria-label*="Comment"]'
-  )).map(btn =>
-    btn.closest('[data-id], [data-urn], [data-chameleon-result-urn], .feed-shared-update-v2, .occludable-update, article') ||
-    btn.closest('li') ||
-    btn.parentElement
-  ).filter(Boolean);
-  const unique = [...new Set(byReaction)];
-  if (unique.length) { console.log(`[Post Engager] ${unique.length} posts via reaction-button fallback`); return unique; }
+  // Strategy: start from post permalink anchors and walk up to the card container
+  // This is the most reliable fallback for new LinkedIn layouts where no URN attribute
+  // is set on the outer container but the post URL link is always present.
+  const postAnchors = Array.from(document.querySelectorAll(
+    'a[href*="/feed/update/"],a[href*="urn:li:activity:"],a[href*="urn:li:ugcPost:"]'
+  ));
+  const byLink = [...new Set(postAnchors.map(a => {
+    let el = a.parentElement;
+    let depth = 0;
+    while (el && el !== document.body && depth < 14) {
+      // Stop when we find a container that also has social action buttons
+      if (el.querySelector('button[aria-label*="Like" i],button[aria-label*="React" i],' +
+          'button[aria-label*="Comment" i],button[aria-label*="Comentar" i],' +
+          '[data-test-id="like-button"]')) return el;
+      el = el.parentElement;
+      depth++;
+    }
+    return null;
+  }).filter(Boolean))];
+  if (byLink.length) { console.log(`[Post Engager] ${byLink.length} posts via link-walk`); return byLink; }
+
+  // Last resort: walk up from Like/Comment buttons — multilingual aware
+  const actionBtns = Array.from(document.querySelectorAll(
+    'button[aria-label*="Like" i],button[aria-label*="React" i],' +
+    'button[aria-label*="Comment" i],button[aria-label*="Comentar" i],' +
+    '[data-test-id="like-button"],[data-control-name="like"]'
+  ));
+  const byReaction = [...new Set(actionBtns.map(btn => {
+    const byAttr = btn.closest(
+      '[data-id],[data-urn],[data-occludable-entity-urn],[data-chameleon-result-urn],' +
+      '.feed-shared-update-v2,.social-feed-update,.occludable-update,article'
+    );
+    if (byAttr) return byAttr;
+    // Walk up until an ancestor has a post permalink link
+    let el = btn.parentElement;
+    let depth = 0;
+    while (el && el !== document.body && depth < 14) {
+      if (el.querySelector('a[href*="/feed/update/"],a[href*="urn:li:activity:"],a[href*="/posts/"]')) return el;
+      el = el.parentElement;
+      depth++;
+    }
+    return btn.closest('li') || btn.parentElement;
+  }).filter(Boolean))];
+  if (byReaction.length) { console.log(`[Post Engager] ${byReaction.length} posts via reaction-button fallback`); return byReaction; }
 
   console.warn('[Post Engager] ALL selectors failed. url=', location.href);
   return [];
 }
 
 function extractPostId(post) {
-  // Direct URN attribute — all known variants
+  // Direct URN attribute — all known variants including LinkedIn 2026
   const direct =
     post.getAttribute('data-urn') ||
     post.getAttribute('data-id') ||
     post.getAttribute('data-chameleon-result-urn') ||
-    post.getAttribute('data-entity-urn');
+    post.getAttribute('data-entity-urn') ||
+    post.getAttribute('data-occludable-entity-urn');
   if (direct) return direct;
 
   // Walk up the DOM — covers reaction-button fallback landing on a child element
   const ancestor = post.closest(
-    '[data-urn], [data-id], [data-chameleon-result-urn], [data-entity-urn]'
+    '[data-urn],[data-id],[data-chameleon-result-urn],[data-entity-urn],[data-occludable-entity-urn]'
   );
   if (ancestor) {
     return (
       ancestor.getAttribute('data-urn') ||
       ancestor.getAttribute('data-id') ||
       ancestor.getAttribute('data-chameleon-result-urn') ||
-      ancestor.getAttribute('data-entity-urn')
+      ancestor.getAttribute('data-entity-urn') ||
+      ancestor.getAttribute('data-occludable-entity-urn')
     );
   }
 
@@ -459,7 +575,7 @@ function extractPostId(post) {
 
   // Link-based fallback — unencoded URNs in href (most reliable on content-search pages)
   const urnLink = post.querySelector(
-    'a[href*="urn:li:activity:"], a[href*="urn:li:ugcPost:"], a[href*="urn:li:share:"]'
+    'a[href*="urn:li:activity:"],a[href*="urn:li:ugcPost:"],a[href*="urn:li:share:"]'
   );
   if (urnLink) return urnLink.href.split('?')[0];
 
@@ -469,7 +585,34 @@ function extractPostId(post) {
     post.querySelector('a[href*="/posts/"]') ||
     post.querySelector('a[href*="/activity-"]') ||
     post.querySelector('a[href*="urn%3Ali%3A"]');
-  return link ? link.href.split('?')[0] : null;
+  if (link) return link.href.split('?')[0];
+
+  // Scan ALL data-* attributes on this element and its close ancestors
+  // for any value containing a LinkedIn URN pattern (covers undocumented attributes)
+  const scanTargets = [post, post.parentElement, post.parentElement?.parentElement].filter(Boolean);
+  for (const el of scanTargets) {
+    for (const attr of (el.attributes || [])) {
+      const v = attr.value;
+      if (v && (v.includes(':activity:') || v.includes(':ugcPost:') || v.includes(':share:'))) {
+        return v;
+      }
+    }
+  }
+
+  // Absolute last resort: stable synthetic ID from author slug + text fingerprint
+  // Ensures we never skip a post just because LinkedIn changed their DOM attributes.
+  const authorLink = post.querySelector('a[href*="/in/"]');
+  if (authorLink) {
+    try {
+      const authorSlug = new URL(authorLink.href, location.origin).pathname.split('/')[2] || 'unknown';
+      const snippet = (post.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+      const hash = [...snippet].reduce((h, c) => (Math.imul(31, h) + c.charCodeAt(0)) | 0, 0)
+        .toString(16).replace('-', 'n');
+      return `synthetic:${authorSlug}:${hash}`;
+    } catch (_) { /* ignore URL parse errors */ }
+  }
+
+  return null;
 }
 
 function extractPostUrl(post) {
@@ -514,10 +657,13 @@ async function hasLikedPost(postId) {
 async function likePost(post) {
   const btn =
     post.querySelector('[data-test-id="like-button"]') ||
-    post.querySelector('button[aria-label*="Like"]') ||
-    post.querySelector('button[aria-label*="React"]') ||
+    post.querySelector('[data-control-name="like"]') ||
+    post.querySelector('button[aria-label*="Like" i]') ||
+    post.querySelector('button[aria-label*="React" i]') ||
+    post.querySelector('button[aria-label*="Reagir" i]') ||
+    post.querySelector('button[aria-label*="Curtir" i]') ||
     Array.from(post.querySelectorAll('button')).find(
-      b => /^(like|react)/i.test((b.getAttribute('aria-label') || b.textContent).trim())
+      b => /^(like|react|reagir|curtir)/i.test((b.getAttribute('aria-label') || b.textContent).trim())
     );
   if (!btn) { console.log('[Post Engager] likePost: no like button found'); return false; }
   if (btn.getAttribute('aria-pressed') === 'true') { console.log('[Post Engager] likePost: already liked'); return false; }
@@ -529,10 +675,12 @@ async function likePost(post) {
 
 async function commentOnPost(post, templates = COMMENT_TEMPLATES) {
   const commentBtn =
-    post.querySelector('button[aria-label*="Comment"]') ||
-    post.querySelector('button[aria-label*="comment"]') ||
+    post.querySelector('button[aria-label*="Comment" i]') ||
+    post.querySelector('button[aria-label*="Comentar" i]') ||
+    post.querySelector('[data-control-name="comment"]') ||
+    post.querySelector('button[data-test-id*="comment"]') ||
     Array.from(post.querySelectorAll('button')).find(
-      b => /^comment$/i.test(b.textContent.trim())
+      b => /^(comment|comentar)$/i.test(b.textContent.trim())
     );
   if (!commentBtn) {
     console.log('[Post Engager] commentOnPost: no comment button found');
@@ -540,18 +688,23 @@ async function commentOnPost(post, templates = COMMENT_TEMPLATES) {
   }
 
   await humanClick(commentBtn);
-  await randomWait(1500, 3500);
+  // Wait for the comment box to animate open (LinkedIn uses CSS transitions)
+  await randomWait(2500, 4500);
 
   const commentBox =
     post.querySelector('.ql-editor[data-placeholder]') ||
     document.querySelector('.comments-comment-texteditor .ql-editor') ||
     document.querySelector('.comments-comment-box__text-editor .ql-editor') ||
-    document.querySelector('[contenteditable="true"][data-placeholder*="omment"]') ||
-    document.querySelector('.comments-comment-box [contenteditable="true"]');
+    document.querySelector('[contenteditable="true"][data-placeholder*="omment" i]') ||
+    document.querySelector('[contenteditable="true"][data-placeholder*="omentár" i]') ||
+    document.querySelector('.comments-comment-box [contenteditable="true"]') ||
+    document.querySelector('[role="textbox"][contenteditable="true"]');
 
   if (!commentBox) {
+    // If the comment box didn't appear, the click may have navigated to the post page.
+    // Log and bail — the post URL is already registered via logLink for manual review.
     console.warn('[Post Engager] commentOnPost: comment box not found after click');
-    await contentLog('⚠ comment box not found — may be a JS timing issue', 'warn');
+    await contentLog('⚠ comment box not found after click — post may have opened a modal or navigated', 'warn');
     return false;
   }
 
@@ -571,8 +724,10 @@ async function commentOnPost(post, templates = COMMENT_TEMPLATES) {
     document.querySelector('.comments-comment-box__submit-button--cr') ||
     document.querySelector('.comments-comment-box .artdeco-button--primary') ||
     document.querySelector('button[data-control-name="submit-post"]') ||
-    Array.from(document.querySelectorAll('.comments-comment-box button')).find(
-      b => /^post$/i.test(b.textContent.trim()) || /submit/i.test(b.getAttribute('aria-label') || '')
+    document.querySelector('button[data-control-name="comment.comment"]') ||
+    Array.from(document.querySelectorAll('.comments-comment-box button, [role="dialog"] button')).find(
+      b => /^(post|publicar|postar|enviar)$/i.test(b.textContent.trim()) ||
+           /submit/i.test(b.getAttribute('aria-label') || '')
     );
 
   if (!submitBtn) {

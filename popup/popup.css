@@ -263,6 +263,37 @@ footer a:hover {
   margin-top: 8px;
 }
 
+.comment-post-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.input-url {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 11px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-text);
+  min-width: 0;
+}
+
+.input-url:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.comment-post-status {
+  font-size: 11px;
+  margin-top: 6px;
+  min-height: 14px;
+}
+
+.comment-post-status--success { color: var(--color-success, #4caf50); }
+.comment-post-status--error   { color: var(--color-error,   #e53935); }
+
 /* ─── Live log ───────────────────────────────────────────────────────────── */
 
 .live-log {

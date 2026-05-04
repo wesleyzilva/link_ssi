@@ -274,6 +274,8 @@ const CONTENT_SEARCH_EXPRESSIONS = [
   'project manager',
   'agile manager',
   'manager project',
+  'tech recruiter experian',
+  'tech recruiter information technology experian',
 ];
 
 // People-search URLs for "Localizar as pessoas certas" SSI pillar — view-only browse
@@ -294,6 +296,10 @@ const PEOPLE_SEARCH_URLS = [
   'https://www.linkedin.com/search/results/people/?keywords=Tech%20Recruiter%20Information%20Technology&origin=FACETED_SEARCH&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22102713980%22%2C%22101174742%22%2C%22101165590%22%2C%22104738515%22%2C%2290009496%22%5D&serviceCategory=%5B%224725%22%5D&profileLanguage=%5B%22en%22%5D',
   // Tech Recruiter IT — US/CA/UK/AU/India/Singapore, IT consulting service category, English
   'https://www.linkedin.com/search/results/people/?keywords=Tech%20Recruiter%20Information%20Technology&origin=FACETED_SEARCH&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22102713980%22%2C%22101165590%22%2C%22101174742%22%2C%2290009496%22%2C%22104738515%22%5D&serviceCategory=%5B%2250342%22%5D&profileLanguage=%5B%22en%22%5D',
+  // tech recruiter experian — US, Canada, 90009496, 101739942, 104738515, Netherlands, Germany (user-validated geos)
+  'https://www.linkedin.com/search/results/people/?keywords=tech%20recruiter%20experian&origin=FACETED_SEARCH&geoUrn=%5B%22103644278%22%2C%22102713980%22%2C%2290009496%22%2C%22101739942%22%2C%22104738515%22%2C%22102890883%22%2C%22102454443%22%5D&network=%5B%22S%22%2C%22O%22%5D',
+  // tech recruiter experian — same geos, with Tech/IT industry filter
+  'https://www.linkedin.com/search/results/people/?keywords=tech%20recruiter%20experian&origin=FACETED_SEARCH&geoUrn=%5B%22103644278%22%2C%22102713980%22%2C%2290009496%22%2C%22101739942%22%2C%22104738515%22%2C%22102890883%22%2C%22102454443%22%5D&network=%5B%22S%22%2C%22O%22%5D&f_I=%5B%226%22%5D',
 ];
 
 /**
@@ -387,29 +393,38 @@ const RECRUITER_SEARCH_POOL = {
 };
 
 async function buildSearchUrl(targetWindow) {
-  const storageKey = `recruiterSearchIndex_${targetWindow}`;
-  const stored = await chrome.storage.local.get(storageKey);
-  const idx = stored[storageKey] || 0;
+  const counterKey = `recruiterCounter_${targetWindow}`;
+  const stored = await chrome.storage.local.get(counterKey);
+  const counter = stored[counterKey] || 0;
 
   const pool = RECRUITER_SEARCH_POOL[targetWindow] || RECRUITER_SEARCH_POOL.US_EU;
-  const keyword = pool[idx % pool.length];
-  const keywords = encodeURIComponent(keyword);
+  // Each keyword spans 10 pages before rotating to the next
+  const keywordIdx = Math.floor(counter / 10) % pool.length;
+  const page       = (counter % 10) + 1;          // 1 – 10
+  const keyword    = pool[keywordIdx];
+  const keywords   = encodeURIComponent(keyword);
 
-  // Advance the index for the next run
-  await chrome.storage.local.set({ [storageKey]: (idx + 1) % pool.length });
+  await chrome.storage.local.set({ [counterKey]: counter + 1 });
   console.log(
-    `[SSI Optimizer] Recruiter search keyword ${(idx % pool.length) + 1}/${pool.length}: "${keyword}" | window: ${targetWindow}`
+    `[SSI Optimizer] Recruiter search "${keyword}" page ${page}/10` +
+    ` (keyword ${keywordIdx + 1}/${pool.length}) | window: ${targetWindow}`
   );
 
+  // Expanded geo list validated by the user across pages 1-10
   const geoMap = {
-    US_EU: '103644278,101165590',   // USA + United Kingdom URNs
-    APAC: '102257491,101452733',    // Australia + Singapore URNs
+    // USA, UK, Canada, 90009496, 101739942, 104738515, Netherlands, Germany
+    US_EU: '%5B%22103644278%22%2C%22101165590%22%2C%22102713980%22%2C%2290009496%22%2C%22101739942%22%2C%22104738515%22%2C%22102890883%22%2C%22102454443%22%5D',
+    APAC:  '%5B%22102257491%22%2C%22101452733%22%5D',   // Australia + Singapore
   };
-  const geo = geoMap[targetWindow] || geoMap.US_EU;
+  const geo      = geoMap[targetWindow] || geoMap.US_EU;
+  const pagePart = page > 1 ? `&page=${page}` : '';
   return (
     `https://www.linkedin.com/search/results/people/?keywords=${keywords}` +
-    `&geoUrn=%5B${geo}%5D` +
-    `&network=%5B%22S%22%2C%22O%22%5D`
+    `&network=%5B%22S%22%2C%22O%22%5D` +
+    `&geoUrn=${geo}` +
+    `&spellCorrectionEnabled=true` +
+    `&prioritizeMessage=false` +
+    pagePart
   );
 }
 
@@ -584,6 +599,23 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         await log(`[EXPORT_LOGS] error: ${err.message}`, 'error');
         sendResponse({ error: err.message });
       });
+    return true;
+  }
+
+  if (message.action === 'COMMENT_POST') {
+    const { postUrl, commentTemplate } = message;
+    if (!postUrl || !postUrl.startsWith('https://www.linkedin.com/')) {
+      sendResponse({ error: 'Invalid LinkedIn URL' });
+      return true;
+    }
+    log(`[Manual] Comment queued for: ${postUrl}`, 'warn').then(async () => {
+      await openTabAndWait(postUrl, 'post-engager', { singlePost: true, commentTemplate: commentTemplate || null });
+      await log(`[Manual] Comment task complete for: ${postUrl}`, 'success');
+      sendResponse({ done: true });
+    }).catch(async (err) => {
+      await log(`[Manual] COMMENT_POST error: ${err.message}`, 'error');
+      sendResponse({ error: err.message });
+    });
     return true;
   }
 });
