@@ -350,6 +350,9 @@ function trySendStart(tabId, task, payload, attempt, done, doneSuccess) {
       }
       // Content script received START and called sendResponse — task complete
       if (doneSuccess) doneSuccess(); else done();
+    });
+  }, wait);
+}
 
 /**
  * Targeted content-search expressions for Wesley's profile:
