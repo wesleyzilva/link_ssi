@@ -269,6 +269,8 @@ const CONTENT_SEARCH_EXPRESSIONS = [
   'product delivery latam',
   'agile delivery brazil',
   'scrum master latam',
+  'remote project manager jobs',
+  'remote project manager jobs latam',
 ];
 
 // People-search URLs for "Localizar as pessoas certas" SSI pillar — view-only browse
