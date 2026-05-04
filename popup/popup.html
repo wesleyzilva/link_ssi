@@ -1,112 +1,164 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SSI Optimizer</title>
-  <link rel="stylesheet" href="popup.css" />
-</head>
-<body>
-  <header>
-    <h1>SSI Optimizer</h1>
-    <div class="header-actions">
-      <span id="status-badge" class="badge">–</span>
-      <button id="btn-run-now" class="btn btn--primary" title="Run full sequence now">▶ Run Now</button>
-    </div>
-  </header>
-
-  <section class="ssi-scores">
-    <div class="score-main">
-      <span class="label">Total SSI</span>
-      <span id="score-total" class="value-large">–</span>
-      <span class="max">/100</span>
-    </div>
-    <div class="score-pillars">
-      <div class="pillar">
-        <span class="pillar-label">Brand</span>
-        <span id="score-brand" class="pillar-value">–</span>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SSI Optimizer</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <h1>SSI Optimizer</h1>
+      <div class="header-actions">
+        <span id="status-badge" class="badge">–</span>
+        <button
+          id="btn-run-now"
+          class="btn btn--primary"
+          title="Run full sequence now"
+        >
+          ▶ Run Now
+        </button>
       </div>
-      <div class="pillar">
-        <span class="pillar-label">People</span>
-        <span id="score-people" class="pillar-value">–</span>
+    </header>
+
+    <section class="ssi-scores">
+      <div class="score-main">
+        <span class="label">Total SSI</span>
+        <span id="score-total" class="value-large">–</span>
+        <span class="max">/100</span>
       </div>
-      <div class="pillar">
-        <span class="pillar-label">Insights</span>
-        <span id="score-insights" class="pillar-value">–</span>
+      <div class="score-pillars">
+        <div class="pillar">
+          <span class="pillar-label">Brand</span>
+          <span id="score-brand" class="pillar-value">–</span>
+        </div>
+        <div class="pillar">
+          <span class="pillar-label">People</span>
+          <span id="score-people" class="pillar-value">–</span>
+        </div>
+        <div class="pillar">
+          <span class="pillar-label">Insights</span>
+          <span id="score-insights" class="pillar-value">–</span>
+        </div>
+        <div class="pillar">
+          <span class="pillar-label">Relationships</span>
+          <span id="score-relationships" class="pillar-value">–</span>
+        </div>
       </div>
-      <div class="pillar">
-        <span class="pillar-label">Relationships</span>
-        <span id="score-relationships" class="pillar-value">–</span>
+    </section>
+
+    <section class="activity-log">
+      <h2>Last Session</h2>
+      <table>
+        <tbody>
+          <tr>
+            <td>Day cycle</td>
+            <td id="log-day-cycle">–</td>
+          </tr>
+          <tr>
+            <td>Last keyword</td>
+            <td id="log-last-expr" title="">–</td>
+          </tr>
+          <tr>
+            <td>SSI captured</td>
+            <td id="log-ssi-time">–</td>
+          </tr>
+          <tr>
+            <td>Connections sent</td>
+            <td id="log-connections">–</td>
+          </tr>
+          <tr>
+            <td>Likes given</td>
+            <td id="log-likes">–</td>
+          </tr>
+          <tr>
+            <td>Comments made</td>
+            <td id="log-comments">–</td>
+          </tr>
+          <tr>
+            <td>Relationships touched</td>
+            <td id="log-relationships">–</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="analytics">
+      <h2>Analytics</h2>
+      <table>
+        <tbody>
+          <tr>
+            <td>Acceptance rate</td>
+            <td id="analytics-acceptance">–</td>
+          </tr>
+          <tr>
+            <td>Accepted / Sent</td>
+            <td id="analytics-accepted-sent">–</td>
+          </tr>
+          <tr>
+            <td>Follow-ups sent</td>
+            <td id="analytics-followups">–</td>
+          </tr>
+          <tr>
+            <td>Pending follow-up</td>
+            <td id="analytics-followup-pending">–</td>
+          </tr>
+          <tr>
+            <td>Weakest SSI pillar</td>
+            <td id="analytics-weakest">–</td>
+          </tr>
+          <tr>
+            <td>SSI 7-day trend</td>
+            <td id="analytics-ssi-trend">–</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="controls">
+      <h2>Manual Triggers</h2>
+      <div class="controls-grid">
+        <button class="btn btn--task" data-task="ssi-monitor">📊 SSI</button>
+        <button class="btn btn--task" data-task="recruiter-prospector">
+          🤝 Prospect
+        </button>
+        <button class="btn btn--task" data-task="post-engager">
+          💬 Engage
+        </button>
+        <button class="btn btn--task" data-task="relationship-builder">
+          🔔 Build
+        </button>
+        <button class="btn btn--task" data-task="connection-tracker">
+          🔍 Track
+        </button>
+        <button class="btn btn--task" data-task="follow-up-sender">
+          📩 Follow-up
+        </button>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="activity-log">
-    <h2>Last Session</h2>
-    <table>
-      <tbody>
-        <tr>
-          <td>Day cycle</td>
-          <td id="log-day-cycle">–</td>
-        </tr>
-        <tr>
-          <td>Last keyword</td>
-          <td id="log-last-expr" title="">–</td>
-        </tr>
-        <tr>
-          <td>SSI captured</td>
-          <td id="log-ssi-time">–</td>
-        </tr>
-        <tr>
-          <td>Connections sent</td>
-          <td id="log-connections">–</td>
-        </tr>
-        <tr>
-          <td>Likes given</td>
-          <td id="log-likes">–</td>
-        </tr>
-        <tr>
-          <td>Comments made</td>
-          <td id="log-comments">–</td>
-        </tr>
-        <tr>
-          <td>Relationships touched</td>
-          <td id="log-relationships">–</td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
+    <section class="next-run">
+      <h2>Next Scheduled Run</h2>
+      <p id="next-alarm">Loading…</p>
+    </section>
 
-  <section class="controls">
-    <h2>Manual Triggers</h2>
-    <div class="controls-grid">
-      <button class="btn btn--task" data-task="ssi-monitor">📊 SSI</button>
-      <button class="btn btn--task" data-task="recruiter-prospector">🤝 Prospect</button>
-      <button class="btn btn--task" data-task="post-engager">💬 Engage</button>
-      <button class="btn btn--task" data-task="relationship-builder">🔔 Build</button>
-    </div>
-  </section>
+    <section class="live-log">
+      <div class="live-log-header">
+        <h2>Activity Log</h2>
+        <button id="btn-clear-log" class="btn btn--ghost">Clear</button>
+      </div>
+      <div id="log-entries" class="log-entries">
+        <p class="log-empty">No activity recorded yet.</p>
+      </div>
+    </section>
 
-  <section class="next-run">
-    <h2>Next Scheduled Run</h2>
-    <p id="next-alarm">Loading…</p>
-  </section>
+    <footer>
+      <a href="https://www.linkedin.com/sales/ssi" target="_blank" id="open-ssi"
+        >Open SSI Dashboard ↗</a
+      >
+      <a href="#" id="open-history">📋 View Full History</a>
+    </footer>
 
-  <section class="live-log">
-    <div class="live-log-header">
-      <h2>Activity Log</h2>
-      <button id="btn-clear-log" class="btn btn--ghost">Clear</button>
-    </div>
-    <div id="log-entries" class="log-entries">
-      <p class="log-empty">No activity recorded yet.</p>
-    </div>
-  </section>
-
-  <footer>
-    <a href="https://www.linkedin.com/sales/ssi" target="_blank" id="open-ssi">Open SSI Dashboard ↗</a>
-    <a href="#" id="open-history">📋 View Full History</a>
-  </footer>
-
-  <script type="module" src="popup.js"></script>
-</body>
+    <script type="module" src="popup.js"></script>
+  </body>
 </html>

@@ -133,6 +133,12 @@ async function runDailySequence(targetWindow, dailyCap) {
     await log('Step 4/5 — Building relationships (birthdays + anniversaries)…');
     await openTabAndWait('https://www.linkedin.com/mynetwork/catch-up/birthday/', 'relationship-builder', { pageType: 'birthday' });
     await openTabAndWait('https://www.linkedin.com/mynetwork/catch-up/work_anniversaries/', 'relationship-builder', { pageType: 'anniversary' });
+
+    await log('Step 5/6 — Tracking accepted connections…');
+    await openTabAndWait('https://www.linkedin.com/mynetwork/invitation-manager/sent/', 'connection-tracker', {});
+
+    await log('Step 6/6 — Sending follow-up messages to accepted connections (≥24h)…');
+    await openTabAndWait('https://www.linkedin.com/messaging/', 'follow-up-sender', {});
   } catch (err) {
     await log(`Sequence error: ${err.message}`, 'error');
     return;
@@ -140,9 +146,9 @@ async function runDailySequence(targetWindow, dailyCap) {
 
   await log(`Daily routine complete. Cap used: ${dailyCap}. Window: ${targetWindow}.`, 'success');
   await exportAllCsvs();
-  chrome.notifications.create({
+  // Note: iconUrl omitted — chrome.notifications fails to download extension icons in MV3 service workers
+  chrome.notifications.create(`run-done-${Date.now()}`, {
     type: 'basic',
-    iconUrl: chrome.runtime.getURL('icons/icon48.png'),
     title: 'SSI Optimizer',
     message: `Daily routine complete. ${dailyCap} connections attempted. Window: ${targetWindow}.`,
   });
@@ -400,6 +406,7 @@ function downloadCsvFromSW(filename, headers, rows) {
 async function exportAllCsvs() {
   const data = await chrome.storage.local.get([
     'connections', 'postInteractions', 'relationships', 'activityLog', 'ssiScores', 'discoveredLinks',
+    'acceptedConnections', 'lastConnectionTracking', 'lastFollowUp',
   ]);
   const ts = new Date().toISOString().slice(0, 16).replace('T', '-').replace(':', '');
 
@@ -436,7 +443,14 @@ async function exportAllCsvs() {
     ['Date', 'Context', 'URL', 'Profile ID', 'Name'],
     links.map(l => [l.ts, l.context || '', l.url || '', l.profileId || '', l.name || '']));
 
-  await log(`Auto-CSV export complete — ${links.length} links, ${logs.length} log entries → Downloads/link_ssi/output/`, 'success');
+  // Accepted connections — for ROI tracking and outreach review
+  const accepted = [...(data.acceptedConnections || [])].sort((a, b) => new Date(b.acceptedAt) - new Date(a.acceptedAt));
+  downloadCsvFromSW(`accepted-connections-${ts}.csv`,
+    ['AcceptedAt', 'Name', 'Profile URL', 'Profile ID', 'SentAt', 'FollowUpSent', 'FollowUpAt'],
+    accepted.map(a => [a.acceptedAt, a.name || '', a.profileUrl || '', a.profileId || '',
+      a.sentAt || '', a.followUpSent ? 'yes' : 'no', a.followUpAt || '']));
+
+  await log(`Auto-CSV export complete — ${links.length} links, ${accepted.length} accepted, ${logs.length} log entries → Downloads/link_ssi/output/`, 'success');
 }
 
 // ─── Manual trigger (popup „Run Now“ / per-task buttons) ──────────────────────
@@ -445,6 +459,8 @@ const TASK_URLS = {
   'ssi-monitor': 'https://www.linkedin.com/sales/ssi',
   'post-engager': 'https://www.linkedin.com/feed/',
   'relationship-builder': 'https://www.linkedin.com/mynetwork/catch-up/birthday/',
+  'connection-tracker': 'https://www.linkedin.com/mynetwork/invitation-manager/sent/',
+  'follow-up-sender': 'https://www.linkedin.com/messaging/',
 };
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
