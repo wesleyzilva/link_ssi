@@ -81,6 +81,13 @@ async function buildRelationships() {
   let touched = 0;
   const cards = await waitForElements(getNetworkCards, 25000);
 
+  if (!cards.length) {
+    const btns = Array.from(document.querySelectorAll('button')).slice(0, 8)
+      .map(b => `"${b.textContent.trim().slice(0, 30)}" aria="${(b.getAttribute('aria-label') || '').slice(0, 50)}"`)
+      .join(' | ');
+    await contentLog(`[Diag] 0 cards found | page:${PAGE_TYPE} title:"${document.title.slice(0, 60)}" | btns: ${btns}`, 'warn');
+  }
+
   for (const card of cards) {
     if (touched >= SESSION_CAP) break;
 
@@ -107,6 +114,10 @@ async function buildRelationships() {
                                NEW_JOB_MESSAGES;
     const chosen   = messages[Math.floor(Math.random() * messages.length)];
     const success  = await sendMessage(card, [chosen]);
+
+    if (!success) {
+      await contentLog(`[Diag] sendMessage failed | ${profileUrl || profileId} | ${name} — ${type}`, 'warn');
+    }
 
     if (success) {
       touched++;
@@ -248,14 +259,28 @@ async function isRecentlyTouched(profileId) {
 async function sendMessage(card, messages) {
   // On the catch-up page LinkedIn uses "Say happy birthday" or "Wish" buttons
   // On the standard mynetwork page it uses "Message"
+  // PT-BR equivalents: "Parabenizar", "Enviar mensagem", "Dizer parabéns", etc.
   const messageButton =
     card.querySelector('button[aria-label*="Message"]') ||
     card.querySelector('button[aria-label*="birthday"]') ||
     card.querySelector('button[aria-label*="Wish"]') ||
+    card.querySelector('button[aria-label*="Mensagem"]') ||
+    card.querySelector('button[aria-label*="aniversário"]') ||
+    card.querySelector('button[aria-label*="Parabenizar"]') ||
+    card.querySelector('button[aria-label*="Felicitar"]') ||
+    card.querySelector('button[aria-label*="parabéns"]') ||
+    card.querySelector('button[aria-label*="novo emprego"]') ||
+    card.querySelector('button[aria-label*="nova função"]') ||
     Array.from(card.querySelectorAll('button')).find(
-      b => /^(Message|Wish|Say happy birthday)$/i.test(b.textContent.trim())
+      b => /^(Message|Wish|Say happy birthday|Mensagem|Parabenizar|Felicitar|Dizer parab[eé]ns|Enviar mensagem|Dar os parab[eé]ns)$/i.test(b.textContent.trim())
     );
-  if (!messageButton) return false;
+  if (!messageButton) {
+    const btns = Array.from(card.querySelectorAll('button'))
+      .map(b => `"${b.textContent.trim().slice(0, 30)}" aria="${(b.getAttribute('aria-label') || '').slice(0, 50)}"`)
+      .join(' | ');
+    console.warn('[Relationship Builder] No message button found. Card buttons:', btns);
+    return false;
+  }
 
   await humanClick(messageButton);
   await randomWait(2000, 4000);
@@ -277,8 +302,10 @@ async function sendMessage(card, messages) {
   const sendButton =
     document.querySelector('.msg-form__send-button') ||
     document.querySelector('button[data-control-name="send-message"]') ||
+    document.querySelector('button[aria-label*="Send"]') ||
+    document.querySelector('button[aria-label*="Enviar"]') ||
     Array.from(document.querySelectorAll('button')).find(
-      b => /^send$/i.test(b.textContent.trim())
+      b => /^(send|enviar)$/i.test(b.textContent.trim())
     );
   if (!sendButton) return false;
 
