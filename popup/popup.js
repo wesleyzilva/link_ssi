@@ -6,13 +6,16 @@
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
-  await renderSSIScores();
-  await renderDayCycle();
-  await renderActivityLog();
-  await renderAnalytics();
-  await renderNextAlarm();
-  await renderLiveLog();
-  await renderPostQueue();
+  // Each render function is isolated so one failure never blocks the rest.
+  // wireButtons() MUST always run — broken buttons are worse than broken data.
+  const safeRun = (fn) => fn().catch(err => console.warn('[Popup]', err));
+  await safeRun(renderSSIScores);
+  await safeRun(renderDayCycle);
+  await safeRun(renderActivityLog);
+  await safeRun(renderAnalytics);
+  await safeRun(renderNextAlarm);
+  await safeRun(renderLiveLog);
+  await safeRun(renderPostQueue);
   wireButtons();
 });
 
@@ -175,21 +178,23 @@ async function renderPostQueue() {
 
 // ─── Next alarm ───────────────────────────────────────────────────────────────
 async function renderNextAlarm() {
-  const alarms = await chrome.alarms.getAll();
   const el = document.getElementById('next-alarm');
+  const alarms = await chrome.alarms.getAll();
 
   if (!alarms.length) {
-    // Auto-reschedule silently — service worker may have been killed by Chrome
-    try {
-      await chrome.runtime.sendMessage({ action: 'SCHEDULE_ALARMS' });
-    } catch { /* service worker restarting — alarms registered on wake */ }
-
     el.innerHTML =
       'No alarms found. <button id="btn-fix-alarms" style="margin-left:6px;padding:2px 8px;font-size:11px;cursor:pointer;">📅 Fix</button>';
-    document.getElementById('btn-fix-alarms')?.addEventListener('click', async () => {
+
+    const fixAlarms = async () => {
       try { await chrome.runtime.sendMessage({ action: 'SCHEDULE_ALARMS' }); } catch { /* ok */ }
+      // Give the service worker 800 ms to register the alarms before re-reading
+      await new Promise(r => setTimeout(r, 800));
       await renderNextAlarm();
-    });
+    };
+
+    document.getElementById('btn-fix-alarms')?.addEventListener('click', fixAlarms);
+    // Auto-attempt once in background without blocking UI
+    fixAlarms();
     return;
   }
 
