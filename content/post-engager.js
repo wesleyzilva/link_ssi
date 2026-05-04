@@ -199,6 +199,15 @@ async function engageWithPosts() {
       await scrollIntoViewAndPause(post);
       await readBeforeActing(post, 3000, 9000);
 
+      // ── 0. EXTRACT EMAILS (recruiter posts only) ──
+      if (isRecruiter) {
+        const emails = extractEmailsFromPost(post);
+        if (emails.length) {
+          await saveExtractedEmails(emails, postId, postUrl);
+          await contentLog(`📧 ${emails.length} email(s) extracted: ${emails.join(', ')} | ${postId}`, 'success');
+        }
+      }
+
       // ── 1. LIKE ──
       if (likesGiven < CAPS.likes && !alreadyLiked) {
         try {
@@ -307,6 +316,35 @@ async function saveInteraction(postId, postUrl, action) {
     await chrome.storage.local.set({ postInteractions: postInteractions.slice(-500) });
   } catch (e) {
     console.warn('[Post Engager][saveInteraction failed]', e);
+  }
+}
+
+// ─── Email extraction ─────────────────────────────────────────────────────────
+
+const EMAIL_RE = /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g;
+
+function extractEmailsFromPost(post) {
+  const text = post.textContent || '';
+  return [...new Set(text.match(EMAIL_RE) || [])];
+}
+
+async function saveExtractedEmails(emails, postId, postUrl) {
+  if (!emails.length) return;
+  try {
+    const { extractedEmails = [] } = await chrome.storage.local.get('extractedEmails');
+    for (const email of emails) {
+      if (!extractedEmails.some(r => r.email === email)) {
+        extractedEmails.push({
+          email,
+          postId: postId || '',
+          postUrl: postUrl || '',
+          foundAt: new Date().toISOString(),
+        });
+      }
+    }
+    await chrome.storage.local.set({ extractedEmails: extractedEmails.slice(-1000) });
+  } catch (e) {
+    console.warn('[Post Engager][saveExtractedEmails failed]', e);
   }
 }
 

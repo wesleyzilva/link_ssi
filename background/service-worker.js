@@ -271,6 +271,8 @@ const CONTENT_SEARCH_EXPRESSIONS = [
   'scrum master latam',
   'remote project manager jobs',
   'remote project manager jobs latam',
+  'project manager',
+  'agile manager',
 ];
 
 // People-search URLs for "Localizar as pessoas certas" SSI pillar — view-only browse
@@ -283,6 +285,10 @@ const PEOPLE_SEARCH_URLS = [
   'https://www.linkedin.com/search/results/people/?keywords=Engineering%20Manager%20LATAM&f_I=%5B%2296%22%2C%226%22%2C%224%22%5D',
   'https://www.linkedin.com/search/results/people/?keywords=IT%20recruitment%20technology%20brazil&f_I=%5B%2296%22%2C%226%22%2C%224%22%5D',
   'https://www.linkedin.com/search/results/people/?keywords=nearshore%20IT%20manager%20LATAM&f_I=%5B%2296%22%2C%226%22%2C%224%22%5D',
+  // Tech Recruiter IT — US + Canada + UK + Australia + Germany + Netherlands + Ireland + Brazil — 1st/2nd degree
+  'https://www.linkedin.com/search/results/people/?keywords=Tech%20Recruiter%20Information%20Technology&origin=FACETED_SEARCH&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22102713980%22%2C%22101165590%22%2C%22100364837%22%2C%22102454443%22%2C%22102890883%22%2C%22104738515%22%2C%22101174742%22%5D',
+  // Tech Recruiter IT — same geos, English-only profiles, staffing/recruiting service category
+  'https://www.linkedin.com/search/results/people/?keywords=Tech%20Recruiter%20Information%20Technology&origin=FACETED_SEARCH&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22102713980%22%2C%22101174742%22%2C%22101165590%22%2C%22100364837%22%2C%22102454443%22%2C%22102890883%22%2C%22104738515%22%5D&serviceCategory=%5B%224725%22%5D&profileLanguage=%5B%22en%22%5D',
 ];
 
 /**
@@ -452,7 +458,14 @@ async function exportAllCsvs() {
     accepted.map(a => [a.acceptedAt, a.name || '', a.profileUrl || '', a.profileId || '',
       a.sentAt || '', a.followUpSent ? 'yes' : 'no', a.followUpAt || '']));
 
-  await log(`Auto-CSV export complete — ${links.length} links, ${accepted.length} accepted, ${logs.length} log entries → Downloads/link_ssi/output/`, 'success');
+  // Extracted recruiter emails — harvested from post text by post-engager
+  const { extractedEmails = [] } = await chrome.storage.local.get('extractedEmails');
+  const emails = [...extractedEmails].sort((a, b) => new Date(b.foundAt) - new Date(a.foundAt));
+  downloadCsvFromSW(`extracted-emails-${ts}.csv`,
+    ['FoundAt', 'Email', 'Post URL', 'Post ID'],
+    emails.map(e => [e.foundAt, e.email, e.postUrl || '', e.postId || '']));
+
+  await log(`Auto-CSV export complete — ${links.length} links, ${accepted.length} accepted, ${emails.length} emails, ${logs.length} log entries → Downloads/link_ssi/output/`, 'success');
 }
 
 // ─── Manual trigger (popup „Run Now“ / per-task buttons) ──────────────────────
