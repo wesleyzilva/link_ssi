@@ -56,6 +56,11 @@
       "matches": ["https://www.linkedin.com/messaging/*"],
       "js": ["utils/human-mimicry.js", "content/follow-up-sender.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.linkedin.com/in/*"],
+      "js": ["utils/human-mimicry.js", "utils/db.js", "content/profile-connector.js"],
+      "run_at": "document_idle"
     }
   ],
 
