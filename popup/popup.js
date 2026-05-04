@@ -17,11 +17,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   await safeRun(renderIntervalSchedule);
   await safeRun(renderLiveLog);
   await safeRun(renderPostQueue);
+  await safeRun(renderRunNowButton);
   wireButtons();
 });
 
 // Auto-refresh when storage changes (e.g. a task just completed)
 chrome.storage.onChanged.addListener((changes) => {
+  if (changes.routineRunning || changes.lastSequenceDoneAt) renderRunNowButton();
   if (changes.specificPostQueue) renderPostQueue();
   if (changes.activityLog)      renderLiveLog();
   if (changes.lastSSI)          renderSSIScores();
@@ -283,23 +285,61 @@ async function renderLiveLog() {
   }).join('');
 }
 
+// ─── Run Now button state ─────────────────────────────────────────────────────
+
+async function renderRunNowButton() {
+  const { routineRunning, lastSequenceDoneAt } = await chrome.storage.local.get(['routineRunning', 'lastSequenceDoneAt']);
+
+  if (routineRunning) {
+    setRunNowState('running');
+    return;
+  }
+
+  const doneRecently = lastSequenceDoneAt &&
+    (Date.now() - new Date(lastSequenceDoneAt).getTime()) < 60_000;
+
+  if (doneRecently) {
+    setRunNowState('done');
+    const elapsed = Date.now() - new Date(lastSequenceDoneAt).getTime();
+    setTimeout(() => setRunNowState('idle'), Math.max(0, 60_000 - elapsed));
+    return;
+  }
+
+  setRunNowState('idle');
+}
+
+function setRunNowState(state) {
+  const btn = document.getElementById('btn-run-now');
+  btn.classList.remove('btn--danger', 'btn--running', 'btn--done');
+
+  if (state === 'running') {
+    btn.classList.add('btn--running');
+    btn.textContent = '⏳ Running…';
+    btn.disabled = true;
+  } else if (state === 'done') {
+    btn.classList.add('btn--done');
+    btn.textContent = '✓ Done';
+    btn.disabled = false;
+  } else {
+    btn.classList.add('btn--danger');
+    btn.textContent = '▶ Run Now';
+    btn.disabled = false;
+  }
+}
+
 // ─── Button wiring ────────────────────────────────────────────────────────────
 
 function wireButtons() {
   const runNow = document.getElementById('btn-run-now');
   runNow.addEventListener('click', async () => {
-    runNow.disabled = true;
-    runNow.textContent = 'Running…';
+    const { routineRunning } = await chrome.storage.local.get('routineRunning');
+    if (routineRunning) return; // already running — ignore click
+    setRunNowState('running');
     try {
       await chrome.runtime.sendMessage({ action: 'RUN_NOW' });
     } catch {
-      // Service worker may restart briefly; that's OK
+      // Service worker may restart briefly; that's OK — storage flag will sync
     }
-    // Re-enable after 5 s; the log will update via storage.onChanged
-    setTimeout(() => {
-      runNow.disabled = false;
-      runNow.textContent = '▶ Run Now';
-    }, 5000);
   });
 
   document.querySelectorAll('.btn--task').forEach((btn) => {

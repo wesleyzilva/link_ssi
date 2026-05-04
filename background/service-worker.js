@@ -179,6 +179,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
  * @param {number} dailyCap     - connection requests allowed today
  */
 async function runDailySequence(targetWindow, dailyCap) {
+  await chrome.storage.local.set({ routineRunning: true });
   try {
     await log('Step 1/6 — Capturing SSI scores…');
     await openTabAndWait('https://www.linkedin.com/sales/ssi', 'ssi-monitor', {});
@@ -211,10 +212,12 @@ async function runDailySequence(targetWindow, dailyCap) {
     await log('Step 6/6 — Sending follow-up messages to accepted connections (≥24h)…');
     await openTabAndWait('https://www.linkedin.com/messaging/', 'follow-up-sender', {});
   } catch (err) {
+    await chrome.storage.local.set({ routineRunning: false });
     await log(`Sequence error: ${err.message}`, 'error');
     return;
   }
 
+  await chrome.storage.local.set({ routineRunning: false, lastSequenceDoneAt: new Date().toISOString() });
   await log(`Daily routine complete. Cap used: ${dailyCap}. Window: ${targetWindow}.`, 'success');
   await exportAllCsvs();
   // Note: iconUrl omitted — chrome.notifications fails to download extension icons in MV3 service workers
@@ -682,6 +685,11 @@ const TASK_URLS = {
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action === 'RUN_NOW') {
     getDailyConnectionCap().then(async (cap) => {
+      const { routineRunning } = await chrome.storage.local.get('routineRunning');
+      if (routineRunning) {
+        sendResponse({ alreadyRunning: true });
+        return;
+      }
       await log(`[Manual] Full sequence triggered. Cap today: ${cap}.`, 'warn');
       runDailySequence(TARGET_WINDOWS.US_EU, cap)
         .then(() => advanceDayCycle())

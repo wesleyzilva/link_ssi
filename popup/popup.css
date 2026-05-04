@@ -256,6 +256,28 @@ footer a:hover {
 
 .btn--primary:hover:not(:disabled) { opacity: 0.85; }
 
+.btn--danger {
+  background: #dc2626;
+  color: #fff;
+  padding: 5px 10px;
+}
+
+.btn--danger:hover:not(:disabled) { opacity: 0.85; }
+
+.btn--running {
+  background: #ea580c;
+  color: #fff;
+  padding: 5px 10px;
+}
+
+.btn--done {
+  background: #16a34a;
+  color: #fff;
+  padding: 5px 10px;
+}
+
+.btn--done:hover:not(:disabled) { opacity: 0.85; }
+
 .btn--task {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
