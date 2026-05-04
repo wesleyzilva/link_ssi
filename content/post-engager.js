@@ -1,69 +1,117 @@
 /**
- * post-engager.js — Content script for linkedin.com/feed/ and linkedin.com/search/results/content/
+ * post-engager.js — Content script for feed + content-search pages
  *
- * Strategically engages with posts to maximise SSI "Engage with Insights" score.
- * When opened via a targeted content-search URL, comments signal Wesley as a
- * senior IT Manager / Project Manager available for global/LATAM roles.
+ * Goals (in priority order):
+ *   1. Find posts by Tech Recruiters with job openings → comment "Let's connect! portfolio_url"
+ *   2. Like posts (SSI: Engage with Insights)
+ *   3. Follow post authors (SSI signal, no connection request sent here)
+ *   4. Register ALL post links found for later validation
+ *   5. Log EVERYTHING — every action, every error, every link encountered
  *
  * Priority tiers by comment count:
- *   HIGH    : 0–10 comments  — maximum SSI impact, low noise for the author
- *   MEDIUM  : 11–30 comments — moderate engagement value
- *   SKIP    : 50+ comments   — diminishing returns; post is already viral
+ *   HIGH    : 0–15 comments  — maximum SSI impact
+ *   MEDIUM  : 16–40 comments — moderate
+ *   SKIP    : 41+ comments   — viral, skip comment
  *
- * Session cap: 5 likes + 2 meaningful comments per run.
- * Anti-duplication: every post ID is stored in chrome.storage.local after interaction.
+ * Session caps (per run): likes 8 | comments 4 | follows 6
+ * Anti-duplication: post IDs stored in chrome.storage.local
+ * Human-mimicry: all actions use randomWait + humanClick + readBeforeActing
  */
 
-// utils/human-mimicry.js and utils/db.js are loaded before this script by the manifest
+// utils/human-mimicry.js and utils/db.js injected by manifest before this script
 
-// ─── Activity logger (inline — content scripts cannot use ES modules) ────────
+// ─── Logger ──────────────────────────────────────────────────────────────────
+
 async function contentLog(msg, level = 'info') {
+  const entry = { ts: new Date().toISOString(), level, script: 'post-engager', msg };
+  console[level === 'error' ? 'error' : level === 'warn' ? 'warn' : 'log']('[Post Engager]', msg);
   try {
     const { activityLog = [] } = await chrome.storage.local.get('activityLog');
-    activityLog.push({ ts: new Date().toISOString(), level, msg });
-    await chrome.storage.local.set({ activityLog: activityLog.slice(-300) });
-  } catch (e) { console.warn('[contentLog]', e); }
+    activityLog.push(entry);
+    await chrome.storage.local.set({ activityLog: activityLog.slice(-500) });
+  } catch (e) { console.warn('[Post Engager][contentLog failed]', e); }
 }
 
-const CAPS = { likes: 5, comments: 3, follows: 10 };
+async function logLink(postUrl, context) {
+  try {
+    const entry = { ts: new Date().toISOString(), url: postUrl, context };
+    const { discoveredLinks = [] } = await chrome.storage.local.get('discoveredLinks');
+    discoveredLinks.push(entry);
+    await chrome.storage.local.set({ discoveredLinks: discoveredLinks.slice(-1000) });
+    await contentLog(`🔗 link registered | ${context} | ${postUrl}`);
+  } catch (e) { console.warn('[Post Engager][logLink failed]', e); }
+}
 
-/**
- * Comment templates written for posts about PM/Delivery/Agile/LATAM topics.
- * Each naturally positions Wesley as a senior IT Manager open to global roles.
- * Rotate randomly so comments never look templated to LinkedIn's classifiers.
- */
+// ─── Caps ─────────────────────────────────────────────────────────────────────
+
+const CAPS = { likes: 8, comments: 4, follows: 6 };
+
+// ─── Recruiter / job-post detection ──────────────────────────────────────────
+
+const RECRUITER_KEYWORDS = [
+  'recruiter', 'talent acquisition', 'head of talent', 'ta manager',
+  'hr manager', 'people & culture', 'people ops', 'hiring manager',
+  'technical recruiter', 'engineering recruiter',
+];
+
+const JOB_KEYWORDS = [
+  'we are hiring', "we're hiring", 'open role', 'job opening', 'new opportunity',
+  'looking for', 'we have an opening', 'apply now', 'join our team',
+  'remote opportunity', '#hiring', '#novasvaga', '#job', '#career',
+];
+
+function isRecruiterPost(post) {
+  const text = (post.textContent || '').toLowerCase();
+  const authorTitle = (
+    post.querySelector('.update-components-actor__description, .artdeco-entity-lockup__subtitle')
+      ?.textContent || ''
+  ).toLowerCase();
+
+  const hasRecruiterTitle = RECRUITER_KEYWORDS.some(kw => authorTitle.includes(kw));
+  const hasJobKeyword = JOB_KEYWORDS.some(kw => text.includes(kw));
+
+  return hasRecruiterTitle || hasJobKeyword;
+}
+
+// ─── Comment templates (short, direct, no emojis that trigger spam filters) ──
+
 const COMMENT_TEMPLATES = [
-  "Great perspective on this. The real challenge for distributed tech teams is maintaining this consistency at scale — especially across LATAM time zones. Let's connect! 🔗 https://wesleyzilva.github.io/portfolioNearshoreWesIA/ | https://www.linkedin.com/in/wesleyzilva/",
-  "This aligns with what I’ve observed leading engineering teams across LATAM. The cultural alignment piece is often underestimated in remote setups. Let’s connect! 🔗 https://wesleyzilva.github.io/portfolioNearshoreWesIA/ | https://www.linkedin.com/in/wesleyzilva/",
-  "Solid breakdown. From an IT Management standpoint (14+ yrs, remote teams, M&A), the ROI case becomes even clearer when you factor in attrition costs. Let’s connect! 🔗 https://www.linkedin.com/in/wesleyzilva/",
-  "This resonates — especially for companies expanding into LATAM tech talent markets where this delivery pattern is most common. Let’s connect! 🔗 https://wesleyzilva.github.io/portfolioNearshoreWesIA/ | https://www.linkedin.com/in/wesleyzilva/",
-  "Really valuable insight. As an IT Manager based in Brazil with 14+ yrs leading remote engineering teams, I see this daily in Agile transformations. Let’s connect! 🔗 https://www.linkedin.com/in/wesleyzilva/",
-  "Exactly why Delivery Managers in LATAM need strong async frameworks — the overlap window with EU/US is tight. Curious how your team handles sprint ceremonies. Let’s connect! 🔗 https://wesleyzilva.github.io/portfolioNearshoreWesIA/",
-  "Nearshore teams in Brazil have been closing this gap fast. 14+ years of M&A and cross-border delivery taught me the blockers rarely come from the tech side. Let’s connect! 🔗 https://www.linkedin.com/in/wesleyzilva/",
-  "Agile at scale in distributed environments is where most frameworks break down. Happy to share what worked for us leading tech teams across time zones from Brazil. Let’s connect! 🔗 https://wesleyzilva.github.io/portfolioNearshoreWesIA/",
-  "The demand for bilingual Project Managers who can bridge LATAM talent pools with global delivery standards is real — and still undersupplied. Let’s connect! 🔗 https://www.linkedin.com/in/wesleyzilva/",
-  "Digital transformation initiatives stall when the PM layer can’t translate between business stakeholders and distributed engineering teams. Hard lesson from 14 yrs in IT. Let’s connect! 🔗 https://wesleyzilva.github.io/portfolioNearshoreWesIA/",
+  "Great opportunity! Let's connect 👉 https://wesleyzilva.github.io/portfolioNearshoreWesIA/",
+  "Really interesting — Let's connect! https://wesleyzilva.github.io/portfolioNearshoreWesIA/",
+  "Solid perspective. Let's connect! https://wesleyzilva.github.io/portfolioNearshoreWesIA/",
+  "This aligns with what I see across LATAM tech teams. Let's connect! https://wesleyzilva.github.io/portfolioNearshoreWesIA/",
+  "From 14+ yrs leading nearshore teams in Brazil, I agree entirely. Let's connect! https://wesleyzilva.github.io/portfolioNearshoreWesIA/",
+  "Exactly what distributed engineering teams face at scale. Let's connect! https://wesleyzilva.github.io/portfolioNearshoreWesIA/",
+  "Very relevant for LATAM delivery contexts. Let's connect! https://wesleyzilva.github.io/portfolioNearshoreWesIA/",
+  "The async/sync balance question is one every global team wrestles with. Let's connect! https://wesleyzilva.github.io/portfolioNearshoreWesIA/",
+  "Strong point on nearshore delivery. Happy to share context from Brazil. Let's connect! https://wesleyzilva.github.io/portfolioNearshoreWesIA/",
+  "Agile at scale across time zones is where most frameworks break. Let's connect! https://wesleyzilva.github.io/portfolioNearshoreWesIA/",
+];
+
+// Recruiter/hiring-post specific comment (shorter, more direct)
+const RECRUITER_COMMENT_TEMPLATES = [
+  "Let's connect! https://wesleyzilva.github.io/portfolioNearshoreWesIA/",
+  "Interested — Let's connect! https://wesleyzilva.github.io/portfolioNearshoreWesIA/",
 ];
 
 // ─── Message listener ────────────────────────────────────────────────────────
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action === 'START' && message.task === 'post-engager') {
-    engageWithPosts().then((result) => {
+    contentLog('▶ post-engager START message received').then(() =>
+      engageWithPosts()
+    ).then((result) => {
       sendResponse({ success: true, ...result });
     }).catch((error) => {
-      console.error('[Post Engager] Error:', error);
+      contentLog(`✗ post-engager fatal error: ${error.message}`, 'error');
       sendResponse({ success: false, error: error.message });
     });
     return true;
   }
 });
 
-// ─── Core logic ───────────────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/**
- * Polls a DOM query function until it returns at least one element, or times out.
- */
 async function waitForElements(queryFn, maxWait = 20000, interval = 2000) {
   const deadline = Date.now() + maxWait;
   while (Date.now() < deadline) {
@@ -74,182 +122,242 @@ async function waitForElements(queryFn, maxWait = 20000, interval = 2000) {
   return queryFn();
 }
 
-async function engageWithPosts() {
-  await contentLog(`▶ post-engager started | ${window.location.href}`);
-  await randomWait(4000, 8000); // initial wait for SPA render
+// ─── Core ─────────────────────────────────────────────────────────────────────
 
-  // Simulate a person arriving on the feed and reading before engaging
+async function engageWithPosts() {
+  await contentLog(`▶ post-engager started | url=${window.location.href}`);
+  await randomWait(4000, 8000);
+
   await simulatePageReading(randomInt(8000, 14000));
 
   let likesGiven = 0;
   let commentsMade = 0;
-  let followsGiven = 0;
+  let followsMade = 0;
+  let linksFound = 0;
   let scrollRounds = 0;
-  const MAX_SCROLL_ROUNDS = 5;
+  const MAX_SCROLL_ROUNDS = 8;
 
   while (
-    (likesGiven < CAPS.likes || commentsMade < CAPS.comments || followsGiven < CAPS.follows) &&
+    (likesGiven < CAPS.likes || commentsMade < CAPS.comments || followsMade < CAPS.follows) &&
     scrollRounds < MAX_SCROLL_ROUNDS
   ) {
-    const posts = await waitForElements(getFeedPosts, 15000);
+    let posts;
+    try {
+      posts = await waitForElements(getFeedPosts, 15000);
+    } catch (e) {
+      await contentLog(`✗ waitForElements error: ${e.message}`, 'error');
+      break;
+    }
+
+    if (!posts.length) {
+      await contentLog(`⚠ no posts found in round ${scrollRounds + 1}/${MAX_SCROLL_ROUNDS}`, 'warn');
+    }
 
     for (const post of posts) {
-      if (likesGiven >= CAPS.likes && commentsMade >= CAPS.comments && followsGiven >= CAPS.follows) break;
+      if (likesGiven >= CAPS.likes && commentsMade >= CAPS.comments && followsMade >= CAPS.follows) break;
 
-      const postId = extractPostId(post);
-      if (!postId) continue;
+      let postId, postUrl;
+      try {
+        postId  = extractPostId(post);
+        postUrl = extractPostUrl(post);
+      } catch (e) {
+        await contentLog(`✗ extractPostId/Url error: ${e.message}`, 'error');
+        continue;
+      }
 
-      // Independent per-action dedup checks
-      const alreadyLiked     = await hasInteractedWithPost(postId);
-      const alreadyCommented = await hasCommentedOnPostRecord(postId);
-      const authorId         = extractAuthorId(post);
-      const alreadyFollowed  = await hasFollowedAuthor(authorId);
+      if (!postId) {
+        await contentLog('⚠ post with no id found — skipped');
+        continue;
+      }
 
-      // Skip when all actions are exhausted for this post
-      const likeCapReached   = likesGiven >= CAPS.likes;
-      const commCapReached   = commentsMade >= CAPS.comments;
-      const followCapReached = followsGiven >= CAPS.follows;
-      if ((alreadyLiked || likeCapReached) && (alreadyCommented || commCapReached) && (alreadyFollowed || followCapReached)) continue;
+      // Register every link we find (for later human validation)
+      if (postUrl) {
+        await logLink(postUrl, 'discovered');
+        linksFound++;
+      }
 
+      const isRecruiter = isRecruiterPost(post);
       const commentCount = getCommentCount(post);
       const priority = getPriority(commentCount);
-      if (priority === 'SKIP') continue;
+
+      await contentLog(
+        `📌 post ${postId.slice(-18)} | recruiter=${isRecruiter} | comments=${commentCount} | priority=${priority} | url=${postUrl || 'none'}`
+      );
+
+      if (priority === 'SKIP' && !isRecruiter) continue;
+
+      // Dedup checks — both use postInteractions (no db.js dependency)
+      let alreadyLiked, alreadyCommented;
+      try {
+        alreadyLiked     = await hasLikedPost(postId);
+        alreadyCommented = await hasCommentedOnPostRecord(postId);
+      } catch (e) {
+        await contentLog(`✗ dedup check error for ${postId}: ${e.message}`, 'error');
+        continue;
+      }
 
       await scrollIntoViewAndPause(post);
-      // Simulate reading the post content before deciding to engage
-      await readBeforeActing(post, 4000, 10000);
+      await readBeforeActing(post, 3000, 9000);
 
-      // ── COMMENT — main priority, runs first on HIGH + MEDIUM posts ────────
-      if (commentsMade < CAPS.comments && !alreadyCommented) {
-        const commented = await commentOnPost(post);
-        if (commented) {
-          commentsMade++;
-          const postUrl = extractPostUrl(post);
-          await contentLog(`✓ commented | ${postUrl || postId} (${commentsMade}/${CAPS.comments})`, 'success');
-          const { postInteractions = [] } = await chrome.storage.local.get('postInteractions');
-          postInteractions.push({ postId, postUrl, action: 'comment', interactedAt: new Date().toISOString() });
-          await chrome.storage.local.set({ postInteractions: postInteractions.slice(-200) });
-          console.log(`[Post Engager] Commented on ${postId} (${commentsMade}/${CAPS.comments})`);
-          await randomWait(15000, 30000); // longer pause after commenting
-        }
-      }
-
-      // ── FOLLOW the post author ────────────────────────────────────────────
-      if (followsGiven < CAPS.follows && !alreadyFollowed) {
-        const { followed } = await followAuthor(post);
-        if (followed && authorId) {
-          followsGiven++;
-          const { followedAuthors = [] } = await chrome.storage.local.get('followedAuthors');
-          followedAuthors.push({ authorId, followedAt: new Date().toISOString() });
-          await chrome.storage.local.set({ followedAuthors: followedAuthors.slice(-500) });
-          await contentLog(`✓ followed | ${authorId} (${followsGiven}/${CAPS.follows})`, 'success');
-          console.log(`[Post Engager] Followed ${authorId} (${followsGiven}/${CAPS.follows})`);
-          await randomWait(3000, 7000);
-        }
-      }
-
-      // ── LIKE the post ─────────────────────────────────────────────────────
+      // ── 1. LIKE ──
       if (likesGiven < CAPS.likes && !alreadyLiked) {
-        const liked = await likePost(post);
-        if (liked) {
-          likesGiven++;
-          const postUrl = extractPostUrl(post);
-          await markPostAsInteracted(postId);
-          await contentLog(`✓ liked | ${postUrl || postId} (${likesGiven}/${CAPS.likes})`, 'success');
-          const { postInteractions = [] } = await chrome.storage.local.get('postInteractions');
-          postInteractions.push({ postId, postUrl, action: 'like', interactedAt: new Date().toISOString() });
-          await chrome.storage.local.set({ postInteractions: postInteractions.slice(-200) });
-          console.log(`[Post Engager] Liked post ${postId} (${likesGiven}/${CAPS.likes})`);
-          await randomWait(5000, 12000);
+        try {
+          const liked = await likePost(post);
+          if (liked) {
+            likesGiven++;
+            await saveInteraction(postId, postUrl, 'like');
+            await contentLog(`✓ LIKE | ${postUrl || postId} (${likesGiven}/${CAPS.likes})`, 'success');
+            await randomWait(5000, 12000);
+          } else {
+            await contentLog(`⚠ like button not found or already liked | ${postId}`, 'warn');
+          }
+        } catch (e) {
+          await contentLog(`✗ like error for ${postId}: ${e.message}`, 'error');
+        }
+      }
+
+      // ── 2. COMMENT — recruiter/job posts get priority, else HIGH only ──
+      const shouldComment = commentsMade < CAPS.comments && !alreadyCommented &&
+        (isRecruiter || priority === 'HIGH');
+      if (shouldComment) {
+        try {
+          const templates = isRecruiter ? RECRUITER_COMMENT_TEMPLATES : COMMENT_TEMPLATES;
+          const commented = await commentOnPost(post, templates);
+          if (commented) {
+            commentsMade++;
+            await saveInteraction(postId, postUrl, 'comment');
+            await contentLog(`✓ COMMENT | ${postUrl || postId} (${commentsMade}/${CAPS.comments})`, 'success');
+            if (postUrl) await logLink(postUrl, 'commented');
+            await randomWait(15000, 30000);
+          } else {
+            await contentLog(`⚠ comment failed (no box/submit) | ${postId}`, 'warn');
+          }
+        } catch (e) {
+          await contentLog(`✗ comment error for ${postId}: ${e.message}`, 'error');
+        }
+      }
+
+      // ── 3. FOLLOW author ──
+      if (followsMade < CAPS.follows) {
+        try {
+          const followed = await followPostAuthor(post);
+          if (followed) {
+            followsMade++;
+            await saveInteraction(postId, postUrl, 'follow');
+            await contentLog(`✓ FOLLOW | author of ${postUrl || postId} (${followsMade}/${CAPS.follows})`, 'success');
+            await randomWait(3000, 7000);
+          }
+        } catch (e) {
+          await contentLog(`✗ follow error for ${postId}: ${e.message}`, 'error');
         }
       }
     }
 
-    // Scroll for more posts
     randomScroll(800, 2000);
     await randomWait(3000, 6000);
     scrollRounds++;
+    await contentLog(`↓ scroll round ${scrollRounds}/${MAX_SCROLL_ROUNDS} | likes=${likesGiven} comments=${commentsMade} follows=${followsMade}`);
   }
 
-  await chrome.storage.local.set({
-    lastEngagement: {
-      likes: likesGiven,
-      comments: commentsMade,
-      follows: followsGiven,
-      runAt: new Date().toISOString(),
-    },
-  });
-  await contentLog(`■ post-engager done | ${commentsMade} comments / ${followsGiven} follows / ${likesGiven} likes`);
+  const summary = {
+    likes: likesGiven,
+    comments: commentsMade,
+    follows: followsMade,
+    linksFound,
+    runAt: new Date().toISOString(),
+    url: window.location.href,
+  };
 
-  return { likes: likesGiven, comments: commentsMade, follows: followsGiven };
+  try {
+    await chrome.storage.local.set({ lastEngagement: summary });
+  } catch (e) {
+    await contentLog(`✗ failed to save lastEngagement: ${e.message}`, 'error');
+  }
+
+  await contentLog(
+    `■ post-engager DONE | likes=${likesGiven}/${CAPS.likes} comments=${commentsMade}/${CAPS.comments} follows=${followsMade}/${CAPS.follows} linksFound=${linksFound}`,
+    'success'
+  );
+
+  // Export CSVs to output/ after every run (not just at day end)
+  try {
+    await chrome.runtime.sendMessage({ action: 'EXPORT_LOGS' });
+    await contentLog('📁 CSV export triggered → output/');
+  } catch (e) {
+    await contentLog(`⚠ CSV export trigger failed: ${e.message}`, 'warn');
+  }
+
+  return summary;
 }
 
-// ─── Priority classification ──────────────────────────────────────────────────
+// ─── Priority ─────────────────────────────────────────────────────────────────
 
 function getPriority(commentCount) {
-  if (commentCount <= 10) return 'HIGH';
-  if (commentCount <= 30) return 'MEDIUM';
+  if (commentCount <= 15) return 'HIGH';
+  if (commentCount <= 40) return 'MEDIUM';
   return 'SKIP';
+}
+
+// ─── Persistence helpers ──────────────────────────────────────────────────────
+
+async function saveInteraction(postId, postUrl, action) {
+  try {
+    const { postInteractions = [] } = await chrome.storage.local.get('postInteractions');
+    postInteractions.push({ postId, postUrl, action, interactedAt: new Date().toISOString() });
+    await chrome.storage.local.set({ postInteractions: postInteractions.slice(-500) });
+  } catch (e) {
+    console.warn('[Post Engager][saveInteraction failed]', e);
+  }
 }
 
 // ─── DOM helpers ──────────────────────────────────────────────────────────────
 
 function getFeedPosts() {
-  // Strategy 1: LinkedIn 2024-2026 feed — posts carry data-id with urn
-  const byUrn = Array.from(document.querySelectorAll(
+  const s1 = Array.from(document.querySelectorAll(
     'div[data-id*=":activity:"], div[data-id*=":ugcPost:"], div[data-id*=":share:"]'
   ));
-  if (byUrn.length) { console.log(`[Post Engager] Found ${byUrn.length} posts via data-id urn.`); return byUrn; }
+  if (s1.length) { console.log(`[Post Engager] ${s1.length} posts via data-id urn`); return s1; }
 
-  // Strategy 2: legacy class (still present in some LinkedIn themes)
-  const byClass = Array.from(document.querySelectorAll('.feed-shared-update-v2'));
-  if (byClass.length) { console.log(`[Post Engager] Found ${byClass.length} posts via .feed-shared-update-v2.`); return byClass; }
+  const s2 = Array.from(document.querySelectorAll('.feed-shared-update-v2'));
+  if (s2.length) { console.log(`[Post Engager] ${s2.length} posts via .feed-shared-update-v2`); return s2; }
 
-  // Strategy 3: content search results page — universal template container
-  const bySearch = Array.from(document.querySelectorAll(
-    '[data-view-name="search-entity-result-universal-template"], ' +
-    '.search-results-container .occludable-update, ' +
+  const s3 = Array.from(document.querySelectorAll(
+    '[data-view-name="search-entity-result-universal-template"],' +
+    '.search-results-container .occludable-update,' +
     '.entity-result[data-urn]'
   ));
-  if (bySearch.length) { console.log(`[Post Engager] Found ${bySearch.length} posts via search selectors.`); return bySearch; }
+  if (s3.length) { console.log(`[Post Engager] ${s3.length} posts via search selectors`); return s3; }
 
-  // Strategy 4: any element with a data-urn pointing to an activity/post
-  const byDataUrn = Array.from(document.querySelectorAll(
+  const s4 = Array.from(document.querySelectorAll(
     '[data-urn*=":activity:"], [data-urn*=":ugcPost:"], [data-urn*=":share:"]'
   ));
-  if (byDataUrn.length) { console.log(`[Post Engager] Found ${byDataUrn.length} posts via data-urn.`); return byDataUrn; }
+  if (s4.length) { console.log(`[Post Engager] ${s4.length} posts via data-urn`); return s4; }
 
-  // Strategy 5: broadest fallback — artdeco cards that are posts
-  const byArtdeco = Array.from(document.querySelectorAll(
+  const s5 = Array.from(document.querySelectorAll(
     '.occludable-update, .artdeco-card[data-id], .artdeco-card[data-urn]'
   ));
-  if (byArtdeco.length) { console.log(`[Post Engager] Found ${byArtdeco.length} posts via artdeco fallback.`); return byArtdeco; }
+  if (s5.length) { console.log(`[Post Engager] ${s5.length} posts via artdeco`); return s5; }
 
-  // Strategy 6: search/results/content — list items in search result containers (LinkedIn 2025)
-  const bySearchLi = Array.from(document.querySelectorAll(
-    'ul.reusable-search__entity-result-list > li, ' +
-    '.search-results-container li, ' +
+  const s6 = Array.from(document.querySelectorAll(
+    'ul.reusable-search__entity-result-list > li,' +
+    '.search-results-container li,' +
     'li.search-content-result__wrapper'
   )).filter(el => el.querySelector('[aria-label*="Like"], [data-urn], [data-id]'));
-  if (bySearchLi.length) { console.log(`[Post Engager] Found ${bySearchLi.length} posts via search-li fallback.`); return bySearchLi; }
+  if (s6.length) { console.log(`[Post Engager] ${s6.length} posts via search-li`); return s6; }
 
-  // Strategy 7: absolute broadest — any element with a reaction button
   const byReaction = Array.from(document.querySelectorAll(
-    '[data-reaction-type], [aria-label*="React"], ' +
     'button[aria-label*="Like"], button[aria-label*="Comment"]'
   )).map(btn => btn.closest('article, li, [data-id], [data-urn]') || btn.parentElement).filter(Boolean);
-  const uniqueContainers = [...new Set(byReaction)];
-  if (uniqueContainers.length) { console.log(`[Post Engager] Found ${uniqueContainers.length} posts via reaction-button fallback.`); return uniqueContainers; }
+  const unique = [...new Set(byReaction)];
+  if (unique.length) { console.log(`[Post Engager] ${unique.length} posts via reaction-button fallback`); return unique; }
 
-  console.warn('[Post Engager] All selectors failed. Page URL:', location.href);
+  console.warn('[Post Engager] ALL selectors failed. url=', location.href);
   return [];
 }
 
 function extractPostId(post) {
   const urn = post.getAttribute('data-urn') || post.getAttribute('data-id');
   if (urn) return urn;
-  // Fallback: derive a stable ID from the post's permalink URL so the post
-  // is still dedup-tracked even when the container has no data-urn/data-id.
   const link =
     post.querySelector('a[href*="/feed/update/"]') ||
     post.querySelector('a[href*="/posts/"]') ||
@@ -257,109 +365,100 @@ function extractPostId(post) {
   return link ? link.href.split('?')[0] : null;
 }
 
-/**
- * Checks chrome.storage.local to see if a COMMENT was already recorded for this post.
- * Used separately from hasInteractedWithPost (which tracks likes) so posts can be
- * commented on even if they were liked in a previous session.
- */
-async function hasCommentedOnPostRecord(postId) {
-  const { postInteractions = [] } = await chrome.storage.local.get('postInteractions');
-  return postInteractions.some(r => r.postId === postId && r.action === 'comment');
-}
-
 function extractPostUrl(post) {
-  // Standard permalink: timestamp anchor at the top of the post
-  const link = post.querySelector('a[href*="/feed/update/"]') ||
+  const link =
+    post.querySelector('a[href*="/feed/update/"]') ||
     post.querySelector('a[href*="/posts/"]') ||
     post.querySelector('a[href*="/activity-"]');
   return link ? link.href.split('?')[0] : null;
 }
 
 function getCommentCount(post) {
-  const countEl = post.querySelector('[data-test-id="social-actions__comments-count"]') ||
-    post.querySelector('.social-details-social-counts__comments button');
-  if (!countEl) return 0;
-  const text = countEl.textContent.trim();
-  const match = text.match(/(\d+)/);
-  return match ? parseInt(match[1], 10) : 0;
+  const el =
+    post.querySelector('[data-test-id="social-actions__comments-count"]') ||
+    post.querySelector('.social-details-social-counts__comments button') ||
+    post.querySelector('[aria-label*="comment"]');
+  if (!el) return 0;
+  const m = (el.textContent || '').trim().match(/(\d+)/);
+  return m ? parseInt(m[1], 10) : 0;
 }
 
-function extractAuthorId(post) {
-  const link =
-    post.querySelector('a[href*="/in/"][data-control-name="actor_container"]') ||
-    post.querySelector('a.app-aware-link[href*="/in/"]') ||
-    post.querySelector('a[href*="/in/"]');
-  if (!link) return null;
-  return link.href.split('?')[0].replace(/\/$/, '');
+// ─── Dedup helpers — single source of truth: postInteractions ───────────────
+
+/** Returns true if this post was already COMMENTED in any previous run. */
+async function hasCommentedOnPostRecord(postId) {
+  try {
+    const { postInteractions = [] } = await chrome.storage.local.get('postInteractions');
+    return postInteractions.some(r => r.postId === postId && r.action === 'comment');
+  } catch { return false; }
 }
 
-async function hasFollowedAuthor(authorId) {
-  if (!authorId) return false;
-  const { followedAuthors = [] } = await chrome.storage.local.get('followedAuthors');
-  return followedAuthors.some(r => r.authorId === authorId);
+/** Returns true if this post was already LIKED in any previous run. */
+async function hasLikedPost(postId) {
+  try {
+    const { postInteractions = [] } = await chrome.storage.local.get('postInteractions');
+    return postInteractions.some(r => r.postId === postId && r.action === 'like');
+  } catch { return false; }
 }
 
-async function followAuthor(post) {
-  // Follow button appears in the post header actor-card or as a secondary action
-  const followButton =
-    post.querySelector('button[aria-label*="Follow"]') ||
-    post.querySelector('button[data-control-name="follow"]') ||
-    post.querySelector('.follow-button:not(.is-following)') ||
-    Array.from(post.querySelectorAll('button')).find(
-      b => /^follow$/i.test((b.getAttribute('aria-label') || b.textContent).trim()) && !b.disabled
-    );
-  if (!followButton || followButton.disabled) return { followed: false };
-
-  await humanClick(followButton);
-  return { followed: true };
-}
+// ─── Like ─────────────────────────────────────────────────────────────────────
 
 async function likePost(post) {
-  const likeButton =
+  const btn =
     post.querySelector('[data-test-id="like-button"]') ||
     post.querySelector('button[aria-label*="Like"]') ||
     post.querySelector('button[aria-label*="React"]') ||
     Array.from(post.querySelectorAll('button')).find(
       b => /^(like|react)/i.test((b.getAttribute('aria-label') || b.textContent).trim())
     );
-  if (!likeButton || likeButton.getAttribute('aria-pressed') === 'true') return false;
-
-  await humanClick(likeButton);
+  if (!btn) { console.log('[Post Engager] likePost: no like button found'); return false; }
+  if (btn.getAttribute('aria-pressed') === 'true') { console.log('[Post Engager] likePost: already liked'); return false; }
+  await humanClick(btn);
   return true;
 }
 
-async function commentOnPost(post) {
-  const commentButton =
+// ─── Comment ──────────────────────────────────────────────────────────────────
+
+async function commentOnPost(post, templates = COMMENT_TEMPLATES) {
+  const commentBtn =
     post.querySelector('button[aria-label*="Comment"]') ||
     post.querySelector('button[aria-label*="comment"]') ||
     Array.from(post.querySelectorAll('button')).find(
       b => /^comment$/i.test(b.textContent.trim())
     );
-  if (!commentButton) return false;
+  if (!commentBtn) {
+    console.log('[Post Engager] commentOnPost: no comment button found');
+    return false;
+  }
 
-  await humanClick(commentButton);
-  await randomWait(1500, 3000);
+  await humanClick(commentBtn);
+  await randomWait(1500, 3500);
 
   const commentBox =
     post.querySelector('.ql-editor[data-placeholder]') ||
     document.querySelector('.comments-comment-texteditor .ql-editor') ||
     document.querySelector('.comments-comment-box__text-editor .ql-editor') ||
-    document.querySelector('[contenteditable="true"][data-placeholder*="comment"]') ||
-    document.querySelector('[contenteditable="true"][data-placeholder*="Comment"]') ||
+    document.querySelector('[contenteditable="true"][data-placeholder*="omment"]') ||
     document.querySelector('.comments-comment-box [contenteditable="true"]');
-  if (!commentBox) return false;
 
-  const template = COMMENT_TEMPLATES[Math.floor(Math.random() * COMMENT_TEMPLATES.length)];
+  if (!commentBox) {
+    console.warn('[Post Engager] commentOnPost: comment box not found after click');
+    await contentLog('⚠ comment box not found — may be a JS timing issue', 'warn');
+    return false;
+  }
+
+  const template = templates[Math.floor(Math.random() * templates.length)];
+  await contentLog(`💬 typing comment: "${template.slice(0, 60)}..."`);
+
   commentBox.focus();
-  // execCommand is required for React-controlled contenteditable editors:
-  // assigning textContent directly bypasses React's synthetic event system
-  // and leaves the submit button disabled.
   document.execCommand('selectAll', false, null);
   document.execCommand('insertText', false, template);
   commentBox.dispatchEvent(new InputEvent('input', { bubbles: true }));
+
+  // Simulate re-reading typed comment before posting (human behaviour)
   await randomWait(3000, 6000);
 
-  const submitButton =
+  const submitBtn =
     post.querySelector('button[class*="comments-comment-box__submit-button"]') ||
     document.querySelector('.comments-comment-box__submit-button--cr') ||
     document.querySelector('.comments-comment-box .artdeco-button--primary') ||
@@ -367,8 +466,38 @@ async function commentOnPost(post) {
     Array.from(document.querySelectorAll('.comments-comment-box button')).find(
       b => /^post$/i.test(b.textContent.trim()) || /submit/i.test(b.getAttribute('aria-label') || '')
     );
-  if (!submitButton) return false;
 
-  await humanClick(submitButton);
+  if (!submitBtn) {
+    console.warn('[Post Engager] commentOnPost: submit button not found');
+    await contentLog('⚠ comment submit button not found', 'warn');
+    return false;
+  }
+
+  await humanClick(submitBtn);
+  await randomWait(2000, 4000);
+  return true;
+}
+
+// ─── Follow ───────────────────────────────────────────────────────────────────
+
+async function followPostAuthor(post) {
+  // Follow button strategies — LinkedIn renders this differently in feed vs search
+  const followBtn =
+    post.querySelector('button[aria-label*="Follow"]') ||
+    post.querySelector('button[aria-label*="follow"]') ||
+    Array.from(post.querySelectorAll('button')).find(b => {
+      const label = (b.getAttribute('aria-label') || b.textContent || '').toLowerCase().trim();
+      return label === 'follow' || label.startsWith('follow ');
+    });
+
+  if (!followBtn) return false; // no follow button visible — skip silently
+
+  const currentLabel = (followBtn.getAttribute('aria-label') || followBtn.textContent || '').toLowerCase();
+  if (currentLabel.includes('following') || currentLabel.includes('unfollow')) {
+    // Already following
+    return false;
+  }
+
+  await humanClick(followBtn);
   return true;
 }

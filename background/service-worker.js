@@ -113,21 +113,32 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
  */
 async function runDailySequence(targetWindow, dailyCap) {
   try {
-    await log('Step 1/4 — Capturing SSI scores…');
+    await log('Step 1/5 — Capturing SSI scores…');
     await openTabAndWait('https://www.linkedin.com/sales/ssi', 'ssi-monitor', {});
 
-    await log(`Step 2/4 — Prospecting Tech Recruiters (cap: ${dailyCap})…`);
+    await log(`Step 2/5 — Prospecting Tech Recruiters (cap: ${dailyCap})…`);
     await openTabAndWait(buildSearchUrl(targetWindow), 'recruiter-prospector', { dailyCap });
 
-    await log('Step 3/4 — Engaging with targeted content search posts…');
+    await log('Step 2b/5 — Browsing people search (SSI: Localizar as pessoas certas)…');
+    const peopleUrl = await getNextPeopleSearchUrl();
+    await openTabAndWait(peopleUrl, 'recruiter-prospector', { dailyCap: 0 });
+    await advancePeopleQueue();
+
+    await log('Step 3/5 — Engaging with targeted content search posts…');
     const { expr, index: exprIndex, url: postEngageUrl } = await getNextSearchExpression();
     await log(`Keyword ${exprIndex + 1}/${CONTENT_SEARCH_EXPRESSIONS.length}: "${expr}"`);
     await openTabAndWait(postEngageUrl, 'post-engager', {});
     await advanceExprQueue();
 
-    await log('Step 4/4 — Building relationships (birthdays + anniversaries)…');
+    await log('Step 4/5 — Building relationships (birthdays + anniversaries)…');
     await openTabAndWait('https://www.linkedin.com/mynetwork/catch-up/birthday/', 'relationship-builder', { pageType: 'birthday' });
     await openTabAndWait('https://www.linkedin.com/mynetwork/catch-up/work_anniversaries/', 'relationship-builder', { pageType: 'anniversary' });
+
+    await log('Step 5/6 — Tracking accepted connections…');
+    await openTabAndWait('https://www.linkedin.com/mynetwork/invitation-manager/sent/', 'connection-tracker', {});
+
+    await log('Step 6/6 — Sending follow-up messages to accepted connections (≥24h)…');
+    await openTabAndWait('https://www.linkedin.com/messaging/', 'follow-up-sender', {});
   } catch (err) {
     await log(`Sequence error: ${err.message}`, 'error');
     return;
@@ -135,9 +146,9 @@ async function runDailySequence(targetWindow, dailyCap) {
 
   await log(`Daily routine complete. Cap used: ${dailyCap}. Window: ${targetWindow}.`, 'success');
   await exportAllCsvs();
-  chrome.notifications.create({
+  // Note: iconUrl omitted — chrome.notifications fails to download extension icons in MV3 service workers
+  chrome.notifications.create(`run-done-${Date.now()}`, {
     type: 'basic',
-    iconUrl: chrome.runtime.getURL('icons/icon48.png'),
     title: 'SSI Optimizer',
     message: `Daily routine complete. ${dailyCap} connections attempted. Window: ${targetWindow}.`,
   });
@@ -238,26 +249,39 @@ function trySendStart(tabId, task, payload, attempt, done) {
  *   69  → Technical and Vocational Training
  *   32  → Utilities / Energy Technology
  */
+// Validated content-search keywords — matches proven LinkedIn search URL format
+// (authorIndustry=6 = Technology, Information and Media — user-validated sector)
 const CONTENT_SEARCH_EXPRESSIONS = [
-  '"project manager" latam',
-  '"delivery manager" latam',
-  '"agile master" latam',
-  '"scrum master" latam',
-  '"program manager" latam',
-  '"technical program manager" latam',
-  '"agile coach" latam',
-  '"head of delivery" latam',
-  '"engineering manager" latam',
-  '"IT manager" brazil remote',
-  'nearshore "project manager"',
-  '"digital transformation" latam',
-  '"remote" "project manager" brazil',
-  '"product owner" latam',
-  'agile "IT manager" brazil',
+  'project delivery',
+  'project delivery latam',
+  'agile master',
+  'project manager brazil',
+  'project delivery brazil',
+  'tech recruiter information technology',
+  'delivery manager',
+  'delivery manager latam',
+  'project manager latam',
+  'IT manager remote',
+  'nearshore project manager',
+  'tech lead latam',
+  'engineering manager brazil',
+  'program manager latam',
+  'product delivery latam',
+  'agile delivery brazil',
+  'scrum master latam',
 ];
 
-// LinkedIn industry filter codes for content search
-const CONTENT_INDUSTRIES = '96%2C6%2C4%2C69%2C32';
+// People-search URLs for "Localizar as pessoas certas" SSI pillar — view-only browse
+// Rotated each run so LinkedIn sees varied, organic search behaviour
+const PEOPLE_SEARCH_URLS = [
+  'https://www.linkedin.com/search/results/people/?keywords=IT%20Manager%20remote%20brazil&f_I=%5B%2296%22%2C%226%22%2C%224%22%5D',
+  'https://www.linkedin.com/search/results/people/?keywords=Delivery%20Manager%20LATAM&f_I=%5B%2296%22%2C%226%22%2C%224%22%5D',
+  'https://www.linkedin.com/search/results/people/?keywords=Project%20Manager%20Brazil%20remote&f_I=%5B%2296%22%2C%226%22%2C%224%22%5D',
+  'https://www.linkedin.com/search/results/people/?keywords=tech%20recruiter%20information%20technology&f_I=%5B%2296%22%2C%226%22%2C%224%22%5D',
+  'https://www.linkedin.com/search/results/people/?keywords=Engineering%20Manager%20LATAM&f_I=%5B%2296%22%2C%226%22%2C%224%22%5D',
+  'https://www.linkedin.com/search/results/people/?keywords=IT%20recruitment%20technology%20brazil&f_I=%5B%2296%22%2C%226%22%2C%224%22%5D',
+  'https://www.linkedin.com/search/results/people/?keywords=nearshore%20IT%20manager%20LATAM&f_I=%5B%2296%22%2C%226%22%2C%224%22%5D',
+];
 
 /**
  * Returns the next content-search expression using round-robin rotation.
@@ -269,11 +293,12 @@ async function getNextSearchExpression() {
   const idx  = exprQueueIndex % CONTENT_SEARCH_EXPRESSIONS.length;
   const expr = CONTENT_SEARCH_EXPRESSIONS[idx];
   const kw   = encodeURIComponent(expr);
+  // Use validated URL format: authorIndustry=6 (Technology, Information and Media), past-month
   const url  =
     `https://www.linkedin.com/search/results/content/?keywords=${kw}` +
-    `&f_I=${CONTENT_INDUSTRIES}` +
-    `&datePosted=past-week` +
-    `&sortBy=relevance`;
+    `&origin=GLOBAL_SEARCH_HEADER` +
+    `&datePosted=%5B%22past-month%22%5D` +
+    `&authorIndustry=%5B%226%22%5D`;
   await chrome.storage.local.set({ lastUsedExpression: { expr, index: idx, usedAt: new Date().toISOString() } });
   return { expr, index: idx, url };
 }
@@ -285,6 +310,20 @@ async function advanceExprQueue() {
   console.log(`[SSI Optimizer] Expr queue advanced: ${exprQueueIndex} → ${next} (next: "${CONTENT_SEARCH_EXPRESSIONS[next]}")`);
 }
 
+async function getNextPeopleSearchUrl() {
+  const { peopleQueueIndex = 0 } = await chrome.storage.local.get('peopleQueueIndex');
+  const idx = peopleQueueIndex % PEOPLE_SEARCH_URLS.length;
+  console.log(`[SSI Optimizer] People search URL ${idx + 1}/${PEOPLE_SEARCH_URLS.length}: ${PEOPLE_SEARCH_URLS[idx]}`);
+  return PEOPLE_SEARCH_URLS[idx];
+}
+
+async function advancePeopleQueue() {
+  const { peopleQueueIndex = 0 } = await chrome.storage.local.get('peopleQueueIndex');
+  const next = (peopleQueueIndex + 1) % PEOPLE_SEARCH_URLS.length;
+  await chrome.storage.local.set({ peopleQueueIndex: next });
+  console.log(`[SSI Optimizer] People queue advanced: ${peopleQueueIndex} → ${next}`);
+}
+
 function buildPostEngageUrl() {
   const expr = CONTENT_SEARCH_EXPRESSIONS[
     Math.floor(Math.random() * CONTENT_SEARCH_EXPRESSIONS.length)
@@ -292,9 +331,9 @@ function buildPostEngageUrl() {
   const kw = encodeURIComponent(expr);
   return (
     `https://www.linkedin.com/search/results/content/?keywords=${kw}` +
-    `&f_I=${CONTENT_INDUSTRIES}` +
-    `&datePosted=past-week` +
-    `&sortBy=relevance`
+    `&origin=GLOBAL_SEARCH_HEADER` +
+    `&datePosted=%5B%22past-month%22%5D` +
+    `&authorIndustry=%5B%226%22%5D`
   );
 }
 
@@ -366,10 +405,10 @@ function downloadCsvFromSW(filename, headers, rows) {
 
 async function exportAllCsvs() {
   const data = await chrome.storage.local.get([
-    'connections', 'postInteractions', 'relationships', 'activityLog', 'ssiScores',
+    'connections', 'postInteractions', 'relationships', 'activityLog', 'ssiScores', 'discoveredLinks',
+    'acceptedConnections', 'lastConnectionTracking', 'lastFollowUp',
   ]);
   const ts = new Date().toISOString().slice(0, 16).replace('T', '-').replace(':', '');
-  // ts = 'YYYYMMDD-HHMM' (e.g. '20260503-1255')
 
   const conns = [...(data.connections || [])].sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt));
   downloadCsvFromSW(`connections-${ts}.csv`,
@@ -389,16 +428,29 @@ async function exportAllCsvs() {
 
   const logs = [...(data.activityLog || [])].reverse();
   downloadCsvFromSW(`activity-log-${ts}.csv`,
-    ['Date', 'Level', 'Message'],
-    logs.map(e => [e.ts, e.level || 'info', e.msg || '']));
+    ['Date', 'Level', 'Script', 'Message'],
+    logs.map(e => [e.ts, e.level || 'info', e.script || '', e.msg || '']));
 
   const ssi = [...(data.ssiScores || [])].sort((a, b) => new Date(b.capturedAt) - new Date(a.capturedAt));
   downloadCsvFromSW(`ssi-scores-${ts}.csv`,
     ['Date', 'CapturedAt', 'Total', 'Brand', 'People', 'Insights', 'Relationships'],
-    ssi.map(s => [s.date || (s.capturedAt || today).slice(0, 10), s.capturedAt,
+    ssi.map(s => [s.date || (s.capturedAt || '').slice(0, 10), s.capturedAt,
       s.total ?? '', s.brand ?? '', s.people ?? '', s.insights ?? '', s.relationships ?? '']));
 
-  await log('Auto-CSV export complete → Downloads/link_ssi/output/', 'success');
+  // Links discovered — for human validation
+  const links = [...(data.discoveredLinks || [])].sort((a, b) => new Date(b.ts) - new Date(a.ts));
+  downloadCsvFromSW(`discovered-links-${ts}.csv`,
+    ['Date', 'Context', 'URL', 'Profile ID', 'Name'],
+    links.map(l => [l.ts, l.context || '', l.url || '', l.profileId || '', l.name || '']));
+
+  // Accepted connections — for ROI tracking and outreach review
+  const accepted = [...(data.acceptedConnections || [])].sort((a, b) => new Date(b.acceptedAt) - new Date(a.acceptedAt));
+  downloadCsvFromSW(`accepted-connections-${ts}.csv`,
+    ['AcceptedAt', 'Name', 'Profile URL', 'Profile ID', 'SentAt', 'FollowUpSent', 'FollowUpAt'],
+    accepted.map(a => [a.acceptedAt, a.name || '', a.profileUrl || '', a.profileId || '',
+      a.sentAt || '', a.followUpSent ? 'yes' : 'no', a.followUpAt || '']));
+
+  await log(`Auto-CSV export complete — ${links.length} links, ${accepted.length} accepted, ${logs.length} log entries → Downloads/link_ssi/output/`, 'success');
 }
 
 // ─── Manual trigger (popup „Run Now“ / per-task buttons) ──────────────────────
@@ -407,6 +459,8 @@ const TASK_URLS = {
   'ssi-monitor': 'https://www.linkedin.com/sales/ssi',
   'post-engager': 'https://www.linkedin.com/feed/',
   'relationship-builder': 'https://www.linkedin.com/mynetwork/catch-up/birthday/',
+  'connection-tracker': 'https://www.linkedin.com/mynetwork/invitation-manager/sent/',
+  'follow-up-sender': 'https://www.linkedin.com/messaging/',
 };
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -438,6 +492,17 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       await log(`[Manual] Task complete: ${task}.`, 'success');
       sendResponse({ done: true });
     });
+    return true;
+  }
+
+  // Content scripts request CSV export after each run (logs go to output/ immediately)
+  if (message.action === 'EXPORT_LOGS') {
+    exportAllCsvs()
+      .then(() => sendResponse({ exported: true }))
+      .catch(async (err) => {
+        await log(`[EXPORT_LOGS] error: ${err.message}`, 'error');
+        sendResponse({ error: err.message });
+      });
     return true;
   }
 });

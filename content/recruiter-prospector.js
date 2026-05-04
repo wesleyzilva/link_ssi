@@ -15,9 +15,11 @@
 
 // ─── Activity logger (inline — content scripts cannot use ES modules) ────────
 async function contentLog(msg, level = 'info') {
+  const entry = { ts: new Date().toISOString(), level, script: 'recruiter-prospector', msg };
+  console[level === 'error' ? 'error' : level === 'warn' ? 'warn' : 'log']('[Recruiter Prospector]', msg);
   try {
     const { activityLog = [] } = await chrome.storage.local.get('activityLog');
-    activityLog.push({ ts: new Date().toISOString(), level, msg });
+    activityLog.push(entry);
     await chrome.storage.local.set({ activityLog: activityLog.slice(-300) });
   } catch (e) { console.warn('[contentLog]', e); }
 }
@@ -27,6 +29,7 @@ async function contentLog(msg, level = 'info') {
  * Fallback to 9 (minimum of the 7-day cycle) if not provided.
  */
 let SESSION_CAP = 9;
+let VIEW_ONLY_MODE = false; // true when dailyCap=0 — browse profiles for SSI "Localizar as pessoas certas", no connections sent
 
 const CONNECTION_NOTE =
   "Hi {firstName}, let's connect! " +
@@ -42,6 +45,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     // Read the daily cap sent by the service worker
     if (typeof message.dailyCap === 'number') {
       SESSION_CAP = message.dailyCap;
+      VIEW_ONLY_MODE = SESSION_CAP === 0;
     }
     prospectRecruiters().then((result) => {
       sendResponse({ success: true, ...result });
@@ -87,22 +91,41 @@ async function prospectRecruiters() {
   let sent = 0;
 
   for (const card of results) {
-    if (sent >= SESSION_CAP) break;
+    if (!VIEW_ONLY_MODE && sent >= SESSION_CAP) break;
 
     const profileId = extractProfileId(card);
     if (!profileId) continue;
 
     const profileUrl = extractProfileUrl(card) || `/in/${profileId}`;
+
+    // VIEW_ONLY_MODE: scroll each card — signals "Find Right People" to LinkedIn SSI
+    if (VIEW_ONLY_MODE) {
+      await scrollIntoViewAndPause(card);
+      await randomWait(2000, 4500);
+      await logProfileLink(profileUrl, profileId, '');
+      await contentLog(`👁 ${profileUrl} — viewed (SSI: localizar as pessoas certas)`);
+      continue;
+    }
+
+    // Log every profile we encounter (for later human review)
+    const firstName = extractName(card);
+    await logProfileLink(profileUrl, profileId, firstName);
+
     const locked = await isRecruiterLocked(profileId);
     if (locked) {
+      // Scroll into view even when locked — SSI counts profile impressions from search
+      await scrollIntoViewAndPause(card);
+      await randomWait(1500, 3000);
       console.log(`[Recruiter Prospector] Skipping ${profileId} — within 7-day lock.`);
-      await contentLog(`↷ ${profileUrl} — locked (7-day)`);
+      await contentLog(`↷ ${profileUrl} — locked (7-day, viewed)`);
       continue;
     }
 
     const connectButton = getConnectButton(card);
     if (!connectButton) {
-      await contentLog(`↷ ${profileUrl} — no connect button`);
+      await scrollIntoViewAndPause(card);
+      await randomWait(1000, 2500);
+      await contentLog(`↷ ${profileUrl} — no connect button (viewed)`);
       continue;
     }
 
@@ -110,11 +133,13 @@ async function prospectRecruiters() {
     await readBeforeActing(card, 3000, 7000);
     await humanClick(connectButton);
 
-    // LinkedIn may show a modal asking for a note
-    const noteSent = await handleConnectionModal(card, profileId);
-    if (!noteSent) continue;
+    // Send connection WITHOUT a note — avoids modal friction and feels more organic
+    const connected = await handleConnectionModalNoNote();
+    if (!connected) {
+      await contentLog(`⚠ connection modal handled but send failed | ${profileUrl}`, 'warn');
+      continue;
+    }
 
-    const firstName = extractName(card);
     await markRecruiterInteracted(profileId, firstName);
     sent++;
     await contentLog(`✓ ${profileUrl} | ${firstName} — connected (${sent}/${SESSION_CAP})`, 'success');
@@ -136,7 +161,7 @@ async function prospectRecruiters() {
   await chrome.storage.local.set({
     lastProspecting: { sent, runAt: new Date().toISOString() },
   });
-  await contentLog(`■ recruiter-prospector done | ${sent} sent / ${results.length} checked`);
+  await contentLog(`■ recruiter-prospector DONE | ${sent} sent / ${results.length} checked`, 'success');
 
   return { sent };
 }
@@ -301,4 +326,85 @@ async function handleConnectionModal(card, profileId) {
     document.querySelector('button[data-control-name="overlay.close"]');
   if (dismissButton) await humanClick(dismissButton);
   return false;
+}
+
+// ─── No-note connection handler ───────────────────────────────────────────────
+/**
+ * Handles the post-click connection modal by always sending WITHOUT a note.
+ * This avoids the message-compose step and feels less bot-like in terms of
+ * volume (LinkedIn flags accounts that always send identical notes).
+ * Logs everything for debugging.
+ */
+async function handleConnectionModalNoNote() {
+  // Wait up to 5s for any modal to appear
+  const modal = await new Promise(resolve => {
+    const deadline = Date.now() + 5000;
+    const tick = setInterval(() => {
+      const m =
+        document.querySelector('div[data-test-modal-id="send-invite-modal"]') ||
+        document.querySelector('.send-invite') ||
+        document.querySelector('[data-test-modal]') ||
+        document.querySelector('.artdeco-modal[role="dialog"]');
+      if (m || Date.now() >= deadline) { clearInterval(tick); resolve(m || null); }
+    }, 300);
+  });
+
+  if (!modal) {
+    // LinkedIn sent directly — no modal (already connected or 1st degree)
+    await contentLog('📤 connection sent directly — no modal appeared');
+    return true;
+  }
+
+  await contentLog('📋 connection modal appeared — looking for send-without-note button');
+
+  // Priority: "Send without a note" button
+  const sendWithoutNote =
+    modal.querySelector('[aria-label="Send without a note"]') ||
+    Array.from(modal.querySelectorAll('button')).find(
+      b => /send without/i.test(b.textContent) || /send$/i.test(b.textContent.trim())
+    );
+
+  if (sendWithoutNote) {
+    await humanClick(sendWithoutNote);
+    await randomWait(1000, 2500);
+    await contentLog('✓ sent without note');
+    return true;
+  }
+
+  // Fallback: generic send/submit button
+  const sendBtn =
+    modal.querySelector('[aria-label="Send now"]') ||
+    modal.querySelector('[aria-label="Send invitation"]') ||
+    modal.querySelector('button[data-control-name="send-invite-cta-btn"]') ||
+    Array.from(modal.querySelectorAll('button')).find(
+      b => !b.disabled && /^send/i.test(b.textContent.trim())
+    );
+
+  if (sendBtn) {
+    await humanClick(sendBtn);
+    await randomWait(1000, 2500);
+    await contentLog('✓ sent via generic send button');
+    return true;
+  }
+
+  // Could not find any send button — dismiss and log for debugging
+  await contentLog('⚠ no send/dismiss button found in modal — dumping modal HTML to log', 'warn');
+  await contentLog(`[modal-html] ${modal.innerHTML.slice(0, 600)}`, 'warn');
+
+  const dismissBtn =
+    modal.querySelector('[aria-label="Dismiss"]') ||
+    modal.querySelector('.artdeco-modal__dismiss') ||
+    modal.querySelector('button[data-control-name="overlay.close"]');
+  if (dismissBtn) await humanClick(dismissBtn);
+  return false;
+}
+
+// ─── Profile link logger ──────────────────────────────────────────────────────
+async function logProfileLink(profileUrl, profileId, name) {
+  try {
+    const entry = { ts: new Date().toISOString(), url: profileUrl, profileId, name, context: 'recruiter-search' };
+    const { discoveredLinks = [] } = await chrome.storage.local.get('discoveredLinks');
+    discoveredLinks.push(entry);
+    await chrome.storage.local.set({ discoveredLinks: discoveredLinks.slice(-1000) });
+  } catch (e) { console.warn('[Recruiter Prospector][logProfileLink failed]', e); }
 }

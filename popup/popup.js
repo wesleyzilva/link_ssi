@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   await renderSSIScores();
   await renderDayCycle();
   await renderActivityLog();
+  await renderAnalytics();
   await renderNextAlarm();
   await renderLiveLog();
   wireButtons();
@@ -19,6 +20,9 @@ chrome.storage.onChanged.addListener((changes) => {
   if (changes.activityLog)      renderLiveLog();
   if (changes.lastSSI)          renderSSIScores();
   if (changes.dayCycleIndex)    renderDayCycle();
+  if (changes.acceptedConnections || changes.lastConnectionTracking || changes.lastFollowUp || changes.ssiScores) {
+    renderAnalytics();
+  }
   if (changes.lastProspecting || changes.lastEngagement || changes.lastRelationshipBuild || changes.lastUsedExpression) {
     renderActivityLog();
   }
@@ -95,8 +99,58 @@ async function renderActivityLog() {
   }
 }
 
-// ─── Next alarm ───────────────────────────────────────────────────────────────
+// ─── Analytics ────────────────────────────────────────────────────────────────
 
+async function renderAnalytics() {
+  const data = await chrome.storage.local.get([
+    'connections', 'acceptedConnections', 'ssiScores', 'lastSSI',
+  ]);
+
+  const connections = data.connections || [];
+  const accepted = data.acceptedConnections || [];
+  const totalSent = connections.length;
+  const totalAccepted = accepted.length;
+  const rate = totalSent > 0 ? Math.round((totalAccepted / totalSent) * 100) : 0;
+  const followUpSent = accepted.filter(a => a.followUpSent).length;
+  const followUpPending = accepted.filter(a => !a.followUpSent).length;
+
+  document.getElementById('analytics-acceptance').textContent =
+    totalSent > 0 ? `${rate}%` : 'no data';
+  document.getElementById('analytics-accepted-sent').textContent =
+    `${totalAccepted} / ${totalSent}`;
+  document.getElementById('analytics-followups').textContent = followUpSent;
+  document.getElementById('analytics-followup-pending').textContent = followUpPending;
+
+  // Weakest SSI pillar from last score
+  const lastSSI = data.lastSSI;
+  if (lastSSI && !lastSSI.error) {
+    const pillars = { Brand: lastSSI.brand, People: lastSSI.people, Insights: lastSSI.insights, Relationships: lastSSI.relationships };
+    const weakest = Object.entries(pillars)
+      .filter(([, v]) => typeof v === 'number')
+      .sort((a, b) => a[1] - b[1])[0];
+    document.getElementById('analytics-weakest').textContent =
+      weakest ? `${weakest[0]} (${weakest[1]})` : '–';
+  }
+
+  // SSI 7-day trend: last 7 daily totals as arrow sequence
+  const scores = (data.ssiScores || []).slice(-7);
+  if (scores.length >= 2) {
+    const trend = scores.map((s, i) => {
+      if (i === 0) return String(s.total ?? '?');
+      const prev = scores[i - 1].total ?? 0;
+      const cur  = s.total ?? 0;
+      const arrow = cur > prev ? '↑' : cur < prev ? '↓' : '→';
+      return `${arrow}${cur}`;
+    }).join(' ');
+    document.getElementById('analytics-ssi-trend').textContent = trend;
+  } else if (scores.length === 1) {
+    document.getElementById('analytics-ssi-trend').textContent = String(scores[0].total ?? '–');
+  } else {
+    document.getElementById('analytics-ssi-trend').textContent = 'no data';
+  }
+}
+
+// ─── Next alarm ───────────────────────────────────────────────────────────────
 async function renderNextAlarm() {
   const alarms = await chrome.alarms.getAll();
   const el = document.getElementById('next-alarm');
