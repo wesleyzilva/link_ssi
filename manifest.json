@@ -37,7 +37,8 @@
       "matches": [
         "https://www.linkedin.com/feed/*",
         "https://www.linkedin.com/",
-        "https://www.linkedin.com/search/results/content/*"
+        "https://www.linkedin.com/search/results/content/*",
+        "https://www.linkedin.com/posts/*"
       ],
       "js": ["utils/human-mimicry.js", "utils/db.js", "content/post-engager.js"],
       "run_at": "document_idle"

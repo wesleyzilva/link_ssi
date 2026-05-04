@@ -12,11 +12,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   await renderAnalytics();
   await renderNextAlarm();
   await renderLiveLog();
+  await renderPostQueue();
   wireButtons();
 });
 
 // Auto-refresh when storage changes (e.g. a task just completed)
 chrome.storage.onChanged.addListener((changes) => {
+  if (changes.specificPostQueue) renderPostQueue();
   if (changes.activityLog)      renderLiveLog();
   if (changes.lastSSI)          renderSSIScores();
   if (changes.dayCycleIndex)    renderDayCycle();
@@ -148,6 +150,27 @@ async function renderAnalytics() {
   } else {
     document.getElementById('analytics-ssi-trend').textContent = 'no data';
   }
+}
+
+// ─── Specific-post queue ──────────────────────────────────────────────────────
+
+async function renderPostQueue() {
+  const { specificPostQueue = [] } = await chrome.storage.local.get('specificPostQueue');
+  const pending = specificPostQueue.filter(e => !e.done);
+
+  const countEl = document.getElementById('queue-count');
+  countEl.textContent = String(pending.length);
+  countEl.className = pending.length > 0 ? 'badge badge--success' : 'badge badge--neutral';
+
+  const listEl = document.getElementById('queue-list');
+  if (!pending.length) {
+    listEl.innerHTML = '<li class="queue-empty">Queue is empty.</li>';
+    return;
+  }
+  listEl.innerHTML = pending.map(e => {
+    const shortUrl = e.url.replace('https://www.linkedin.com/', '…/').slice(0, 60);
+    return `<li class="queue-item" title="${escapeHtml(e.url)}">${escapeHtml(shortUrl)}</li>`;
+  }).join('');
 }
 
 // ─── Next alarm ───────────────────────────────────────────────────────────────
@@ -282,6 +305,55 @@ function wireButtons() {
       status.className = 'comment-post-status comment-post-status--error';
     }
     setTimeout(() => { btn.disabled = false; }, 8000);
+  });
+
+  document.getElementById('btn-queue-post').addEventListener('click', async () => {
+    const input  = document.getElementById('input-post-url');
+    const status = document.getElementById('comment-post-status');
+    const postUrl = (input.value || '').trim();
+
+    if (!postUrl.startsWith('https://www.linkedin.com/')) {
+      status.textContent = '⚠ Enter a valid LinkedIn post URL.';
+      status.className = 'comment-post-status comment-post-status--error';
+      return;
+    }
+
+    const btn = document.getElementById('btn-queue-post');
+    btn.disabled = true;
+    try {
+      const resp = await chrome.runtime.sendMessage({ action: 'QUEUE_POST', postUrl });
+      if (resp?.queued) {
+        status.textContent = `✓ Queued! ${resp.total} post(s) pending for next run.`;
+        status.className = 'comment-post-status comment-post-status--success';
+        input.value = '';
+        await renderPostQueue();
+      } else {
+        status.textContent = `⚠ ${resp?.reason || resp?.error || 'Could not queue post.'}`;
+        status.className = 'comment-post-status comment-post-status--error';
+      }
+    } catch (e) {
+      status.textContent = '⚠ Could not reach service worker — try again.';
+      status.className = 'comment-post-status comment-post-status--error';
+    }
+    setTimeout(() => { btn.disabled = false; }, 3000);
+  });
+
+  document.getElementById('btn-clear-queue').addEventListener('click', async () => {
+    await chrome.runtime.sendMessage({ action: 'CLEAR_POST_QUEUE' });
+    await renderPostQueue();
+  });
+
+  document.getElementById('btn-run-queue-now').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-run-queue-now');
+    btn.disabled = true;
+    btn.textContent = 'Running…';
+    try {
+      await chrome.runtime.sendMessage({ action: 'RUN_TASK', task: 'post-queue' });
+    } catch { /* ignore */ }
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = '▶ Run queue now';
+    }, 10000);
   });
 
   document.getElementById('open-history').addEventListener('click', (e) => {

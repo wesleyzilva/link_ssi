@@ -495,14 +495,14 @@ function getFeedPosts() {
     'ul.reusable-search__entity-result-list > li,' +
     '.search-results-container li,' +
     'li.search-content-result__wrapper'
-  )).filter(el => el.querySelector('[data-urn],[data-id],a[href*="/feed/update/"]'));
+  )).filter(el => el.querySelector('[data-urn],[data-id],a[href*="/feed/update/"],a[href*="/posts/"]'));
   if (s6.length) { console.log(`[Post Engager] ${s6.length} posts via search-li`); return s6; }
 
-  // Strategy: start from post permalink anchors and walk up to the card container
-  // This is the most reliable fallback for new LinkedIn layouts where no URN attribute
-  // is set on the outer container but the post URL link is always present.
+  // Strategy: start from post permalink anchors and walk up to the card container.
+  // Covers both old /feed/update/ format and the current /posts/ URL format that
+  // LinkedIn rolled out in 2025-2026.
   const postAnchors = Array.from(document.querySelectorAll(
-    'a[href*="/feed/update/"],a[href*="urn:li:activity:"],a[href*="urn:li:ugcPost:"]'
+    'a[href*="/feed/update/"],a[href*="/posts/"],a[href*="urn:li:activity:"],a[href*="urn:li:ugcPost:"]'
   ));
   const byLink = [...new Set(postAnchors.map(a => {
     let el = a.parentElement;
@@ -520,6 +520,11 @@ function getFeedPosts() {
   if (byLink.length) { console.log(`[Post Engager] ${byLink.length} posts via link-walk`); return byLink; }
 
   // Last resort: walk up from Like/Comment buttons — multilingual aware
+  // Only accept containers that also contain a real post permalink link —
+  // this prevents sidebar cards, "Promoted" widgets and people-also-viewed
+  // panels (which have Like buttons but no /feed/update/ or /posts/ link)
+  // from polluting the result set with un-identifiable elements.
+  const POST_LINK_SEL = 'a[href*="/feed/update/"],a[href*="/posts/"],a[href*="urn:li:activity:"],a[href*="urn:li:ugcPost:"]';
   const actionBtns = Array.from(document.querySelectorAll(
     'button[aria-label*="Like" i],button[aria-label*="React" i],' +
     'button[aria-label*="Comment" i],button[aria-label*="Comentar" i],' +
@@ -530,16 +535,20 @@ function getFeedPosts() {
       '[data-id],[data-urn],[data-occludable-entity-urn],[data-chameleon-result-urn],' +
       '.feed-shared-update-v2,.social-feed-update,.occludable-update,article'
     );
-    if (byAttr) return byAttr;
-    // Walk up until an ancestor has a post permalink link
-    let el = btn.parentElement;
-    let depth = 0;
-    while (el && el !== document.body && depth < 14) {
-      if (el.querySelector('a[href*="/feed/update/"],a[href*="urn:li:activity:"],a[href*="/posts/"]')) return el;
-      el = el.parentElement;
-      depth++;
-    }
-    return btn.closest('li') || btn.parentElement;
+    const candidate = byAttr || (() => {
+      // Walk up until an ancestor has a post permalink link
+      let el = btn.parentElement;
+      let depth = 0;
+      while (el && el !== document.body && depth < 14) {
+        if (el.querySelector(POST_LINK_SEL)) return el;
+        el = el.parentElement;
+        depth++;
+      }
+      return btn.closest('li') || null;
+    })();
+    // Guard: only accept candidates that contain an identifiable post link
+    if (!candidate || !candidate.querySelector(POST_LINK_SEL)) return null;
+    return candidate;
   }).filter(Boolean))];
   if (byReaction.length) { console.log(`[Post Engager] ${byReaction.length} posts via reaction-button fallback`); return byReaction; }
 

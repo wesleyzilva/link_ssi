@@ -30,11 +30,47 @@ const SEND_RETRY_WAIT  = 3000; // subsequent attempts: every 3 s
 
 // ─── Extension install / startup ────────────────────────────────────────────
 
-chrome.runtime.onInstalled.addListener(() => {
+// Posts the user specifically requested to comment on (seeded at install/update).
+// Additional posts can be queued via the popup at any time.
+const SEED_POST_URLS = [
+  'https://www.linkedin.com/posts/samuel-gomes-costa-55503a340_backend-nodejs-nestjs-share-7456722421988044800-eWoS/',
+  'https://www.linkedin.com/posts/tales-habib_recently-i-started-using-git-worktree-share-7457077215042863104-z_1X/',
+  'https://www.linkedin.com/posts/gabriel-saturi_backend-distributedsystems-architecture-share-7457052634265407488-tLcm/',
+];
+
+chrome.runtime.onInstalled.addListener(async () => {
   scheduleAlarms();
   log('Extension installed. Daily alarms registered.', 'success');
   console.log('[SSI Optimizer] Installed. Daily alarms registered.');
+  await seedPostQueue();
 });
+
+/**
+ * Adds SEED_POST_URLS to `specificPostQueue` if not already present.
+ * Safe to call on every install/update — deduplicates by URL.
+ */
+async function seedPostQueue() {
+  const { specificPostQueue = [] } = await chrome.storage.local.get('specificPostQueue');
+  let added = 0;
+  let reset = 0;
+  for (const url of SEED_POST_URLS) {
+    const existing = specificPostQueue.find(e => e.url === url);
+    if (!existing) {
+      specificPostQueue.push({ url, addedAt: new Date().toISOString(), done: false });
+      added++;
+    } else if (existing.done) {
+      // Reset seed posts that were marked done without a confirmed content-script response
+      // (i.e. before the success-based done logic was in place).
+      existing.done = false;
+      reset++;
+    }
+  }
+  if (added > 0 || reset > 0) {
+    await chrome.storage.local.set({ specificPostQueue });
+    if (added > 0) await log(`[PostQueue] ${added} seed post(s) added to queue.`, 'success');
+    if (reset > 0) await log(`[PostQueue] ${reset} seed post(s) reset to pending (will retry).`, 'info');
+  }
+}
 
 chrome.runtime.onStartup.addListener(() => {
   scheduleAlarms();
@@ -113,24 +149,27 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
  */
 async function runDailySequence(targetWindow, dailyCap) {
   try {
-    await log('Step 1/5 — Capturing SSI scores…');
+    await log('Step 1/6 — Capturing SSI scores…');
     await openTabAndWait('https://www.linkedin.com/sales/ssi', 'ssi-monitor', {});
 
-    await log(`Step 2/5 — Prospecting Tech Recruiters (cap: ${dailyCap})…`);
+    await log(`Step 2/6 — Prospecting Tech Recruiters (cap: ${dailyCap})…`);
     await openTabAndWait(await buildSearchUrl(targetWindow), 'recruiter-prospector', { dailyCap });
 
-    await log('Step 2b/5 — Browsing people search (SSI: Localizar as pessoas certas)…');
+    await log('Step 2b/6 — Browsing people search (SSI: Localizar as pessoas certas)…');
     const peopleUrl = await getNextPeopleSearchUrl();
     await openTabAndWait(peopleUrl, 'recruiter-prospector', { dailyCap: 0 });
     await advancePeopleQueue();
 
-    await log('Step 3/5 — Engaging with targeted content search posts…');
+    await log('Step 3/6 — Engaging with targeted content search posts…');
     const { expr, index: exprIndex, url: postEngageUrl } = await getNextSearchExpression();
     await log(`Keyword ${exprIndex + 1}/${CONTENT_SEARCH_EXPRESSIONS.length}: "${expr}"`);
     await openTabAndWait(postEngageUrl, 'post-engager', {});
     await advanceExprQueue();
 
-    await log('Step 4/5 — Building relationships (birthdays + anniversaries + job changes)…');
+    await log('Step 3b/6 — Commenting on queued specific posts…');
+    await processSpecificPostQueue();
+
+    await log('Step 4/6 — Building relationships (birthdays + anniversaries + job changes)…');
     await openTabAndWait('https://www.linkedin.com/mynetwork/catch-up/birthday/', 'relationship-builder', { pageType: 'birthday' });
     await openTabAndWait('https://www.linkedin.com/mynetwork/catch-up/work_anniversaries/', 'relationship-builder', { pageType: 'anniversary' });
     await openTabAndWait('https://www.linkedin.com/mynetwork/catch-up/job_changes/', 'relationship-builder', { pageType: 'new_job' });
@@ -155,6 +194,49 @@ async function runDailySequence(targetWindow, dailyCap) {
   });
 }
 
+// ─── Specific-post queue ─────────────────────────────────────────────────────
+
+/**
+ * Reads `specificPostQueue` from storage, comments on each pending post once,
+ * then removes successfully processed entries from the queue.
+ *
+ * Each queue entry: { url: string, addedAt: string, done?: boolean }
+ */
+async function processSpecificPostQueue() {
+  const { specificPostQueue = [] } = await chrome.storage.local.get('specificPostQueue');
+  const pending = specificPostQueue.filter(e => !e.done);
+
+  if (!pending.length) {
+    await log('[PostQueue] No pending posts in queue — skipping.', 'info');
+    return;
+  }
+
+  await log(`[PostQueue] Processing ${pending.length} queued post(s)…`);
+
+  for (const entry of pending) {
+    await log(`[PostQueue] Commenting on: ${entry.url}`);
+    try {
+      const responded = await openTabAndWait(entry.url, 'post-engager', { singlePost: true, commentTemplate: null });
+      if (responded) {
+        entry.done = true;
+        await log(`[PostQueue] Done: ${entry.url}`, 'success');
+      } else {
+        await log(`[PostQueue] Skipped (no content script response) — will retry next run: ${entry.url}`, 'warn');
+      }
+    } catch (err) {
+      await log(`[PostQueue] Error on ${entry.url}: ${err.message}`, 'error');
+    }
+  }
+
+  // Persist the updated queue (mark done=true; fully remove entries older than 7 days)
+  const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const updated = specificPostQueue.filter(
+    e => !e.done || new Date(e.addedAt).getTime() > sevenDaysAgo
+  );
+  await chrome.storage.local.set({ specificPostQueue: updated });
+  await log(`[PostQueue] Queue flushed. ${pending.length} post(s) processed.`, 'success');
+}
+
 /**
  * Opens a LinkedIn URL in a new tab, waits for the content script to register
  * its message listener, sends START, then waits for the task to complete.
@@ -172,6 +254,7 @@ function openTabAndWait(url, task, payload = {}) {
   return new Promise((resolve) => {
     let settled = false;
     let createdTabId = null;
+    let contentScriptResponded = false;
 
     const settle = () => {
       if (settled) return;
@@ -180,11 +263,16 @@ function openTabAndWait(url, task, payload = {}) {
       if (createdTabId !== null) {
         chrome.tabs.remove(createdTabId, () => {
           if (chrome.runtime.lastError) {} // tab may already be closed
-          resolve();
+          resolve(contentScriptResponded);
         });
       } else {
-        resolve();
+        resolve(contentScriptResponded);
       }
+    };
+
+    const settleSuccess = () => {
+      contentScriptResponded = true;
+      settle();
     };
 
     const safetyTimer = setTimeout(() => {
@@ -202,7 +290,7 @@ function openTabAndWait(url, task, payload = {}) {
       const loadListener = (tabId, changeInfo) => {
         if (tabId !== createdTabId || changeInfo.status !== 'complete') return;
         chrome.tabs.onUpdated.removeListener(loadListener);
-        trySendStart(createdTabId, task, payload, 0, settle);
+        trySendStart(createdTabId, task, payload, 0, settle, settleSuccess);
       };
       chrome.tabs.onUpdated.addListener(loadListener);
     });
@@ -214,7 +302,7 @@ function openTabAndWait(url, task, payload = {}) {
  * responds (meaning its onMessage listener is registered and the task ran),
  * or until MAX_RETRIES is exhausted.
  */
-function trySendStart(tabId, task, payload, attempt, done) {
+function trySendStart(tabId, task, payload, attempt, done, doneSuccess) {
   if (attempt > SEND_MAX_RETRIES) {
     log(`[${task}] content script did not respond after ${SEND_MAX_RETRIES} retries — skipping`, 'warn');
     done();
@@ -226,14 +314,11 @@ function trySendStart(tabId, task, payload, attempt, done) {
     chrome.tabs.sendMessage(tabId, { action: 'START', task, ...payload }, (_resp) => {
       if (chrome.runtime.lastError) {
         // Content script not ready yet — try again
-        trySendStart(tabId, task, payload, attempt + 1, done);
+        trySendStart(tabId, task, payload, attempt + 1, done, doneSuccess);
         return;
       }
       // Content script received START and called sendResponse — task complete
-      done();
-    });
-  }, wait);
-}
+      if (doneSuccess) doneSuccess(); else done();
 
 /**
  * Targeted content-search expressions for Wesley's profile:
@@ -576,6 +661,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     const { task } = message;
     getDailyConnectionCap().then(async (cap) => {
       await log(`[Manual] Single task triggered: ${task}.`, 'warn');
+
+      if (task === 'post-queue') {
+        await processSpecificPostQueue();
+        await log('[Manual] Post queue task complete.', 'success');
+        sendResponse({ done: true });
+        return;
+      }
+
       const url = task === 'recruiter-prospector'
         ? await buildSearchUrl(TARGET_WINDOWS.US_EU)
         : TASK_URLS[task];
@@ -616,6 +709,43 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     }).catch(async (err) => {
       await log(`[Manual] COMMENT_POST error: ${err.message}`, 'error');
       sendResponse({ error: err.message });
+    });
+    return true;
+  }
+
+  if (message.action === 'QUEUE_POST') {
+    const { postUrl } = message;
+    if (!postUrl || !postUrl.startsWith('https://www.linkedin.com/')) {
+      sendResponse({ error: 'Invalid LinkedIn URL' });
+      return true;
+    }
+    chrome.storage.local.get('specificPostQueue').then(async ({ specificPostQueue = [] }) => {
+      const alreadyQueued = specificPostQueue.some(e => e.url === postUrl);
+      if (alreadyQueued) {
+        sendResponse({ queued: false, reason: 'already in queue' });
+        return;
+      }
+      specificPostQueue.push({ url: postUrl, addedAt: new Date().toISOString(), done: false });
+      await chrome.storage.local.set({ specificPostQueue });
+      await log(`[PostQueue] Queued: ${postUrl}`, 'success');
+      sendResponse({ queued: true, total: specificPostQueue.filter(e => !e.done).length });
+    }).catch(async (err) => {
+      await log(`[PostQueue] QUEUE_POST error: ${err.message}`, 'error');
+      sendResponse({ error: err.message });
+    });
+    return true;
+  }
+
+  if (message.action === 'GET_POST_QUEUE') {
+    chrome.storage.local.get('specificPostQueue').then(({ specificPostQueue = [] }) => {
+      sendResponse({ queue: specificPostQueue });
+    });
+    return true;
+  }
+
+  if (message.action === 'CLEAR_POST_QUEUE') {
+    chrome.storage.local.set({ specificPostQueue: [] }).then(() => {
+      sendResponse({ cleared: true });
     });
     return true;
   }

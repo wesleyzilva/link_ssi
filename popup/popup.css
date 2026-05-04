@@ -294,6 +294,54 @@ footer a:hover {
 .comment-post-status--success { color: var(--color-success, #4caf50); }
 .comment-post-status--error   { color: var(--color-error,   #e53935); }
 
+/* ─── Post queue ─────────────────────────────────────────────────────────── */
+
+.queue-hint {
+  font-size: 11px;
+  color: var(--color-text-muted, #888);
+  margin: 4px 0 8px;
+}
+
+.queue-list {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+.queue-item {
+  font-size: 11px;
+  padding: 3px 0;
+  color: var(--color-text-muted, #aaa);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.queue-empty {
+  font-size: 11px;
+  color: var(--color-text-muted, #888);
+  font-style: italic;
+}
+
+.btn--small {
+  font-size: 11px;
+  padding: 4px 8px;
+  margin-right: 6px;
+}
+
+.btn--secondary {
+  background: transparent;
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+}
+
+.btn--secondary:hover {
+  background: var(--color-primary);
+  color: #fff;
+}
+
 /* ─── Live log ───────────────────────────────────────────────────────────── */
 
 .live-log {

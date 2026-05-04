@@ -254,8 +254,11 @@ function getConnectButton(card) {
     const text  = b.textContent.trim().toLowerCase();
     const label = (b.getAttribute('aria-label') || '').toLowerCase();
     return text === 'connect' ||
+           text === 'conectar' ||
            /^connect$/i.test(label) ||
-           /^invite .+ to connect/i.test(label);
+           /^conectar$/i.test(label) ||
+           /^invite .+ to connect/i.test(label) ||
+           /^convidar .+ para se conectar/i.test(label);
   }) || null;
 }
 
@@ -268,9 +271,12 @@ async function getConnectButtonViaMore(card) {
   const moreBtn =
     card.querySelector('button[aria-label*="More actions"]') ||
     card.querySelector('button[aria-label*="More options"]') ||
+    card.querySelector('button[aria-label*="Mais ações"]') ||
+    card.querySelector('button[aria-label*="Mais opções"]') ||
     Array.from(card.querySelectorAll('button')).find(b => {
       const label = (b.getAttribute('aria-label') || b.textContent || '').trim().toLowerCase();
-      return label === 'more' || label === 'more actions' || label === 'more options';
+      return label === 'more' || label === 'more actions' || label === 'more options' ||
+             label === 'mais' || label === 'mais ações' || label === 'mais opções';
     });
 
   if (!moreBtn) return null;
@@ -290,7 +296,8 @@ async function getConnectButtonViaMore(card) {
         if (found) return found;
         const btn = li.querySelector('button') || li;
         const label = (btn.getAttribute('aria-label') || btn.textContent || '').trim().toLowerCase();
-        return (label === 'connect' || label.startsWith('connect ') || /^invite .+ to connect/i.test(label))
+        return (label === 'connect' || label.startsWith('connect ') || /^invite .+ to connect/i.test(label) ||
+                label === 'conectar' || label.startsWith('conectar ') || /^convidar .+ para se conectar/i.test(label))
           ? btn : null;
       }, null);
     if (item) return item;

@@ -143,12 +143,21 @@
         <input
           id="input-post-url"
           type="url"
-          placeholder="https://www.linkedin.com/feed/update/urn:li:activity:…"
+          placeholder="https://www.linkedin.com/posts/…"
           class="input-url"
         />
-        <button id="btn-comment-post" class="btn btn--primary">💬 Comment</button>
+        <button id="btn-comment-post" class="btn btn--primary">💬 Now</button>
+        <button id="btn-queue-post" class="btn btn--secondary" title="Add to queue — will be commented at the next scheduled run">📋 Queue</button>
       </div>
       <p id="comment-post-status" class="comment-post-status"></p>
+    </section>
+
+    <section class="controls">
+      <h2>Post Queue <span id="queue-count" class="badge badge--neutral">0</span></h2>
+      <p class="queue-hint">Posts below will be commented at the next scheduled run (or "Run Now").</p>
+      <ul id="queue-list" class="queue-list"></ul>
+      <button id="btn-clear-queue" class="btn btn--ghost btn--small">🗑 Clear queue</button>
+      <button id="btn-run-queue-now" class="btn btn--primary btn--small">▶ Run queue now</button>
     </section>
 
     <section class="next-run">
