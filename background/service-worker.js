@@ -229,13 +229,28 @@ async function runDailySequence(targetWindow, dailyCap) {
 
   await chrome.storage.local.set({ routineRunning: false, lastSequenceDoneAt: new Date().toISOString() });
   await log(`Daily routine complete. Cap used: ${dailyCap}. Window: ${targetWindow}.`, 'success');
+
+  // ─── Session summary (actual counts, not just caps) ──────────────────
+  const _summary = await chrome.storage.local.get(['lastProspecting', 'lastEngagement', 'lastRelationshipBuild']);
+  const _conns = _summary.lastProspecting?.sent ?? 0;
+  const _posts = (_summary.lastEngagement?.likes ?? 0) + (_summary.lastEngagement?.comments ?? 0);
+  const _rels  = _summary.lastRelationshipBuild?.touched ?? 0;
+  await log(
+    `[Summary] 🤝 Connections ${_conns} | 💬 Posts ${_posts} | 🎉 Relationships ${_rels}`,
+    'success'
+  );
+
   await exportAllCsvs();
+
   // Note: iconUrl omitted — chrome.notifications fails to download extension icons in MV3 service workers
   chrome.notifications.create(`run-done-${Date.now()}`, {
     type: 'basic',
     title: 'SSI Optimizer',
-    message: `Daily routine complete. ${dailyCap} connections attempted. Window: ${targetWindow}.`,
+    message: `Done. 🤝 ${_conns} connections | 💬 ${_posts} posts | 🎉 ${_rels} relationships`,
   });
+
+  // Auto-open history page so the user can review results immediately
+  chrome.tabs.create({ url: chrome.runtime.getURL('history/history.html') });
 }
 
 // ─── Specific-post queue ─────────────────────────────────────────────────────
@@ -673,6 +688,16 @@ function downloadCsvFromSW(filename, headers, rows) {
  *   Link         → type=link-discovered | name=context | detail='' | url=url
  */
 async function exportAllCsvs() {
+  // Debounce: skip if exported within the last 3 minutes to prevent double-CSV
+  // when multiple content scripts send EXPORT_LOGS at the same time as the sequence end.
+  const { _lastCsvExportAt } = await chrome.storage.local.get('_lastCsvExportAt');
+  const now = Date.now();
+  if (_lastCsvExportAt && now - _lastCsvExportAt < 3 * 60 * 1000) {
+    console.log('[SSI Optimizer] exportAllCsvs skipped — debounce (< 3 min since last export)');
+    return;
+  }
+  await chrome.storage.local.set({ _lastCsvExportAt: now });
+
   const data = await chrome.storage.local.get([
     'connections', 'postInteractions', 'relationships', 'activityLog', 'ssiScores',
     'discoveredLinks', 'acceptedConnections', 'extractedEmails',
