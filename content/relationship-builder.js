@@ -231,15 +231,25 @@ function extractProfileUrl(card) {
 }
 
 function extractName(card) {
-  // Catch-up page specific selectors (birthday / anniversary cards)
+  // Catch-up page specific selectors (birthday / anniversary / new-job cards)
   const catchUpEl =
     card.querySelector('.catch-up-card__actor-name') ||
     card.querySelector('.catch-up-identity__name') ||
     card.querySelector('[data-anonymize="person-name"]') ||
     card.querySelector('.entity-result__title-text') ||
     card.querySelector('.update-components-actor__name') ||
-    card.querySelector('.update-components-actor__meta-link span[aria-hidden="true"]');
-  if (catchUpEl) return catchUpEl.textContent.trim();
+    card.querySelector('.update-components-actor__meta-link span[aria-hidden="true"]') ||
+    // 2025-2026 LinkedIn PT-BR catch-up redesign selectors
+    card.querySelector('.ntpc-catch-up-card__actor-name') ||
+    card.querySelector('[data-view-name*="catch-up"] .actor-name') ||
+    card.querySelector('.artdeco-entity-lockup__title') ||
+    card.querySelector('.artdeco-entity-lockup__title span[aria-hidden="true"]') ||
+    card.querySelector('span[data-test-id*="name"]') ||
+    card.querySelector('a[data-test-id*="profile"] span[aria-hidden="true"]') ||
+    card.querySelector('.full-name') ||
+    // last-resort: first bold/strong text inside the card
+    card.querySelector('strong, b');
+  if (catchUpEl) return catchUpEl.textContent.trim().split('\n')[0].trim();
 
   // Generic mynetwork page
   const genericEl = card.querySelector('.mn-connection-card__name, .actor-name, span[aria-hidden="true"]');
@@ -257,40 +267,62 @@ async function isRecentlyTouched(profileId) {
 }
 
 async function sendMessage(card, messages) {
-  // On the catch-up page LinkedIn uses "Say happy birthday" or "Wish" buttons
-  // On the standard mynetwork page it uses "Message"
-  // PT-BR equivalents: "Parabenizar", "Enviar mensagem", "Dizer parabéns", etc.
+  // LinkedIn catch-up page buttons — EN + PT-BR variants
+  //
+  // Birthday  EN:  "Say happy birthday", "Wish [Name] a happy birthday"
+  //           PT:  "Dizer parabéns", "Dizer parabéns a [Nome]", "Parabenizar [Nome]"
+  //                "Celebrar", "Dizer que está pensando em você"
+  // Anniv.    EN:  "Congratulate [Name]", "Message"
+  //           PT:  "Parabenizar [Nome]", "Mensagem", "Parabéns"
+  // New job   EN:  "Say congrats", "Congratulate [Name]", "Message"
+  //           PT:  "Dar os parabéns", "Parabenizar [Nome]", "Mensagem"
+
+  // aria-label substring matches (case-insensitive via *=)
+  const ARIA_SUBS = [
+    // EN
+    'birthday', 'Wish', 'Say happy', 'Message', 'Congratulate', 'Say congrats',
+    'new role', 'new job', 'new position', 'Celebrate',
+    // PT-BR
+    'parabéns', 'Parabenizar', 'Felicitar', 'Mensagem',
+    'aniversário', 'novo emprego', 'nova função', 'nova posição',
+    'Dar os parab', 'Dizer parab', 'Enviar mensagem', 'Celebrar',
+    'pensando em você', 'pensando em voce',
+  ];
+
+  const TEXT_RE = /^(Message|Wish|Say happy birthday|Say congrats|Congratulate|Celebrate|Mensagem|Parabenizar|Felicitar|Celebrar|Parabéns|Dizer parab[eé]ns|Dar os parab[eé]ns|Enviar mensagem|Dizer que est[aá] pensando)$/i;
+
   const messageButton =
-    card.querySelector('button[aria-label*="Message"]') ||
-    card.querySelector('button[aria-label*="birthday"]') ||
-    card.querySelector('button[aria-label*="Wish"]') ||
-    card.querySelector('button[aria-label*="Mensagem"]') ||
-    card.querySelector('button[aria-label*="aniversário"]') ||
-    card.querySelector('button[aria-label*="Parabenizar"]') ||
-    card.querySelector('button[aria-label*="Felicitar"]') ||
-    card.querySelector('button[aria-label*="parabéns"]') ||
-    card.querySelector('button[aria-label*="novo emprego"]') ||
-    card.querySelector('button[aria-label*="nova função"]') ||
-    Array.from(card.querySelectorAll('button')).find(
-      b => /^(Message|Wish|Say happy birthday|Mensagem|Parabenizar|Felicitar|Dizer parab[eé]ns|Enviar mensagem|Dar os parab[eé]ns)$/i.test(b.textContent.trim())
-    );
+    ARIA_SUBS.reduce((found, pat) =>
+      found || card.querySelector(`button[aria-label*="${pat}"]`), null) ||
+    Array.from(card.querySelectorAll('button')).find(b => TEXT_RE.test(b.textContent.trim()));
+
   if (!messageButton) {
     const btns = Array.from(card.querySelectorAll('button'))
-      .map(b => `"${b.textContent.trim().slice(0, 30)}" aria="${(b.getAttribute('aria-label') || '').slice(0, 50)}"`)
+      .map(b => `"${b.textContent.trim().slice(0, 30)}" aria="${(b.getAttribute('aria-label') || '').slice(0, 60)}"`)
       .join(' | ');
-    console.warn('[Relationship Builder] No message button found. Card buttons:', btns);
+    // Log to CSV so we can identify exact PT-BR button labels in the activity history
+    await contentLog(`[Diag] no msg btn | card btns: ${btns || '(none)'}`, 'warn');
     return false;
   }
 
   await humanClick(messageButton);
   await randomWait(2000, 4000);
 
+  // LinkedIn birthday/catch-up widget may differ from the inbox form
   const messageBox =
     document.querySelector('.msg-form__contenteditable[contenteditable="true"]') ||
-    document.querySelector('[contenteditable="true"][data-placeholder*="message"]') ||
-    document.querySelector('[contenteditable="true"][data-placeholder*="Message"]') ||
-    document.querySelector('.msg-form__message-texteditor [contenteditable="true"]');
-  if (!messageBox) return false;
+    document.querySelector('[contenteditable="true"][data-placeholder*="message" i]') ||
+    document.querySelector('[contenteditable="true"][data-placeholder*="mensagem" i]') ||
+    document.querySelector('[contenteditable="true"][data-placeholder*="Write" i]') ||
+    document.querySelector('[contenteditable="true"][data-placeholder*="Escreva" i]') ||
+    document.querySelector('[contenteditable="true"][data-placeholder*="Escrever" i]') ||
+    document.querySelector('.msg-form__message-texteditor [contenteditable="true"]') ||
+    document.querySelector('[role="textbox"][contenteditable="true"]');
+
+  if (!messageBox) {
+    await contentLog('[Diag] message box not found after clicking msg button', 'warn');
+    return false;
+  }
 
   const message = messages[Math.floor(Math.random() * messages.length)];
   messageBox.focus();
@@ -302,18 +334,26 @@ async function sendMessage(card, messages) {
   const sendButton =
     document.querySelector('.msg-form__send-button') ||
     document.querySelector('button[data-control-name="send-message"]') ||
-    document.querySelector('button[aria-label*="Send"]') ||
-    document.querySelector('button[aria-label*="Enviar"]') ||
+    document.querySelector('button[aria-label*="Send" i]') ||
+    document.querySelector('button[aria-label*="Enviar" i]') ||
+    document.querySelector('button[aria-label*="Submeter" i]') ||
     Array.from(document.querySelectorAll('button')).find(
-      b => /^(send|enviar)$/i.test(b.textContent.trim())
+      b => /^(send|enviar|submeter|postar)$/i.test(b.textContent.trim())
     );
-  if (!sendButton) return false;
+
+  if (!sendButton) {
+    await contentLog('[Diag] send button not found after composing message', 'warn');
+    return false;
+  }
 
   await humanClick(sendButton);
   await randomWait(1000, 2500);
 
-  // Close the message panel
-  const closeButton = document.querySelector('button[data-control-name="overlay.close_conversation_window"]');
+  // Close the message panel if open
+  const closeButton =
+    document.querySelector('button[data-control-name="overlay.close_conversation_window"]') ||
+    document.querySelector('button[aria-label*="Fechar" i]') ||
+    document.querySelector('button[aria-label*="Close" i]');
   if (closeButton) await humanClick(closeButton);
 
   return true;
