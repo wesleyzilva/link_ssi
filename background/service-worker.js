@@ -422,6 +422,8 @@ const PEOPLE_SEARCH_URLS = [
   'https://www.linkedin.com/search/results/people/?keywords=Engineering%20Manager%20LATAM&f_I=%5B%2296%22%2C%226%22%2C%224%22%5D',
   'https://www.linkedin.com/search/results/people/?keywords=IT%20recruitment%20technology%20brazil&f_I=%5B%2296%22%2C%226%22%2C%224%22%5D',
   'https://www.linkedin.com/search/results/people/?keywords=nearshore%20IT%20manager%20LATAM&f_I=%5B%2296%22%2C%226%22%2C%224%22%5D',
+  'https://www.linkedin.com/search/results/people/?keywords=startup%20project%20manager%20remote&f_I=%5B%2296%22%2C%226%22%2C%224%22%5D',
+  'https://www.linkedin.com/search/results/people/?keywords=startup%20delivery%20manager%20LATAM&f_I=%5B%2296%22%2C%226%22%2C%224%22%5D',
   // Tech Recruiter IT — US + Canada + UK + Australia + Germany + Netherlands + Ireland + Brazil — 1st/2nd degree
   'https://www.linkedin.com/search/results/people/?keywords=Tech%20Recruiter%20Information%20Technology&origin=FACETED_SEARCH&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22102713980%22%2C%22101165590%22%2C%22100364837%22%2C%22102454443%22%2C%22102890883%22%2C%22104738515%22%2C%22101174742%22%5D',
   // Tech Recruiter IT — same geos, English-only profiles, staffing/recruiting service category
@@ -456,6 +458,10 @@ const RECRUITER_DIRECT_CONNECT_URLS = [
   'https://www.linkedin.com/search/results/people/?keywords=hiring%20scrum%20latam&origin=GLOBAL_SEARCH_HEADER&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22101165590%22%2C%22101174742%22%2C%22102454443%22%2C%22103644278%22%2C%22104738515%22%2C%22105015875%22%2C%22106204383%22%5D',
   // "hiring agile latam" — 1st+2nd+3rd degree — US, Canada, UK, Germany, Netherlands, France
   'https://www.linkedin.com/search/results/people/?keywords=hiring%20agile%20latam&origin=GLOBAL_SEARCH_HEADER&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101174742%22%2C%22106204383%22%2C%22101165590%22%2C%22102454443%22%2C%22104738515%22%2C%22105015875%22%5D',
+  // "hiring startup project manager" — US, UK, Canada, Netherlands, Germany, Portugal, UAE
+  'https://www.linkedin.com/search/results/people/?keywords=hiring%20startup%20project%20manager&origin=GLOBAL_SEARCH_HEADER&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%2C%22102713980%22%2C%22104738515%22%2C%22102890883%22%2C%22105015875%22%2C%22106157047%22%5D',
+  // "startup delivery manager remote latam" — US, UK, Canada, Netherlands, Germany, Portugal, UAE
+  'https://www.linkedin.com/search/results/people/?keywords=startup%20delivery%20manager%20remote%20latam&origin=GLOBAL_SEARCH_HEADER&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%2C%22102713980%22%2C%22104738515%22%2C%22102890883%22%2C%22105015875%22%2C%22106157047%22%5D',
 ];
 
 /**
@@ -549,6 +555,13 @@ const RECRUITER_SEARCH_POOL = {
     'Recruiter Information Technology remote',
     'Staff Augmentation Recruiter LATAM',
     'Offshore IT Recruiter latin america',
+    // Startup / scale-up / VC-backed segment (mirrors portfolio SEO keywords)
+    'Startup Recruiter project manager remote',
+    'VC startup IT Recruiter LATAM',
+    'Tech Recruiter startup nearshore',
+    'Scale-up Recruiter engineering LATAM',
+    'Talent Acquisition startup project manager',
+    'Recruiter Series A Series B LATAM remote',
   ],
   APAC: [
     'Tech Recruiter Information Technology',
@@ -582,8 +595,8 @@ async function buildSearchUrl(targetWindow) {
 
   // Expanded geo list validated by the user across pages 1-10
   const geoMap = {
-    // USA, UK, Canada, Australia, Netherlands, Germany, France
-    US_EU: '%5B%22103644278%22%2C%22101165590%22%2C%22102713980%22%2C%22101739942%22%2C%22104738515%22%2C%22102890883%22%2C%22102454443%22%5D',
+    // USA, UK, Canada, Australia, Netherlands, Germany, France, Portugal, UAE
+    US_EU: '%5B%22103644278%22%2C%22101165590%22%2C%22102713980%22%2C%22101739942%22%2C%22104738515%22%2C%22102890883%22%2C%22102454443%22%2C%22105015875%22%2C%22106157047%22%5D',
     APAC:  '%5B%22102257491%22%2C%22101452733%22%5D',   // Australia + Singapore
   };
   const geo      = geoMap[targetWindow] || geoMap.US_EU;
