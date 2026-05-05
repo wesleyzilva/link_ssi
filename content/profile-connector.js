@@ -135,17 +135,22 @@ async function followProfile() {
   const followBtn =
     document.querySelector('.pv-top-card-v2-ctas button[aria-label*="Follow"]') ||
     document.querySelector('.pvs-profile-actions button[aria-label*="Follow"]') ||
+    document.querySelector('.pvs-profile-actions button[aria-label*="Seguir"]') ||
     document.querySelector('.profile-header-cta-section button[aria-label*="Follow"]') ||
+    document.querySelector('.profile-header-cta-section button[aria-label*="Seguir"]') ||
     document.querySelector('section.pv-top-card button[aria-label*="Follow"]') ||
+    document.querySelector('section.pv-top-card button[aria-label*="Seguir"]') ||
     Array.from(document.querySelectorAll('button')).find((b) => {
       const label = (b.getAttribute('aria-label') || b.textContent || '').trim().toLowerCase();
-      return label === 'follow' || label.startsWith('follow ');
+      return label === 'follow'  || label.startsWith('follow ') ||
+             label === 'seguir'  || label.startsWith('seguir ');
     });
 
   if (!followBtn) return false;
 
   const label = (followBtn.getAttribute('aria-label') || followBtn.textContent || '').toLowerCase();
-  if (label.includes('following') || label.includes('unfollow')) {
+  if (label.includes('following') || label.includes('unfollow') ||
+      label.includes('seguindo')  || label.includes('deixar de seguir')) {
     await contentLog('ℹ already following this profile');
     return false;
   }
@@ -193,11 +198,18 @@ async function connectViaMoreMenu() {
 function getDirectConnectButton() {
   return (
     document.querySelector('.pvs-profile-actions button[aria-label*="Connect"]') ||
+    document.querySelector('.pvs-profile-actions button[aria-label*="Conectar"]') ||
+    document.querySelector('.pvs-profile-actions button[aria-label*="Convidar"]') ||
     document.querySelector('.pv-top-card-v2-ctas button[aria-label*="Connect"]') ||
+    document.querySelector('.pv-top-card-v2-ctas button[aria-label*="Conectar"]') ||
     document.querySelector('section.pv-top-card button[aria-label*="Connect"]') ||
+    document.querySelector('section.pv-top-card button[aria-label*="Conectar"]') ||
     Array.from(document.querySelectorAll('button')).find((b) => {
       const label = (b.getAttribute('aria-label') || b.textContent || '').trim().toLowerCase();
-      return label === 'connect' || label.startsWith('connect ');
+      return label === 'connect'    || label.startsWith('connect ') ||
+             label === 'conectar'   || label.startsWith('conectar ') ||
+             label === 'conectar-se' ||
+             /^convidar .+ para se? conectar/i.test(label);
     }) || null
   );
 }
@@ -206,11 +218,17 @@ function getMoreActionsButton() {
   return (
     document.querySelector('button[aria-label="More actions"]') ||
     document.querySelector('button[aria-label="More options"]') ||
+    document.querySelector('button[aria-label="Mais a\u00e7\u00f5es"]') ||
+    document.querySelector('button[aria-label="Mais op\u00e7\u00f5es"]') ||
     document.querySelector('.pvs-profile-actions button[aria-label*="More"]') ||
+    document.querySelector('.pvs-profile-actions button[aria-label*="Mais"]') ||
     document.querySelector('.pv-top-card-v2-ctas button[aria-label*="More"]') ||
+    document.querySelector('.pv-top-card-v2-ctas button[aria-label*="Mais"]') ||
     Array.from(document.querySelectorAll('button')).find((b) => {
       const label = (b.getAttribute('aria-label') || b.textContent || '').trim().toLowerCase();
-      return label === 'more' || label === 'more actions' || label === 'more options';
+      return label === 'more'  || label === 'more actions' || label === 'more options' ||
+             label === 'mais'  || label === 'mais a\u00e7\u00f5es' || label === 'mais op\u00e7\u00f5es' ||
+             label === '\u2026';
     }) || null
   );
 }
@@ -219,8 +237,12 @@ async function waitForDropdownConnect(maxWait = 3000) {
   const deadline = Date.now() + maxWait;
   while (Date.now() < deadline) {
     const item =
-      document.querySelector('[data-view-name="profile-overflow-action"] li button[aria-label*="Connect"]') ||
-      document.querySelector('.artdeco-dropdown__content li button[aria-label*="Connect"]') ||
+      document.querySelector('[data-view-name="profile-overflow-action"] li button[aria-label*="Connect"]')   ||
+      document.querySelector('[data-view-name="profile-overflow-action"] li button[aria-label*="Conectar"]')  ||
+      document.querySelector('[data-view-name="profile-overflow-action"] li button[aria-label*="Convidar"]')  ||
+      document.querySelector('.artdeco-dropdown__content li button[aria-label*="Connect"]')   ||
+      document.querySelector('.artdeco-dropdown__content li button[aria-label*="Conectar"]')  ||
+      document.querySelector('.artdeco-dropdown__content li button[aria-label*="Convidar"]')  ||
       document.querySelector('.pv-profile-section__actions-toggle button[aria-label*="Connect"]') ||
       Array.from(document.querySelectorAll(
         '.artdeco-dropdown__content li, [data-view-name="profile-overflow-action"] li'
@@ -228,7 +250,13 @@ async function waitForDropdownConnect(maxWait = 3000) {
         if (found) return found;
         const btn = li.querySelector('button') || li;
         const label = (btn.getAttribute('aria-label') || btn.textContent || '').trim().toLowerCase();
-        return label === 'connect' || label.startsWith('connect ') ? btn : null;
+        return (
+          label === 'connect'    || label.startsWith('connect ') ||
+          label === 'conectar'   || label.startsWith('conectar ') ||
+          label === 'conectar-se' || label === 'convidar' ||
+          /^invite .+ to connect/i.test(label) ||
+          /^convidar .+ para se? conectar/i.test(label)
+        ) ? btn : null;
       }, null);
 
     if (item) return item;
@@ -266,15 +294,18 @@ async function handleConnectionModalNoNote() {
 
   await contentLog('📋 connection modal appeared — sending without note');
 
-  // Priority: "Send without a note" — LinkedIn 2026 uses both aria-label and data-control-name
+  // Priority: "Send without a note" — EN + PT-BR variants
   const sendWithoutNote =
     modal.querySelector('[aria-label="Send without a note"]') ||
+    modal.querySelector('[aria-label="Enviar sem nota"]') ||
+    modal.querySelector('[aria-label="Enviar sem notas"]') ||
     modal.querySelector('[data-control-name="connect.send_without_note"]') ||
     modal.querySelector('button[data-control-name*="without"]') ||
     Array.from(modal.querySelectorAll('button')).find(
       b => /send without/i.test(b.textContent) ||
-           /sem nota/i.test(b.textContent) ||
-           /without a note/i.test(b.getAttribute('aria-label') || '')
+           /sem nota/i.test(b.textContent)       ||
+           /without a note/i.test(b.getAttribute('aria-label') || '') ||
+           /sem nota/i.test(b.getAttribute('aria-label') || '')
     );
 
   if (sendWithoutNote) {
@@ -284,13 +315,15 @@ async function handleConnectionModalNoNote() {
     return true;
   }
 
-  // Fallback: generic send button
+  // Fallback: generic send button — EN + PT-BR
   const sendBtn =
     modal.querySelector('[aria-label="Send now"]') ||
+    modal.querySelector('[aria-label="Enviar agora"]') ||
     modal.querySelector('[aria-label="Send invitation"]') ||
+    modal.querySelector('[aria-label="Enviar convite"]') ||
     modal.querySelector('button[data-control-name="send-invite-cta-btn"]') ||
     Array.from(modal.querySelectorAll('button')).find(
-      b => !b.disabled && /^send/i.test(b.textContent.trim())
+      b => !b.disabled && (/^send/i.test(b.textContent.trim()) || /^enviar/i.test(b.textContent.trim()))
     );
 
   if (sendBtn) {

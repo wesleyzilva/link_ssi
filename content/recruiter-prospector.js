@@ -121,15 +121,22 @@ async function prospectRecruiters() {
       continue;
     }
 
+    // LinkedIn 2026 lazy-renders action buttons only after the card scrolls into view
+    // and receives a hover event. Scroll first, dispatch hover, then poll for buttons.
+    await scrollIntoViewAndPause(card);
+    await readBeforeActing(card, 2000, 5000);
+    card.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+    card.dispatchEvent(new MouseEvent('mouseover',  { bubbles: true, cancelable: true }));
+    await waitForButtonsInCard(card, 4000);
+
+    // Try direct Connect button inside the card
     let connectButton = getConnectButton(card);
     let viaMoreMenu = false;
 
     if (!connectButton) {
-      // 3rd-degree profiles hide Connect inside the "More actions" overflow menu
-      await scrollIntoViewAndPause(card);
-      await readBeforeActing(card, 2000, 5000);
+      // Connect may be hidden inside the "More actions" overflow menu
       connectButton = await getConnectButtonViaMore(card);
-      viaMoreMenu = true;
+      if (connectButton) viaMoreMenu = true;
     }
 
     if (!connectButton) {
@@ -143,14 +150,9 @@ async function prospectRecruiters() {
       continue;
     }
 
-    // Simulate reading the profile card before deciding to connect (skip if already done above)
-    if (!viaMoreMenu) {
-      await readBeforeActing(card, 3000, 7000);
-      await humanClick(connectButton);
-    } else {
-      // More menu is already open and connectButton is the dropdown item — just click it
-      await humanClick(connectButton);
-    }
+    // Simulate reading the profile card before deciding to connect (scroll + read already done above)
+    await humanClick(connectButton);
+
 
     // Send connection WITHOUT a note — avoids modal friction and feels more organic
     const connected = await handleConnectionModalNoNote();
@@ -186,6 +188,18 @@ async function prospectRecruiters() {
 }
 
 // ─── DOM helpers ──────────────────────────────────────────────────────────────
+
+/**
+ * Polls up to maxWait ms for at least one <button> to appear inside card.
+ * LinkedIn 2026 lazy-renders action buttons after scroll/hover.
+ */
+async function waitForButtonsInCard(card, maxWait = 4000) {
+  const deadline = Date.now() + maxWait;
+  while (Date.now() < deadline) {
+    if (card.querySelectorAll('button').length > 0) return;
+    await new Promise(r => setTimeout(r, 300));
+  }
+}
 
 function getSearchResultCards() {
   // LinkedIn 2024-2026: list items in people search results
@@ -272,22 +286,32 @@ function getConnectButton(card) {
   }) || null;
 }
 
-/**
- * Opens the "More actions" overflow menu in a search result card and returns
- * the Connect button found inside the dropdown. Returns null if not found.
- * Closes the dropdown via Escape if Connect is absent.
- */
 async function getConnectButtonViaMore(card) {
-  const moreBtn =
-    card.querySelector('button[aria-label*="More actions"]') ||
-    card.querySelector('button[aria-label*="More options"]') ||
-    card.querySelector('button[aria-label*="Mais ações"]') ||
-    card.querySelector('button[aria-label*="Mais opções"]') ||
-    Array.from(card.querySelectorAll('button')).find(b => {
-      const label = (b.getAttribute('aria-label') || b.textContent || '').trim().toLowerCase();
-      return label === 'more' || label === 'more actions' || label === 'more options' ||
-             label === 'mais' || label === 'mais ações' || label === 'mais opções';
-    });
+  // Look for the More button first inside the card, then at document level
+  // (LinkedIn 2026 may render action overlays outside the li container)
+  const MORE_SELS = [
+    'button[aria-label*="More actions"]',
+    'button[aria-label*="More options"]',
+    'button[aria-label*="Mais ações"]',
+    'button[aria-label*="Mais opções"]',
+    'button[aria-label*="Mais ação"]',
+  ];
+  const textMatch = (b) => {
+    const t = (b.getAttribute('aria-label') || b.textContent || '').trim().toLowerCase();
+    return t === 'more' || t === 'more actions' || t === 'more options' ||
+           t === 'mais' || t === 'mais ações'   || t === 'mais opções'  || t === '…';
+  };
+
+  let moreBtn =
+    MORE_SELS.reduce((f, s) => f || card.querySelector(s), null) ||
+    Array.from(card.querySelectorAll('button')).find(textMatch);
+
+  // Fallback: the More button may live outside the card's DOM subtree in a floating overlay
+  if (!moreBtn) {
+    moreBtn =
+      MORE_SELS.reduce((f, s) => f || document.querySelector(s), null) ||
+      Array.from(document.querySelectorAll('button')).find(textMatch);
+  }
 
   if (!moreBtn) return null;
 
@@ -300,15 +324,19 @@ async function getConnectButtonViaMore(card) {
     const item =
       document.querySelector('.artdeco-dropdown__content li button[aria-label*="Connect"]') ||
       document.querySelector('.artdeco-dropdown__content li button[aria-label*="Invite"]') ||
+      document.querySelector('.artdeco-dropdown__content li button[aria-label*="Conectar"]') ||
+      document.querySelector('.artdeco-dropdown__content li button[aria-label*="Convidar"]') ||
       Array.from(document.querySelectorAll(
         '.artdeco-dropdown__content li, .artdeco-dropdown li'
       )).reduce((found, li) => {
         if (found) return found;
         const btn = li.querySelector('button') || li;
         const label = (btn.getAttribute('aria-label') || btn.textContent || '').trim().toLowerCase();
-        return (label === 'connect' || label.startsWith('connect ') || /^invite .+ to connect/i.test(label) ||
-                label === 'conectar' || label.startsWith('conectar ') || /^convidar .+ para se conectar/i.test(label))
-          ? btn : null;
+        return (
+          label === 'connect'   || label.startsWith('connect ')   || /^invite .+ to connect/i.test(label)  ||
+          label === 'conectar'  || label.startsWith('conectar ')  || /^convidar .+ para se? conectar/i.test(label) ||
+          label === 'convidar'
+        ) ? btn : null;
       }, null);
     if (item) return item;
     await new Promise(r => setTimeout(r, 300));
