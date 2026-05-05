@@ -488,13 +488,14 @@ async function getNextSearchExpression() {
   const { exprQueueIndex = 0 } = await chrome.storage.local.get('exprQueueIndex');
   const idx  = exprQueueIndex % CONTENT_SEARCH_EXPRESSIONS.length;
   const expr = CONTENT_SEARCH_EXPRESSIONS[idx];
-  const kw   = encodeURIComponent(expr);
-  // Use validated URL format: authorIndustry=6 (Technology, Information and Media), past-month
-  const url  =
-    `https://www.linkedin.com/search/results/content/?keywords=${kw}` +
-    `&origin=GLOBAL_SEARCH_HEADER` +
-    `&datePosted=%5B%22past-month%22%5D` +
-    `&authorIndustry=%5B%226%22%5D`;
+
+  // LinkedIn 2026: /search/results/content/ renders posts with fully obfuscated CSS classes —
+  // all 11+ DOM selectors return 0. Switch to /feed/hashtag/ which uses the standard feed
+  // layout and retains [data-occludable-entity-urn] and aria-label="Like" attributes.
+  // Hashtag URLs have the same content-filtering benefit as content-search keywords.
+  const hashtag = expr.trim().toLowerCase().replace(/\s+/g, '-');
+  const url = `https://www.linkedin.com/feed/hashtag/${encodeURIComponent(hashtag)}/`;
+
   await chrome.storage.local.set({ lastUsedExpression: { expr, index: idx, usedAt: new Date().toISOString() } });
   return { expr, index: idx, url };
 }
@@ -538,13 +539,8 @@ function buildPostEngageUrl() {
   const expr = CONTENT_SEARCH_EXPRESSIONS[
     Math.floor(Math.random() * CONTENT_SEARCH_EXPRESSIONS.length)
   ];
-  const kw = encodeURIComponent(expr);
-  return (
-    `https://www.linkedin.com/search/results/content/?keywords=${kw}` +
-    `&origin=GLOBAL_SEARCH_HEADER` +
-    `&datePosted=%5B%22past-month%22%5D` +
-    `&authorIndustry=%5B%226%22%5D`
-  );
+  const hashtag = expr.trim().toLowerCase().replace(/\s+/g, '-');
+  return `https://www.linkedin.com/feed/hashtag/${encodeURIComponent(hashtag)}/`;
 }
 
 /**

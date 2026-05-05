@@ -164,8 +164,15 @@ async function waitForActionButton(card, maxWait = 5000) {
   const SKIP_LABELS = ['open reactions menu', 'like', 'curtir', 'reagir', 'comment', 'share', 'send'];
   const deadline = Date.now() + maxWait;
   while (Date.now() < deadline) {
-    const btns = Array.from(card.querySelectorAll('button'));
-    const hasAction = btns.some(b => {
+    // Check inside card first, then document-wide (LinkedIn 2026 overlay pattern)
+    const sources = [
+      ...Array.from(card.querySelectorAll('button')),
+      ...Array.from(document.querySelectorAll('button')).filter(b => {
+        const rect = b.getBoundingClientRect();
+        return rect.top > 80 && rect.width > 0 && rect.height > 0 && !b.disabled;
+      }),
+    ];
+    const hasAction = sources.some(b => {
       const label = (b.getAttribute('aria-label') || '').toLowerCase();
       const text  = b.textContent.trim().toLowerCase();
       return !SKIP_LABELS.some(r => label.includes(r) || text.includes(r)) &&
@@ -320,7 +327,17 @@ async function sendMessage(card, messages) {
   const messageButton =
     ARIA_SUBS.reduce((found, pat) =>
       found || card.querySelector(`button[aria-label*="${pat}"]`), null) ||
-    Array.from(card.querySelectorAll('button')).find(b => TEXT_RE.test(b.textContent.trim()));
+    Array.from(card.querySelectorAll('button')).find(b => TEXT_RE.test(b.textContent.trim())) ||
+    // LinkedIn 2026: action buttons rendered in floating overlay OUTSIDE the card's DOM tree.
+    // After hover, scan the full document. Restrict to visible, non-nav buttons only.
+    ARIA_SUBS.reduce((found, pat) =>
+      found || document.querySelector(`button[aria-label*="${pat}"]:not([disabled])`), null) ||
+    Array.from(document.querySelectorAll('button')).find(b => {
+      if (b.disabled) return false;
+      const rect = b.getBoundingClientRect();
+      if (rect.top < 80 || rect.width === 0) return false; // skip navbar
+      return TEXT_RE.test(b.textContent.trim());
+    });
 
   if (!messageButton) {
     const btns = Array.from(card.querySelectorAll('button'))

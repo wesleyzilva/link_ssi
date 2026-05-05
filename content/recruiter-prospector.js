@@ -193,13 +193,26 @@ async function prospectRecruiters() {
       card.dispatchEvent(new MouseEvent('mouseover',  { bubbles: true, cancelable: true }));
       await waitForButtonsInCard(card, 4000);
 
-      // Try direct Connect button inside the card
+      // Try direct Connect button inside the card first
       let connectButton = getConnectButton(card);
       let viaMoreMenu = false;
 
       if (!connectButton) {
-        // Connect may be hidden inside the "More actions" overflow menu
+        // Connect may be hidden inside the "More actions" overflow menu inside card
         connectButton = await getConnectButtonViaMore(card);
+        if (connectButton) viaMoreMenu = true;
+      }
+
+      // LinkedIn 2026: action buttons are rendered in a floating overlay OUTSIDE the card's
+      // DOM subtree. After hover, scan the full document for a Connect button whose
+      // aria-label contains the profile ID or whose nearest ancestor link matches the URL.
+      if (!connectButton) {
+        connectButton = getConnectButtonDocument(profileId, profileUrl);
+      }
+
+      // Last resort: open More actions at document level and search the dropdown
+      if (!connectButton) {
+        connectButton = await getConnectButtonViaMoreDocument(profileId, profileUrl);
         if (connectButton) viaMoreMenu = true;
       }
 
@@ -406,6 +419,116 @@ async function getConnectButtonViaMore(card) {
   }
 
   // Connect not in dropdown — close it and report
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  return null;
+}
+
+/**
+ * LinkedIn 2026: action buttons are rendered in a floating overlay OUTSIDE the card's DOM
+ * subtree. After scrolling a card into view and dispatching hover, the "Connect" button
+ * appears somewhere on the page (not inside the card). We search document-wide but verify
+ * the button is contextually tied to this profile via its aria-label (contains profileId or
+ * profile URL slug) or because it is the only visible Connect button on the page at that moment.
+ *
+ * @param {string} profileId  - URL slug of the profile, e.g. "john-smith-123"
+ * @param {string} profileUrl - full /in/ URL of the profile
+ * @returns {HTMLElement|null}
+ */
+function getConnectButtonDocument(profileId, profileUrl) {
+  const slug = profileId ? profileId.toLowerCase() : '';
+  const CONNECT_RE = /^(connect|conectar|conectar-se|convidar)\b/i;
+  const INVITE_RE  = /^(invite .+ to connect|convidar .+ para se? conectar)/i;
+
+  const allBtns = Array.from(document.querySelectorAll('button'));
+
+  // First pass: prefer buttons whose aria-label explicitly names this profile
+  const byLabel = allBtns.find(b => {
+    const label = (b.getAttribute('aria-label') || '').toLowerCase();
+    if (!CONNECT_RE.test(label) && !INVITE_RE.test(label)) return false;
+    return slug && label.includes(slug.toLowerCase());
+  });
+  if (byLabel) return byLabel;
+
+  // Second pass: any visible, enabled Connect button on the page
+  // (safe when only one card is active / hovered at a time)
+  const visible = allBtns.filter(b => {
+    const label = (b.getAttribute('aria-label') || '').toLowerCase();
+    const text  = b.textContent.trim().toLowerCase();
+    const isConnect = CONNECT_RE.test(label) || CONNECT_RE.test(text) || INVITE_RE.test(label);
+    if (!isConnect) return false;
+    if (b.disabled) return false;
+    const rect = b.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
+  });
+
+  // Return only if exactly one Connect button is visible (avoids ambiguity)
+  if (visible.length === 1) return visible[0];
+
+  return null;
+}
+
+/**
+ * LinkedIn 2026 document-level More-menu fallback.
+ * Clicks the first visible More/overflow button that is NOT inside a nav/header,
+ * then waits for a dropdown Connect item. Verifies the dropdown appeared for THIS
+ * profile by checking the aria-label contains the profile slug.
+ */
+async function getConnectButtonViaMoreDocument(profileId, profileUrl) {
+  const slug = profileId ? profileId.toLowerCase() : '';
+
+  const MORE_SELS = [
+    'button[aria-label*="More actions"]',
+    'button[aria-label*="More options"]',
+    'button[aria-label*="Mais ações"]',
+    'button[aria-label*="Mais opções"]',
+  ];
+  const textMatch = (b) => {
+    const t = (b.getAttribute('aria-label') || b.textContent || '').trim().toLowerCase();
+    return t === 'more' || t === 'more actions' || t === 'more options' ||
+           t === 'mais' || t === 'mais ações'   || t === 'mais opções'  || t === '…';
+  };
+
+  // Find More button that is NOT in the main nav
+  const moreBtns = [
+    ...MORE_SELS.flatMap(s => Array.from(document.querySelectorAll(s))),
+    ...Array.from(document.querySelectorAll('button')).filter(textMatch),
+  ].filter(b => {
+    if (b.disabled) return false;
+    const rect = b.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return false;
+    // Exclude navbar buttons (top of page)
+    if (rect.top < 80) return false;
+    return true;
+  });
+
+  if (!moreBtns.length) return null;
+
+  // Click the first candidate (should be the one for the hovered card)
+  await humanClick(moreBtns[0]);
+  await randomWait(600, 1400);
+
+  const deadline = Date.now() + 3000;
+  while (Date.now() < deadline) {
+    const dropItems = Array.from(document.querySelectorAll(
+      '.artdeco-dropdown__content li, .artdeco-dropdown li'
+    ));
+    const connectItem = dropItems.find(li => {
+      const btn = li.querySelector('button') || li;
+      const label = (btn.getAttribute('aria-label') || btn.textContent || '').trim().toLowerCase();
+      return /^(connect|invite .+ to connect|conectar|convidar)/i.test(label);
+    });
+    if (connectItem) {
+      const btn = connectItem.querySelector('button') || connectItem;
+      // Validate: the aria-label should reference this profile if slug available
+      const label = (btn.getAttribute('aria-label') || '').toLowerCase();
+      if (!slug || label.includes(slug)) return btn;
+      // Mismatch — close and skip
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      return null;
+    }
+    await new Promise(r => setTimeout(r, 300));
+  }
+
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
   return null;
 }
