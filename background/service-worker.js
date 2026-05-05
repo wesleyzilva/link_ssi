@@ -426,14 +426,14 @@ const PEOPLE_SEARCH_URLS = [
   'https://www.linkedin.com/search/results/people/?keywords=Tech%20Recruiter%20Information%20Technology&origin=FACETED_SEARCH&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22102713980%22%2C%22101165590%22%2C%22100364837%22%2C%22102454443%22%2C%22102890883%22%2C%22104738515%22%2C%22101174742%22%5D',
   // Tech Recruiter IT — same geos, English-only profiles, staffing/recruiting service category
   'https://www.linkedin.com/search/results/people/?keywords=Tech%20Recruiter%20Information%20Technology&origin=FACETED_SEARCH&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22102713980%22%2C%22101174742%22%2C%22101165590%22%2C%22100364837%22%2C%22102454443%22%2C%22102890883%22%2C%22104738515%22%5D&serviceCategory=%5B%224725%22%5D&profileLanguage=%5B%22en%22%5D',
-  // Tech Recruiter IT — US/CA/AU/UK/India/Singapore, staffing category, English, IT industry
-  'https://www.linkedin.com/search/results/people/?keywords=Tech%20Recruiter%20Information%20Technology&origin=FACETED_SEARCH&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22102713980%22%2C%22101174742%22%2C%22101165590%22%2C%22104738515%22%2C%2290009496%22%5D&serviceCategory=%5B%224725%22%5D&profileLanguage=%5B%22en%22%5D',
-  // Tech Recruiter IT — US/CA/UK/AU/India/Singapore, IT consulting service category, English
-  'https://www.linkedin.com/search/results/people/?keywords=Tech%20Recruiter%20Information%20Technology&origin=FACETED_SEARCH&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22102713980%22%2C%22101165590%22%2C%22101174742%22%2C%2290009496%22%2C%22104738515%22%5D&serviceCategory=%5B%2250342%22%5D&profileLanguage=%5B%22en%22%5D',
-  // tech recruiter experian — US, Canada, 90009496, 101739942, 104738515, Netherlands, Germany (user-validated geos)
-  'https://www.linkedin.com/search/results/people/?keywords=tech%20recruiter%20experian&origin=FACETED_SEARCH&geoUrn=%5B%22103644278%22%2C%22102713980%22%2C%2290009496%22%2C%22101739942%22%2C%22104738515%22%2C%22102890883%22%2C%22102454443%22%5D&network=%5B%22S%22%2C%22O%22%5D',
+  // Tech Recruiter IT — US/CA/AU/UK/Singapore, staffing category, English, IT industry
+  'https://www.linkedin.com/search/results/people/?keywords=Tech%20Recruiter%20Information%20Technology&origin=FACETED_SEARCH&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22102713980%22%2C%22101174742%22%2C%22101165590%22%2C%22104738515%22%5D&serviceCategory=%5B%224725%22%5D&profileLanguage=%5B%22en%22%5D',
+  // Tech Recruiter IT — US/CA/UK/AU/Singapore, IT consulting service category, English
+  'https://www.linkedin.com/search/results/people/?keywords=Tech%20Recruiter%20Information%20Technology&origin=FACETED_SEARCH&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22102713980%22%2C%22101165590%22%2C%22101174742%22%2C%22104738515%22%5D&serviceCategory=%5B%2250342%22%5D&profileLanguage=%5B%22en%22%5D',
+  // tech recruiter experian — US, Canada, Australia, Netherlands, Germany, France (user-validated geos)
+  'https://www.linkedin.com/search/results/people/?keywords=tech%20recruiter%20experian&origin=FACETED_SEARCH&geoUrn=%5B%22103644278%22%2C%22102713980%22%2C%22101739942%22%2C%22104738515%22%2C%22102890883%22%2C%22102454443%22%5D&network=%5B%22S%22%2C%22O%22%5D',
   // tech recruiter experian — same geos, with Tech/IT industry filter
-  'https://www.linkedin.com/search/results/people/?keywords=tech%20recruiter%20experian&origin=FACETED_SEARCH&geoUrn=%5B%22103644278%22%2C%22102713980%22%2C%2290009496%22%2C%22101739942%22%2C%22104738515%22%2C%22102890883%22%2C%22102454443%22%5D&network=%5B%22S%22%2C%22O%22%5D&f_I=%5B%226%22%5D',
+  'https://www.linkedin.com/search/results/people/?keywords=tech%20recruiter%20experian&origin=FACETED_SEARCH&geoUrn=%5B%22103644278%22%2C%22102713980%22%2C%22101739942%22%2C%22104738515%22%2C%22102890883%22%2C%22102454443%22%5D&network=%5B%22S%22%2C%22O%22%5D&f_I=%5B%226%22%5D',
 ];
 
 // Direct people-search URLs for global (non-Brazilian) profiles — network=O (3rd degree+)
@@ -442,20 +442,20 @@ const PEOPLE_SEARCH_URLS = [
 const RECRUITER_DIRECT_CONNECT_URLS = [
   // 1st–3rd degree, "eua" keyword — US-oriented global professionals
   'https://www.linkedin.com/search/results/people/?keywords=eua&origin=GLOBAL_SEARCH_HEADER&network=%5B%22O%22%5D',
-  // 3rd degree, "europe" keyword — France, Netherlands, India, US, Portugal, UK, Germany
-  'https://www.linkedin.com/search/results/people/?keywords=europe&origin=FACETED_SEARCH&network=%5B%22O%22%5D&geoUrn=%5B%22101165590%22%2C%22105015875%22%2C%2290009496%22%2C%22103644278%22%2C%22106204383%22%2C%22101174742%22%2C%22104738515%22%5D',
-  // "hiring project manager" — 1st+2nd+3rd degree — US, UK, Canada, Germany, Netherlands, France, India
-  'https://www.linkedin.com/search/results/people/?keywords=hiring%20project%20manager&origin=GLOBAL_SEARCH_HEADER&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101174742%22%2C%22101165590%22%2C%22102454443%22%2C%22104738515%22%2C%22105015875%22%2C%22106204383%22%2C%2290009496%22%5D',
-  // "hiring delivery manager" — 1st+2nd+3rd degree — US, France, UK, Canada, Germany, Netherlands, India
-  'https://www.linkedin.com/search/results/people/?keywords=hiring%20delivery%20manager&origin=GLOBAL_SEARCH_HEADER&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22105015875%22%2C%22101165590%22%2C%22101174742%22%2C%22102454443%22%2C%22104738515%22%2C%22106204383%22%2C%2290009496%22%5D',
-  // "hiring delivery manager latam" — 1st+2nd+3rd degree — US, UK, India, Canada, Germany, Netherlands, France
-  'https://www.linkedin.com/search/results/people/?keywords=hiring%20delivery%20manager%20latam&origin=GLOBAL_SEARCH_HEADER&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%2C%2290009496%22%2C%22101174742%22%2C%22102454443%22%2C%22104738515%22%2C%22105015875%22%2C%22106204383%22%5D',
-  // "hiring project manager latam" — 1st+2nd+3rd degree — US, UK, Canada, Germany, Netherlands, France, India
-  'https://www.linkedin.com/search/results/people/?keywords=hiring%20project%20manager%20latam&origin=GLOBAL_SEARCH_HEADER&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%2C%22101174742%22%2C%22102454443%22%2C%22104738515%22%2C%22105015875%22%2C%22106204383%22%2C%2290009496%22%5D',
-  // "hiring scrum latam" — 1st+2nd+3rd degree — UK, Canada, Germany, US, Netherlands, France, India
-  'https://www.linkedin.com/search/results/people/?keywords=hiring%20scrum%20latam&origin=GLOBAL_SEARCH_HEADER&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22101165590%22%2C%22101174742%22%2C%22102454443%22%2C%22103644278%22%2C%22104738515%22%2C%22105015875%22%2C%22106204383%22%2C%2290009496%22%5D',
-  // "hiring agile latam" — 1st+2nd+3rd degree — US, Canada, India, UK, Germany, Netherlands, France
-  'https://www.linkedin.com/search/results/people/?keywords=hiring%20agile%20latam&origin=GLOBAL_SEARCH_HEADER&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101174742%22%2C%22106204383%22%2C%22101165590%22%2C%22102454443%22%2C%22104738515%22%2C%22105015875%22%2C%2290009496%22%5D',
+  // 3rd degree, "europe" keyword — France, Netherlands, US, Portugal, UK, Germany
+  'https://www.linkedin.com/search/results/people/?keywords=europe&origin=FACETED_SEARCH&network=%5B%22O%22%5D&geoUrn=%5B%22101165590%22%2C%22105015875%22%2C%22103644278%22%2C%22106204383%22%2C%22101174742%22%2C%22104738515%22%5D',
+  // "hiring project manager" — 1st+2nd+3rd degree — US, UK, Canada, Germany, Netherlands, France
+  'https://www.linkedin.com/search/results/people/?keywords=hiring%20project%20manager&origin=GLOBAL_SEARCH_HEADER&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101174742%22%2C%22101165590%22%2C%22102454443%22%2C%22104738515%22%2C%22105015875%22%2C%22106204383%22%5D',
+  // "hiring delivery manager" — 1st+2nd+3rd degree — US, France, UK, Canada, Germany, Netherlands
+  'https://www.linkedin.com/search/results/people/?keywords=hiring%20delivery%20manager&origin=GLOBAL_SEARCH_HEADER&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22105015875%22%2C%22101165590%22%2C%22101174742%22%2C%22102454443%22%2C%22104738515%22%2C%22106204383%22%5D',
+  // "hiring delivery manager latam" — 1st+2nd+3rd degree — US, UK, Canada, Germany, Netherlands, France
+  'https://www.linkedin.com/search/results/people/?keywords=hiring%20delivery%20manager%20latam&origin=GLOBAL_SEARCH_HEADER&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%2C%22101174742%22%2C%22102454443%22%2C%22104738515%22%2C%22105015875%22%2C%22106204383%22%5D',
+  // "hiring project manager latam" — 1st+2nd+3rd degree — US, UK, Canada, Germany, Netherlands, France
+  'https://www.linkedin.com/search/results/people/?keywords=hiring%20project%20manager%20latam&origin=GLOBAL_SEARCH_HEADER&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%2C%22101174742%22%2C%22102454443%22%2C%22104738515%22%2C%22105015875%22%2C%22106204383%22%5D',
+  // "hiring scrum latam" — 1st+2nd+3rd degree — UK, Canada, Germany, US, Netherlands, France
+  'https://www.linkedin.com/search/results/people/?keywords=hiring%20scrum%20latam&origin=GLOBAL_SEARCH_HEADER&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22101165590%22%2C%22101174742%22%2C%22102454443%22%2C%22103644278%22%2C%22104738515%22%2C%22105015875%22%2C%22106204383%22%5D',
+  // "hiring agile latam" — 1st+2nd+3rd degree — US, Canada, UK, Germany, Netherlands, France
+  'https://www.linkedin.com/search/results/people/?keywords=hiring%20agile%20latam&origin=GLOBAL_SEARCH_HEADER&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101174742%22%2C%22106204383%22%2C%22101165590%22%2C%22102454443%22%2C%22104738515%22%2C%22105015875%22%5D',
 ];
 
 /**
@@ -582,8 +582,8 @@ async function buildSearchUrl(targetWindow) {
 
   // Expanded geo list validated by the user across pages 1-10
   const geoMap = {
-    // USA, UK, Canada, 90009496, 101739942, 104738515, Netherlands, Germany
-    US_EU: '%5B%22103644278%22%2C%22101165590%22%2C%22102713980%22%2C%2290009496%22%2C%22101739942%22%2C%22104738515%22%2C%22102890883%22%2C%22102454443%22%5D',
+    // USA, UK, Canada, Australia, Netherlands, Germany, France
+    US_EU: '%5B%22103644278%22%2C%22101165590%22%2C%22102713980%22%2C%22101739942%22%2C%22104738515%22%2C%22102890883%22%2C%22102454443%22%5D',
     APAC:  '%5B%22102257491%22%2C%22101452733%22%5D',   // Australia + Singapore
   };
   const geo      = geoMap[targetWindow] || geoMap.US_EU;
