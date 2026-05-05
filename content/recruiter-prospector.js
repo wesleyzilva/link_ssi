@@ -75,122 +75,177 @@ async function waitForElements(queryFn, maxWait = 20000, interval = 2000) {
   return queryFn(); // final attempt
 }
 
+/**
+ * Navigates to the next LinkedIn search results page by clicking the native
+ * pagination "Next" button. Returns true if navigation succeeded.
+ * LinkedIn is a SPA — the URL changes via pushState and the content script
+ * stays alive across pagination.
+ */
+async function goToNextPage() {
+  const nextBtn =
+    document.querySelector('button[aria-label="Next"]') ||
+    document.querySelector('button[aria-label="Próximo"]') ||
+    document.querySelector('button[aria-label="Siguiente"]') ||
+    document.querySelector('.artdeco-pagination__button--next:not([disabled])') ||
+    Array.from(document.querySelectorAll('button')).find(b => {
+      const label = (b.getAttribute('aria-label') || '').toLowerCase();
+      const text  = b.textContent.trim().toLowerCase();
+      return (label === 'next' || label === 'próximo' || text === 'next' || text === 'próximo') &&
+             !b.disabled;
+    });
+
+  if (!nextBtn || nextBtn.disabled) return false;
+
+  const prevUrl = window.location.href;
+  nextBtn.click();
+
+  // Wait up to 15s for the SPA to update the URL
+  const deadline = Date.now() + 15000;
+  while (Date.now() < deadline) {
+    if (window.location.href !== prevUrl) return true;
+    await new Promise(r => setTimeout(r, 500));
+  }
+  return false;
+}
+
 async function prospectRecruiters() {
   await contentLog(`▶ recruiter-prospector started | ${window.location.href}`);
   await randomWait(5000, 9000); // initial wait for SPA render
 
-  const results = await waitForElements(getSearchResultCards);
-  if (!results.length) {
-    console.warn('[Recruiter Prospector] No search result cards found — selectors may need updating.');
-    await contentLog('✗ recruiter-prospector — no search result cards found (waited 20 s)', 'warn');
-    await chrome.storage.local.set({ lastProspecting: { sent: 0, runAt: new Date().toISOString() } });
-    return { sent: 0 };
-  }
-  await contentLog(`recruiter-prospector — ${results.length} cards found`);
-
   let sent = 0;
+  let totalChecked = 0;
+  const MAX_PAGES = 10;
 
-  for (const card of results) {
+  for (let page = 1; page <= MAX_PAGES; page++) {
     if (!VIEW_ONLY_MODE && sent >= SESSION_CAP) break;
 
-    const profileId = extractProfileId(card);
-    if (!profileId) continue;
-
-    const profileUrl = extractProfileUrl(card) || `/in/${profileId}`;
-
-    // Skip profiles with a locale suffix in the URL — e.g. /en/, /pt/, /es/
-    // These are typically Brazilians who set their LinkedIn UI to English.
-    // We want genuinely global profiles, not localised ones.
-    if (/\/in\/[^/]+\/[a-z]{2}(-[a-zA-Z]{2,4})?\/?($|\?)/.test(profileUrl)) {
-      await contentLog(`↷ ${profileUrl} — skipped (locale-suffixed URL, likely BR)`);
-      continue;
+    // From page 2 onward: navigate via the Next button
+    if (page > 1) {
+      await randomWait(3000, 6000); // human-like pause between pages
+      const navigated = await goToNextPage();
+      if (!navigated) {
+        await contentLog(`■ no more pages after page ${page - 1} — stopping pagination`);
+        break;
+      }
+      await contentLog(`▶ page ${page} — waiting for SPA render...`);
+      await randomWait(4000, 7000); // wait for LinkedIn SPA to paint new results
     }
 
-    // VIEW_ONLY_MODE: scroll each card — signals "Find Right People" to LinkedIn SSI
-    if (VIEW_ONLY_MODE) {
+    const cards = await waitForElements(getSearchResultCards);
+    if (!cards.length) {
+      if (page === 1) {
+        console.warn('[Recruiter Prospector] No search result cards found — selectors may need updating.');
+        await contentLog('✗ recruiter-prospector — no search result cards found (waited 20 s)', 'warn');
+        await chrome.storage.local.set({ lastProspecting: { sent: 0, runAt: new Date().toISOString() } });
+        return { sent: 0 };
+      }
+      await contentLog(`✗ page ${page} — no cards found — stopping pagination`, 'warn');
+      break;
+    }
+
+    await contentLog(`page ${page}/${MAX_PAGES} — ${cards.length} cards found`);
+    totalChecked += cards.length;
+
+    for (const card of cards) {
+      if (!VIEW_ONLY_MODE && sent >= SESSION_CAP) break;
+
+      const profileId = extractProfileId(card);
+      if (!profileId) continue;
+
+      const profileUrl = extractProfileUrl(card) || `/in/${profileId}`;
+
+      // Skip profiles with a locale suffix in the URL — e.g. /en/, /pt/, /es/
+      // These are typically Brazilians who set their LinkedIn UI to English.
+      // We want genuinely global profiles, not localised ones.
+      if (/\/in\/[^/]+\/[a-z]{2}(-[a-zA-Z]{2,4})?\/?($|\?)/.test(profileUrl)) {
+        await contentLog(`↷ ${profileUrl} — skipped (locale-suffixed URL, likely BR)`);
+        continue;
+      }
+
+      // VIEW_ONLY_MODE: scroll each card — signals "Find Right People" to LinkedIn SSI
+      if (VIEW_ONLY_MODE) {
+        await scrollIntoViewAndPause(card);
+        await randomWait(2000, 4500);
+        await logProfileLink(profileUrl, profileId, '');
+        await contentLog(`👁 ${profileUrl} — viewed (SSI: localizar as pessoas certas)`);
+        continue;
+      }
+
+      // Log every profile we encounter (for later human review)
+      const firstName = extractName(card);
+      await logProfileLink(profileUrl, profileId, firstName);
+
+      const locked = await isRecruiterLocked(profileId);
+      if (locked) {
+        // Scroll into view even when locked — SSI counts profile impressions from search
+        await scrollIntoViewAndPause(card);
+        await randomWait(1500, 3000);
+        console.log(`[Recruiter Prospector] Skipping ${profileId} — within 7-day lock.`);
+        await contentLog(`↷ ${profileUrl} — locked (7-day, viewed)`);
+        continue;
+      }
+
+      // LinkedIn 2026 lazy-renders action buttons only after the card scrolls into view
+      // and receives a hover event. Scroll first, dispatch hover, then poll for buttons.
       await scrollIntoViewAndPause(card);
-      await randomWait(2000, 4500);
-      await logProfileLink(profileUrl, profileId, '');
-      await contentLog(`👁 ${profileUrl} — viewed (SSI: localizar as pessoas certas)`);
-      continue;
+      await readBeforeActing(card, 2000, 5000);
+      card.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+      card.dispatchEvent(new MouseEvent('mouseover',  { bubbles: true, cancelable: true }));
+      await waitForButtonsInCard(card, 4000);
+
+      // Try direct Connect button inside the card
+      let connectButton = getConnectButton(card);
+      let viaMoreMenu = false;
+
+      if (!connectButton) {
+        // Connect may be hidden inside the "More actions" overflow menu
+        connectButton = await getConnectButtonViaMore(card);
+        if (connectButton) viaMoreMenu = true;
+      }
+
+      if (!connectButton) {
+        await randomWait(1000, 2500);
+        // Diagnostic: log all button texts/aria-labels in this card so we can tune selectors
+        const btns = Array.from(card.querySelectorAll('button'))
+          .map(b => `"${b.textContent.trim().slice(0,30)}" aria="${(b.getAttribute('aria-label')||'').slice(0,50)}"`)
+          .join(' | ');
+        await contentLog(`[Diag] no connect btn found | card buttons: ${btns || 'none'}`, 'warn');
+        await contentLog(`↷ ${profileUrl} — no connect button (viewed)`);
+        continue;
+      }
+
+      await humanClick(connectButton);
+
+      // Send connection WITHOUT a note — avoids modal friction and feels more organic
+      const connected = await handleConnectionModalNoNote();
+      if (!connected) {
+        await contentLog(`⚠ connection modal handled but send failed | ${profileUrl}`, 'warn');
+        continue;
+      }
+
+      await markRecruiterInteracted(profileId, firstName);
+      sent++;
+      await contentLog(`✓ ${profileUrl} | ${firstName} — connected (${sent}/${SESSION_CAP}) [p${page}]`, 'success');
+
+      // Persist to history — chrome.storage.local is readable from any extension page
+      const { connections = [] } = await chrome.storage.local.get('connections');
+      connections.push({
+        profileId,
+        name: firstName,
+        profileUrl,
+        sentAt: new Date().toISOString(),
+      });
+      await chrome.storage.local.set({ connections: connections.slice(-200) });
+
+      console.log(`[Recruiter Prospector] Connection sent to ${profileId} (${sent}/${SESSION_CAP})`);
+      await randomWait(9000, 20000); // longer pause between requests to avoid rate detection
     }
-
-    // Log every profile we encounter (for later human review)
-    const firstName = extractName(card);
-    await logProfileLink(profileUrl, profileId, firstName);
-
-    const locked = await isRecruiterLocked(profileId);
-    if (locked) {
-      // Scroll into view even when locked — SSI counts profile impressions from search
-      await scrollIntoViewAndPause(card);
-      await randomWait(1500, 3000);
-      console.log(`[Recruiter Prospector] Skipping ${profileId} — within 7-day lock.`);
-      await contentLog(`↷ ${profileUrl} — locked (7-day, viewed)`);
-      continue;
-    }
-
-    // LinkedIn 2026 lazy-renders action buttons only after the card scrolls into view
-    // and receives a hover event. Scroll first, dispatch hover, then poll for buttons.
-    await scrollIntoViewAndPause(card);
-    await readBeforeActing(card, 2000, 5000);
-    card.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
-    card.dispatchEvent(new MouseEvent('mouseover',  { bubbles: true, cancelable: true }));
-    await waitForButtonsInCard(card, 4000);
-
-    // Try direct Connect button inside the card
-    let connectButton = getConnectButton(card);
-    let viaMoreMenu = false;
-
-    if (!connectButton) {
-      // Connect may be hidden inside the "More actions" overflow menu
-      connectButton = await getConnectButtonViaMore(card);
-      if (connectButton) viaMoreMenu = true;
-    }
-
-    if (!connectButton) {
-      await randomWait(1000, 2500);
-      // Diagnostic: log all button texts/aria-labels in this card so we can tune selectors
-      const btns = Array.from(card.querySelectorAll('button'))
-        .map(b => `"${b.textContent.trim().slice(0,30)}" aria="${(b.getAttribute('aria-label')||'').slice(0,50)}"`)
-        .join(' | ');
-      await contentLog(`[Diag] no connect btn found | card buttons: ${btns || 'none'}`, 'warn');
-      await contentLog(`↷ ${profileUrl} — no connect button (viewed)`);
-      continue;
-    }
-
-    // Simulate reading the profile card before deciding to connect (scroll + read already done above)
-    await humanClick(connectButton);
-
-
-    // Send connection WITHOUT a note — avoids modal friction and feels more organic
-    const connected = await handleConnectionModalNoNote();
-    if (!connected) {
-      await contentLog(`⚠ connection modal handled but send failed | ${profileUrl}`, 'warn');
-      continue;
-    }
-
-    await markRecruiterInteracted(profileId, firstName);
-    sent++;
-    await contentLog(`✓ ${profileUrl} | ${firstName} — connected (${sent}/${SESSION_CAP})`, 'success');
-
-    // Persist to history — chrome.storage.local is readable from any extension page
-    const { connections = [] } = await chrome.storage.local.get('connections');
-    connections.push({
-      profileId,
-      name: firstName,
-      profileUrl,
-      sentAt: new Date().toISOString(),
-    });
-    await chrome.storage.local.set({ connections: connections.slice(-200) });
-
-    console.log(`[Recruiter Prospector] Connection sent to ${profileId} (${sent}/${SESSION_CAP})`);
-    await randomWait(9000, 20000); // longer pause between requests to avoid rate detection
   }
 
   await chrome.storage.local.set({
     lastProspecting: { sent, runAt: new Date().toISOString() },
   });
-  await contentLog(`■ recruiter-prospector DONE | ${sent} sent / ${results.length} checked`, 'success');
+  await contentLog(`■ recruiter-prospector DONE | ${sent} sent / ${totalChecked} checked`, 'success');
 
   return { sent };
 }

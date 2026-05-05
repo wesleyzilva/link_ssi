@@ -190,16 +190,16 @@ async function runDailySequence(targetWindow, dailyCap) {
     const capRest = dailyCap - capHalf;
 
     await log(`Step 2/6 — Prospecting Tech Recruiters via keyword search (cap: ${capHalf})…`);
-    await openTabAndWait(await buildSearchUrl(targetWindow), 'recruiter-prospector', { dailyCap: capHalf });
+    await openTabAndWait(await buildSearchUrl(targetWindow), 'recruiter-prospector', { dailyCap: capHalf }, 600_000);
 
     await log('Step 2b/6 — Browsing people search (SSI: Localizar as pessoas certas)…');
     const peopleUrl = await getNextPeopleSearchUrl();
-    await openTabAndWait(peopleUrl, 'recruiter-prospector', { dailyCap: 0 });
+    await openTabAndWait(peopleUrl, 'recruiter-prospector', { dailyCap: 0 }, 600_000);
     await advancePeopleQueue();
 
     await log(`Step 2c/6 — Prospecting global profiles via direct URLs (cap: ${capRest})…`);
     const directUrl = await getNextDirectConnectUrl();
-    await openTabAndWait(directUrl, 'recruiter-prospector', { dailyCap: capRest });
+    await openTabAndWait(directUrl, 'recruiter-prospector', { dailyCap: capRest }, 600_000);
     await advanceDirectConnectQueue();
 
     await log('Step 3/6 — Engaging with targeted content search posts…');
@@ -294,7 +294,7 @@ async function processSpecificPostQueue() {
  * @param {string} task
  * @param {object} payload
  */
-function openTabAndWait(url, task, payload = {}) {
+function openTabAndWait(url, task, payload = {}, timeoutMs = 90_000) {
   return new Promise((resolve) => {
     let settled = false;
     let createdTabId = null;
@@ -319,10 +319,11 @@ function openTabAndWait(url, task, payload = {}) {
       settle();
     };
 
+    const timeoutSecs = Math.round(timeoutMs / 1000);
     const safetyTimer = setTimeout(() => {
-      log(`[${task}] timed out after 90 s — continuing sequence`, 'warn');
+      log(`[${task}] timed out after ${timeoutSecs} s — continuing sequence`, 'warn');
       settle();
-    }, 90_000);
+    }, timeoutMs);
 
     chrome.tabs.create({ url, active: false }, (tab) => {
       createdTabId = tab.id;
