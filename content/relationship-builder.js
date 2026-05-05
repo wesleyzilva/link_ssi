@@ -106,7 +106,12 @@ async function buildRelationships() {
     }
 
     await scrollIntoViewAndPause(card);
-    await randomWait(1500, 4000);
+    // LinkedIn 2026 lazy-renders the action buttons (Celebrar / Parabenizar / etc.)
+    // only after the card enters the viewport AND receives a hover event.
+    card.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+    card.dispatchEvent(new MouseEvent('mouseover',  { bubbles: true, cancelable: true }));
+    await waitForActionButton(card, 5000);
+    await randomWait(1000, 2500);
 
     const messages =
       type === 'anniversary' ? ANNIVERSARY_MESSAGES :
@@ -149,6 +154,27 @@ async function buildRelationships() {
 }
 
 // ─── DOM helpers ──────────────────────────────────────────────────────────────
+
+/**
+ * Polls up to maxWait ms for the card to expose at least one NON-reaction button.
+ * LinkedIn 2026 lazy-renders action buttons (Celebrar / Parabenizar / etc.) after hover.
+ * The "Open reactions menu" Like button is always present but we need the action button.
+ */
+async function waitForActionButton(card, maxWait = 5000) {
+  const SKIP_LABELS = ['open reactions menu', 'like', 'curtir', 'reagir', 'comment', 'share', 'send'];
+  const deadline = Date.now() + maxWait;
+  while (Date.now() < deadline) {
+    const btns = Array.from(card.querySelectorAll('button'));
+    const hasAction = btns.some(b => {
+      const label = (b.getAttribute('aria-label') || '').toLowerCase();
+      const text  = b.textContent.trim().toLowerCase();
+      return !SKIP_LABELS.some(r => label.includes(r) || text.includes(r)) &&
+             (label.length > 0 || text.length > 0);
+    });
+    if (hasAction) return;
+    await new Promise(r => setTimeout(r, 300));
+  }
+}
 
 function getNetworkCards() {
   // Strategy 1: dedicated birthday/anniversary catch-up pages
