@@ -98,6 +98,14 @@ async function prospectRecruiters() {
 
     const profileUrl = extractProfileUrl(card) || `/in/${profileId}`;
 
+    // Skip profiles with a locale suffix in the URL — e.g. /en/, /pt/, /es/
+    // These are typically Brazilians who set their LinkedIn UI to English.
+    // We want genuinely global profiles, not localised ones.
+    if (/\/in\/[^/]+\/[a-z]{2}(-[a-zA-Z]{2,4})?\/?($|\?)/.test(profileUrl)) {
+      await contentLog(`↷ ${profileUrl} — skipped (locale-suffixed URL, likely BR)`);
+      continue;
+    }
+
     // VIEW_ONLY_MODE: scroll each card — signals "Find Right People" to LinkedIn SSI
     if (VIEW_ONLY_MODE) {
       await scrollIntoViewAndPause(card);

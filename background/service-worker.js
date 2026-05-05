@@ -184,13 +184,23 @@ async function runDailySequence(targetWindow, dailyCap) {
     await log('Step 1/6 — Capturing SSI scores…');
     await openTabAndWait('https://www.linkedin.com/sales/ssi', 'ssi-monitor', {});
 
-    await log(`Step 2/6 — Prospecting Tech Recruiters (cap: ${dailyCap})…`);
-    await openTabAndWait(await buildSearchUrl(targetWindow), 'recruiter-prospector', { dailyCap });
+    // Split the daily cap: Step 2 uses the keyword pool, Step 2c uses direct validated URLs.
+    // Total connections per day stays within the DAILY_CAPS schedule.
+    const capHalf = Math.floor(dailyCap / 2);
+    const capRest = dailyCap - capHalf;
+
+    await log(`Step 2/6 — Prospecting Tech Recruiters via keyword search (cap: ${capHalf})…`);
+    await openTabAndWait(await buildSearchUrl(targetWindow), 'recruiter-prospector', { dailyCap: capHalf });
 
     await log('Step 2b/6 — Browsing people search (SSI: Localizar as pessoas certas)…');
     const peopleUrl = await getNextPeopleSearchUrl();
     await openTabAndWait(peopleUrl, 'recruiter-prospector', { dailyCap: 0 });
     await advancePeopleQueue();
+
+    await log(`Step 2c/6 — Prospecting global profiles via direct URLs (cap: ${capRest})…`);
+    const directUrl = await getNextDirectConnectUrl();
+    await openTabAndWait(directUrl, 'recruiter-prospector', { dailyCap: capRest });
+    await advanceDirectConnectQueue();
 
     await log('Step 3/6 — Engaging with targeted content search posts…');
     const { expr, index: exprIndex, url: postEngageUrl } = await getNextSearchExpression();
@@ -425,6 +435,16 @@ const PEOPLE_SEARCH_URLS = [
   'https://www.linkedin.com/search/results/people/?keywords=tech%20recruiter%20experian&origin=FACETED_SEARCH&geoUrn=%5B%22103644278%22%2C%22102713980%22%2C%2290009496%22%2C%22101739942%22%2C%22104738515%22%2C%22102890883%22%2C%22102454443%22%5D&network=%5B%22S%22%2C%22O%22%5D&f_I=%5B%226%22%5D',
 ];
 
+// Direct people-search URLs for global (non-Brazilian) profiles — network=O (3rd degree+)
+// These are user-validated URLs that target genuinely global audiences.
+// Rotated each run, processed with full connect cap (split with Step 2).
+const RECRUITER_DIRECT_CONNECT_URLS = [
+  // 1st–3rd degree, "eua" keyword — US-oriented global professionals
+  'https://www.linkedin.com/search/results/people/?keywords=eua&origin=GLOBAL_SEARCH_HEADER&network=%5B%22O%22%5D',
+  // 3rd degree, "europe" keyword — France, Netherlands, India, US, Portugal, UK, Germany
+  'https://www.linkedin.com/search/results/people/?keywords=europe&origin=FACETED_SEARCH&network=%5B%22O%22%5D&geoUrn=%5B%22101165590%22%2C%22105015875%22%2C%2290009496%22%2C%22103644278%22%2C%22106204383%22%2C%22101174742%22%2C%22104738515%22%5D',
+];
+
 /**
  * Returns the next content-search expression using round-robin rotation.
  * Cycles through all 15 expressions before any repeats.
@@ -464,6 +484,20 @@ async function advancePeopleQueue() {
   const next = (peopleQueueIndex + 1) % PEOPLE_SEARCH_URLS.length;
   await chrome.storage.local.set({ peopleQueueIndex: next });
   console.log(`[SSI Optimizer] People queue advanced: ${peopleQueueIndex} → ${next}`);
+}
+
+async function getNextDirectConnectUrl() {
+  const { directConnectIndex = 0 } = await chrome.storage.local.get('directConnectIndex');
+  const idx = directConnectIndex % RECRUITER_DIRECT_CONNECT_URLS.length;
+  console.log(`[SSI Optimizer] Direct connect URL ${idx + 1}/${RECRUITER_DIRECT_CONNECT_URLS.length}: ${RECRUITER_DIRECT_CONNECT_URLS[idx]}`);
+  return RECRUITER_DIRECT_CONNECT_URLS[idx];
+}
+
+async function advanceDirectConnectQueue() {
+  const { directConnectIndex = 0 } = await chrome.storage.local.get('directConnectIndex');
+  const next = (directConnectIndex + 1) % RECRUITER_DIRECT_CONNECT_URLS.length;
+  await chrome.storage.local.set({ directConnectIndex: next });
+  console.log(`[SSI Optimizer] Direct connect queue advanced: ${directConnectIndex} → ${next}`);
 }
 
 function buildPostEngageUrl() {
