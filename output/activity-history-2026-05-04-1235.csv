@@ -1,0 +1,85 @@
+﻿Category,Date,Type,Name,Detail,URL
+Log,2026-05-04T12:35:04.107Z,success,connection-tracker,■ connection-tracker DONE | +0 accepted | total: 0/0 (0%),
+Log,2026-05-04T12:35:04.105Z,info,connection-tracker,📋 pending invitations on page: 0,
+Log,2026-05-04T12:34:49.634Z,info,connection-tracker,▶ connection-tracker started | https://www.linkedin.com/mynetwork/invitation-manager/sent/,
+Log,2026-05-04T12:34:45.133Z,info,,Step 5/6 — Tracking accepted connections…,
+Log,2026-05-04T12:34:45.111Z,info,,■ relationship-builder done | 0 touched,
+Log,2026-05-04T12:33:53.472Z,info,,▶ relationship-builder started | https://www.linkedin.com/mynetwork/catch-up/work_anniversaries/,
+Log,2026-05-04T12:33:49.106Z,info,,■ relationship-builder done | 0 touched,
+Log,2026-05-04T12:33:28.423Z,warn,,[post-engager] content script did not respond after 15 retries — skipping,
+Log,2026-05-04T12:32:47.085Z,info,,▶ relationship-builder started | https://www.linkedin.com/mynetwork/catch-up/birthday/,
+Log,2026-05-04T12:32:43.297Z,info,,Step 4/5 — Building relationships (birthdays + anniversaries)…,
+Log,2026-05-04T12:32:43.235Z,warn,,[post-engager] timed out after 90 s — continuing sequence,
+Log,2026-05-04T12:32:27.103Z,info,post-engager,📌 post 54843831604256768/ | recruiter=false | comments=0 | priority=HIGH | url=https://www.linkedin.com/feed/update/urn:li:activity:7454843831604256768/,
+Log,2026-05-04T12:32:27.102Z,info,post-engager,🔗 link registered | discovered | https://www.linkedin.com/feed/update/urn:li:activity:7454843831604256768/,
+Link,2026-05-04T12:32:27.102Z,link-discovered,discovered,,https://www.linkedin.com/feed/update/urn:li:activity:7454843831604256768/
+Log,2026-05-04T12:32:27.099Z,info,post-engager,↓ scroll round 1/8 | likes=1 comments=0 follows=1,
+Log,2026-05-04T12:32:15.112Z,success,post-engager,✓ FOLLOW | author of https://www.linkedin.com/feed/update/urn:li:activity:7454843831604256768/ (1/6),
+Post,2026-05-04T12:32:15.111Z,follow,,https://www.linkedin.com/feed/update/urn:li:activity:7454843831604256768/,https://www.linkedin.com/feed/update/urn:li:activity:7454843831604256768/
+Log,2026-05-04T12:32:11.109Z,warn,post-engager,⚠ comment failed (no box/submit) | https://www.linkedin.com/feed/update/urn:li:activity:7454843831604256768/,
+Log,2026-05-04T12:32:11.107Z,warn,post-engager,⚠ comment submit button not found,
+Log,2026-05-04T12:32:05.112Z,info,post-engager,"💬 typing comment: ""From 14+ yrs leading nearshore teams in Brazil, I agree enti...""",
+Log,2026-05-04T12:31:58.346Z,warn,,[recruiter-prospector] content script did not respond after 15 retries — skipping,
+Post,2026-05-04T12:31:50.106Z,like,,https://www.linkedin.com/feed/update/urn:li:activity:7454843831604256768/,https://www.linkedin.com/feed/update/urn:li:activity:7454843831604256768/
+Log,2026-05-04T12:31:50.106Z,success,post-engager,✓ LIKE | https://www.linkedin.com/feed/update/urn:li:activity:7454843831604256768/ (1/8),
+Log,2026-05-04T12:31:36.111Z,info,post-engager,📌 post 54843831604256768/ | recruiter=false | comments=0 | priority=HIGH | url=https://www.linkedin.com/feed/update/urn:li:activity:7454843831604256768/,
+Log,2026-05-04T12:31:36.109Z,info,post-engager,🔗 link registered | discovered | https://www.linkedin.com/feed/update/urn:li:activity:7454843831604256768/,
+Link,2026-05-04T12:31:36.109Z,link-discovered,discovered,,https://www.linkedin.com/feed/update/urn:li:activity:7454843831604256768/
+Log,2026-05-04T12:31:17.836Z,info,post-engager,▶ post-engager started | url=https://www.linkedin.com/search/results/content/?keywords=project%20delivery&origin=GLOBAL_SEARCH_HEADER&datePosted=%5B%22past-month%22%5D&authorIndustry=%5B%226%22%5D,
+Log,2026-05-04T12:31:17.833Z,info,post-engager,▶ post-engager START message received,
+Log,2026-05-04T12:31:13.220Z,info,,"Keyword 1/22: ""project delivery""",
+Log,2026-05-04T12:31:13.218Z,info,,Step 3/5 — Engaging with targeted content search posts…,
+Log,2026-05-04T12:31:13.178Z,warn,,[recruiter-prospector] timed out after 90 s — continuing sequence,
+Log,2026-05-04T12:31:08.116Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/marcosminorunakatsugawa/ — viewed (SSI: localizar as pessoas certas),
+Link,2026-05-04T12:31:08.114Z,link-discovered,recruiter-search,,https://www.linkedin.com/in/marcosminorunakatsugawa/
+Log,2026-05-04T12:31:02.108Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/karlacoelho/ — viewed (SSI: localizar as pessoas certas),
+Link,2026-05-04T12:31:02.107Z,link-discovered,recruiter-search,,https://www.linkedin.com/in/karlacoelho/
+Log,2026-05-04T12:30:56.113Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/victorabussafi/ — viewed (SSI: localizar as pessoas certas),
+Link,2026-05-04T12:30:56.111Z,link-discovered,recruiter-search,,https://www.linkedin.com/in/victorabussafi/
+Log,2026-05-04T12:30:50.107Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/abi-s-lima/ — viewed (SSI: localizar as pessoas certas),
+Link,2026-05-04T12:30:50.106Z,link-discovered,recruiter-search,,https://www.linkedin.com/in/abi-s-lima/
+Log,2026-05-04T12:30:45.114Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/maiotto/ — viewed (SSI: localizar as pessoas certas),
+Link,2026-05-04T12:30:45.112Z,link-discovered,recruiter-search,,https://www.linkedin.com/in/maiotto/
+Log,2026-05-04T12:30:39.103Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/alexccampos/ — viewed (SSI: localizar as pessoas certas),
+Link,2026-05-04T12:30:39.101Z,link-discovered,recruiter-search,,https://www.linkedin.com/in/alexccampos/
+Log,2026-05-04T12:30:33.114Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/patriciaxavierlimaiwashita/en/ — viewed (SSI: localizar as pessoas certas),
+Link,2026-05-04T12:30:33.113Z,link-discovered,recruiter-search,,https://www.linkedin.com/in/patriciaxavierlimaiwashita/en/
+Log,2026-05-04T12:30:28.275Z,warn,,[recruiter-prospector] content script did not respond after 15 retries — skipping,
+Log,2026-05-04T12:30:27.114Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/rodrigobautista/ — viewed (SSI: localizar as pessoas certas),
+Link,2026-05-04T12:30:27.113Z,link-discovered,recruiter-search,,https://www.linkedin.com/in/rodrigobautista/
+Log,2026-05-04T12:30:21.101Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/dario-melro-andrade/en/ — viewed (SSI: localizar as pessoas certas),
+Link,2026-05-04T12:30:21.099Z,link-discovered,recruiter-search,,https://www.linkedin.com/in/dario-melro-andrade/en/
+Log,2026-05-04T12:30:16.105Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/danielmreis/en/ — viewed (SSI: localizar as pessoas certas),
+Link,2026-05-04T12:30:16.104Z,link-discovered,recruiter-search,,https://www.linkedin.com/in/danielmreis/en/
+Log,2026-05-04T12:30:11.107Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/eduardo-gouv%C3%AAa-757a4a4b/en/ — viewed (SSI: localizar as pessoas certas),
+Link,2026-05-04T12:30:11.105Z,link-discovered,recruiter-search,,https://www.linkedin.com/in/eduardo-gouv%C3%AAa-757a4a4b/en/
+Log,2026-05-04T12:30:05.103Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/rodrigopoulis/ — viewed (SSI: localizar as pessoas certas),
+Link,2026-05-04T12:30:05.102Z,link-discovered,recruiter-search,,https://www.linkedin.com/in/rodrigopoulis/
+Log,2026-05-04T12:29:58.101Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/victor-bensadon-55a5a8133/ — viewed (SSI: localizar as pessoas certas),
+Link,2026-05-04T12:29:58.100Z,link-discovered,recruiter-search,,https://www.linkedin.com/in/victor-bensadon-55a5a8133/
+Log,2026-05-04T12:29:53.102Z,info,recruiter-prospector,recruiter-prospector — 19 cards found,
+Log,2026-05-04T12:29:47.498Z,info,recruiter-prospector,▶ recruiter-prospector started | https://www.linkedin.com/search/results/people/?keywords=IT%20Manager%20remote%20brazil,
+Log,2026-05-04T12:29:43.174Z,info,,Step 2b/5 — Browsing people search (SSI: Localizar as pessoas certas)…,
+Log,2026-05-04T12:29:43.141Z,warn,,[recruiter-prospector] timed out after 90 s — continuing sequence,
+Link,2026-05-04T12:29:39.108Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/georgiawellman/
+Log,2026-05-04T12:29:39.105Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/ana-laurentino/ — no connect button (viewed),
+Link,2026-05-04T12:29:24.111Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/ana-laurentino/
+Log,2026-05-04T12:29:24.109Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/ankit-mishra-42036825b/ — no connect button (viewed),
+Link,2026-05-04T12:29:11.103Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/ankit-mishra-42036825b/
+Log,2026-05-04T12:29:11.102Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/andreapolito/ — no connect button (viewed),
+Link,2026-05-04T12:29:00.107Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/andreapolito/
+Log,2026-05-04T12:29:00.105Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/lucassieverding/ — no connect button (viewed),
+Link,2026-05-04T12:28:51.111Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/lucassieverding/
+Log,2026-05-04T12:28:51.108Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/rafael-sanches-24a2b034/en/ — no connect button (viewed),
+Link,2026-05-04T12:28:38.112Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/rafael-sanches-24a2b034/en/
+Log,2026-05-04T12:28:38.110Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/filipe-pimentel-43210a85/ — no connect button (viewed),
+Link,2026-05-04T12:28:27.112Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/filipe-pimentel-43210a85/
+Log,2026-05-04T12:28:27.110Z,info,recruiter-prospector,recruiter-prospector — 17 cards found,
+Log,2026-05-04T12:28:17.979Z,info,recruiter-prospector,▶ recruiter-prospector started | https://www.linkedin.com/search/results/people/?keywords=Tech%20Recruiter%20Information%20Technology&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%5D,
+Log,2026-05-04T12:28:13.128Z,info,,Step 2/5 — Prospecting Tech Recruiters (cap: 15)…,
+Log,2026-05-04T12:28:13.109Z,success,,■ ssi-monitor done | total:51 brand:51 people:14 insights:14 rel:7,
+SSI,2026-05-04T12:28:13.109Z,ssi-score,,total:51 brand:51 people:14 insights:14 rel:7,
+Log,2026-05-04T12:28:05.815Z,info,,▶ ssi-monitor started | https://www.linkedin.com/sales/ssi,
+Log,2026-05-04T12:28:02.373Z,info,,Step 1/5 — Capturing SSI scores…,
+Log,2026-05-04T12:28:02.372Z,warn,,[Manual] Full sequence triggered. Cap today: 15.,
+Log,2026-05-04T12:27:55.763Z,success,,Extension installed. Daily alarms registered.,
