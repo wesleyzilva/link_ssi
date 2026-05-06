@@ -15,10 +15,10 @@
 // utils/human-mimicry.js is loaded before this script by the manifest
 
 const INTRO_MESSAGE =
-  'olá sou Wesley Gomes from Brazil e eu sou Agile Project Manager of digital products. ' +
-  'Expert em elevar a maturidade dos times para alta performance e AI workspace based. ' +
-  'Please check my portfolio and let´s talk if required. +55 16 997212966 ' +
-  'https://wesleyzilva.github.io/portfolioNearshoreWesIA/';
+  'Hi! I\'m Wesley Gomes, an Agile Project Manager from Brazil specialising in digital product delivery. ' +
+  'I help teams reach high performance through structured maturity frameworks and AI-integrated workspaces. ' +
+  'Feel free to browse my portfolio — and do reach out if there\'s any potential synergy. ' +
+  '+55 16 997212966 https://wesleyzilva.github.io/portfolioNearshoreWesIA/';
 
 // ─── Logger ───────────────────────────────────────────────────────────────────
 
