@@ -188,6 +188,23 @@
       </div>
     </section>
 
+    <section class="controls">
+      <h2>Message Sender</h2>
+      <p class="queue-hint">Export profile links → validate manually → paste selected URLs below → Send.</p>
+      <button id="btn-export-links" class="btn btn--secondary btn--small">📋 Export Links TXT</button>
+      <p id="export-links-status" class="comment-post-status"></p>
+      <textarea
+        id="input-message-urls"
+        rows="5"
+        placeholder="https://www.linkedin.com/in/profile1/&#10;https://www.linkedin.com/in/profile2/"
+        class="input-textarea"
+      ></textarea>
+      <div style="margin-top:8px;">
+        <button id="btn-send-messages" class="btn btn--primary btn--small">📨 Send Messages</button>
+      </div>
+      <p id="send-messages-status" class="comment-post-status"></p>
+    </section>
+
     <footer>
       <a href="https://www.linkedin.com/sales/ssi" target="_blank" id="open-ssi"
         >Open SSI Dashboard ↗</a

@@ -464,6 +464,61 @@ function wireButtons() {
     e.preventDefault();
     chrome.tabs.create({ url: chrome.runtime.getURL('history/history.html') });
   });
+
+  // ─── Export Links TXT ──────────────────────────────────────────────────────
+  document.getElementById('btn-export-links').addEventListener('click', async () => {
+    const btn    = document.getElementById('btn-export-links');
+    const status = document.getElementById('export-links-status');
+    btn.disabled = true;
+    try {
+      const resp = await chrome.runtime.sendMessage({ action: 'EXPORT_LINKS' });
+      status.textContent = resp?.exported
+        ? `✓ ${resp.exported} profile links exported → Downloads/link_ssi/output/`
+        : '⚠ No profile links found in storage.';
+      status.className = resp?.exported
+        ? 'comment-post-status comment-post-status--success'
+        : 'comment-post-status comment-post-status--error';
+    } catch {
+      status.textContent = '⚠ Export failed — try again.';
+      status.className = 'comment-post-status comment-post-status--error';
+    }
+    setTimeout(() => { btn.disabled = false; }, 3000);
+  });
+
+  // ─── Send Messages ─────────────────────────────────────────────────────────
+  document.getElementById('btn-send-messages').addEventListener('click', async () => {
+    const btn      = document.getElementById('btn-send-messages');
+    const status   = document.getElementById('send-messages-status');
+    const textarea = document.getElementById('input-message-urls');
+    const raw      = (textarea.value || '').trim();
+    const urls     = raw.split('\n').map(u => u.trim()).filter(u => u.includes('linkedin.com/in/'));
+
+    if (!urls.length) {
+      status.textContent = '⚠ Paste at least one LinkedIn /in/ URL.';
+      status.className = 'comment-post-status comment-post-status--error';
+      return;
+    }
+
+    btn.disabled = true;
+    status.textContent = `⏳ Queuing ${urls.length} profiles…`;
+    status.className = 'comment-post-status';
+
+    try {
+      const resp = await chrome.runtime.sendMessage({ action: 'SEND_MESSAGES', urls });
+      if (resp?.started) {
+        status.textContent = `✓ Started — ${resp.count} messages queued. Check Activity Log for progress.`;
+        status.className = 'comment-post-status comment-post-status--success';
+        textarea.value = '';
+      } else {
+        status.textContent = `⚠ ${resp?.reason || 'Could not start.'}`;
+        status.className = 'comment-post-status comment-post-status--error';
+      }
+    } catch {
+      status.textContent = '⚠ Could not reach service worker — try again.';
+      status.className = 'comment-post-status comment-post-status--error';
+    }
+    setTimeout(() => { btn.disabled = false; }, 5000);
+  });
 }
 
 // ─── Utilities ────────────────────────────────────────────────────────────────

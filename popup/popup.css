@@ -340,6 +340,26 @@ footer a:hover {
   border-color: var(--color-primary);
 }
 
+.input-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  font-size: 11px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  color: var(--color-text);
+  resize: vertical;
+  min-height: 70px;
+  margin-top: 8px;
+  font-family: inherit;
+}
+
+.input-textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
 .comment-post-status {
   font-size: 11px;
   margin-top: 6px;

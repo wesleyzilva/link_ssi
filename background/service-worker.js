@@ -671,6 +671,17 @@ function downloadCsvFromSW(filename, headers, rows) {
 }
 
 /**
+ * Exports all discovered /in/ profile URLs to a plain-text file — one URL per line.
+ * Saved to Downloads/link_ssi/output/links-{ts}.txt for manual review.
+ */
+function downloadLinksTxt(profileUrls, ts) {
+  if (!profileUrls.length) return;
+  const content = profileUrls.join('\n');
+  const dataUrl = 'data:text/plain;charset=utf-8,' + encodeURIComponent(content);
+  chrome.downloads.download({ url: dataUrl, filename: `link_ssi/output/links-${ts}.txt`, saveAs: false });
+}
+
+/**
  * Exports ALL activity data into a single chronological CSV.
  *
  * Headers: Category | Date | Type | Name | Detail | URL
@@ -741,6 +752,12 @@ async function exportAllCsvs() {
 
   downloadCsvFromSW(`activity-history-${ts}.csv`, HEADERS, rows);
 
+  // Export a plain-text file with only /in/ profile URLs for manual review
+  const profileUrls = [...new Set(
+    (data.discoveredLinks || []).map(l => l.url).filter(u => u && u.includes('/in/'))
+  )];
+  if (profileUrls.length) downloadLinksTxt(profileUrls, ts);
+
   const counts = {
     links: (data.discoveredLinks || []).length,
     accepted: (data.acceptedConnections || []).length,
@@ -752,7 +769,60 @@ async function exportAllCsvs() {
     'success'
   );
 }
+// ─── Sequential message-queue processor ──────────────────────────────────────
 
+/**
+ * Processes messageQueue from storage one by one.
+ * For each pending entry, extracts the profileId, opens a messaging compose tab,
+ * sends the intro message via profile-messenger.js, then moves to the next.
+ * Human-like pause of 20-40 s between each send.
+ */
+async function processMessageQueue() {
+  const { messageQueue = [] } = await chrome.storage.local.get('messageQueue');
+  const items = messageQueue.filter(m => m.status === 'pending');
+
+  await log(`📨 message queue — processing ${items.length} profiles`);
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+
+    // Reload queue before updating (another caller may have modified it)
+    const { messageQueue: mq = [] } = await chrome.storage.local.get('messageQueue');
+    const idx = mq.findIndex(m => m.url === item.url && m.status === 'pending');
+    if (idx === -1) continue;
+
+    mq[idx].status = 'running';
+    await chrome.storage.local.set({ messageQueue: mq });
+
+    // Build the compose URL from the /in/ profile URL
+    const profileIdMatch = item.url.match(/\/in\/([^/?#]+)/);
+    const profileId = profileIdMatch ? profileIdMatch[1] : null;
+    const composeUrl = profileId
+      ? `https://www.linkedin.com/messaging/compose/?recipient=${profileId}`
+      : item.url;
+
+    const responded = await openTabAndWait(composeUrl, 'profile-messenger', {}, 90_000);
+
+    const { messageQueue: mq2 = [] } = await chrome.storage.local.get('messageQueue');
+    const idx2 = mq2.findIndex(m => m.url === item.url);
+    if (idx2 !== -1) {
+      mq2[idx2].status = responded ? 'sent' : 'failed';
+      mq2[idx2].processedAt = new Date().toISOString();
+      await chrome.storage.local.set({ messageQueue: mq2 });
+    }
+
+    await log(`${responded ? '✓' : '✗'} message ${responded ? 'sent' : 'FAILED'}: ${item.url}`);
+
+    // Human pause between messages: 20-40 s (avoid DM rate limits)
+    if (i < items.length - 1) {
+      await new Promise(r => setTimeout(r, 20000 + Math.random() * 20000));
+    }
+  }
+
+  const { messageQueue: final = [] } = await chrome.storage.local.get('messageQueue');
+  const sentCount = final.filter(m => m.status === 'sent').length;
+  await log(`■ message queue done — ${sentCount}/${final.length} sent`, 'success');
+}
 // ─── Manual trigger (popup „Run Now“ / per-task buttons) ──────────────────────
 
 const TASK_URLS = {
@@ -903,6 +973,40 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action === 'GET_INTERVAL') {
     chrome.alarms.get(ALARM_NAMES.INTERVAL, (alarm) => {
       sendResponse({ alarm: alarm ?? null });
+    });
+    return true;
+  }
+
+  // ─── Links export ───────────────────────────────────────────────────────────
+  if (message.action === 'EXPORT_LINKS') {
+    chrome.storage.local.get('discoveredLinks').then(({ discoveredLinks = [] }) => {
+      const profileUrls = [...new Set(
+        discoveredLinks.map(l => l.url).filter(u => u && u.includes('/in/'))
+      )];
+      const ts = new Date().toISOString().slice(0, 16).replace('T', '-').replace(':', '');
+      downloadLinksTxt(profileUrls, ts);
+      sendResponse({ exported: profileUrls.length });
+    });
+    return true;
+  }
+
+  // ─── Sequential message sender ──────────────────────────────────────────────
+  if (message.action === 'SEND_MESSAGES') {
+    const urls = (message.urls || [])
+      .map(u => String(u).trim())
+      .filter(u => u && u.includes('linkedin.com/in/'));
+    if (!urls.length) {
+      sendResponse({ started: false, reason: 'no valid LinkedIn /in/ URLs provided' });
+      return true;
+    }
+    const queue = urls.map(url => ({
+      url,
+      status: 'pending',
+      addedAt: new Date().toISOString(),
+    }));
+    chrome.storage.local.set({ messageQueue: queue }).then(() => {
+      sendResponse({ started: true, count: queue.length });
+      processMessageQueue();
     });
     return true;
   }
