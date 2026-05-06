@@ -485,32 +485,22 @@ function wireButtons() {
     setTimeout(() => { btn.disabled = false; }, 3000);
   });
 
-  // ─── Send Messages ─────────────────────────────────────────────────────────
+  // ─── Send Messages Now (on-demand auto queue) ──────────────────────────────
   document.getElementById('btn-send-messages').addEventListener('click', async () => {
-    const btn      = document.getElementById('btn-send-messages');
-    const status   = document.getElementById('send-messages-status');
-    const textarea = document.getElementById('input-message-urls');
-    const raw      = (textarea.value || '').trim();
-    const urls     = raw.split('\n').map(u => u.trim()).filter(u => u.includes('linkedin.com/in/'));
-
-    if (!urls.length) {
-      status.textContent = '⚠ Paste at least one LinkedIn /in/ URL.';
-      status.className = 'comment-post-status comment-post-status--error';
-      return;
-    }
+    const btn    = document.getElementById('btn-send-messages');
+    const status = document.getElementById('send-messages-status');
 
     btn.disabled = true;
-    status.textContent = `⏳ Queuing ${urls.length} profiles…`;
+    status.textContent = '⏳ Building queue from discovered profiles…';
     status.className = 'comment-post-status';
 
     try {
-      const resp = await chrome.runtime.sendMessage({ action: 'SEND_MESSAGES', urls });
+      const resp = await chrome.runtime.sendMessage({ action: 'AUTO_SEND_MESSAGES' });
       if (resp?.started) {
-        status.textContent = `✓ Started — ${resp.count} messages queued. Check Activity Log for progress.`;
+        status.textContent = '✓ Auto-message run started. Check Activity Log for progress.';
         status.className = 'comment-post-status comment-post-status--success';
-        textarea.value = '';
       } else {
-        status.textContent = `⚠ ${resp?.reason || 'Could not start.'}`;
+        status.textContent = `⚠ ${resp?.error || 'Could not start.'}`;
         status.className = 'comment-post-status comment-post-status--error';
       }
     } catch {

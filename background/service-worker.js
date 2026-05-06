@@ -24,6 +24,9 @@ const ALARM_NAMES = {
  */
 const DAILY_CAPS = [15, 14, 13, 12, 11, 10, 9];
 
+// Maximum intro messages sent per run (stays well below LinkedIn DM rate limits)
+const MESSAGE_CAP_PER_RUN = 20;
+
 // Maximum number of sendMessage retries while waiting for the content script
 const SEND_MAX_RETRIES = 15;  // 15 × 3 s = 45 s after page load
 const SEND_FIRST_WAIT  = 3000; // first attempt: 3 s after status:complete
@@ -241,6 +244,9 @@ async function runDailySequence(targetWindow, dailyCap) {
   );
 
   await exportAllCsvs();
+
+  await log('Step 7/7 — Auto-messaging newly discovered profiles…');
+  await buildAndRunAutoMessageQueue();
 
   // Note: iconUrl omitted — chrome.notifications fails to download extension icons in MV3 service workers
   chrome.notifications.create(`run-done-${Date.now()}`, {
@@ -772,10 +778,44 @@ async function exportAllCsvs() {
 // ─── Sequential message-queue processor ──────────────────────────────────────
 
 /**
+ * Builds an auto message queue from newly discovered /in/ profile URLs
+ * (profiles not yet messaged), saves to storage, and processes sequentially.
+ * Called automatically at the end of each daily run and on demand from the popup.
+ */
+async function buildAndRunAutoMessageQueue() {
+  const { discoveredLinks = [], messagedProfiles = [] } = await chrome.storage.local.get(
+    ['discoveredLinks', 'messagedProfiles']
+  );
+
+  const alreadyMessaged = new Set(messagedProfiles);
+  const seen = new Set();
+  const queue = [];
+
+  for (const l of discoveredLinks) {
+    if (!l.url || !l.url.includes('/in/')) continue;
+    const m = l.url.match(/\/in\/([^/?#]+)/);
+    const pid = m ? m[1] : null;
+    if (!pid || alreadyMessaged.has(pid) || seen.has(pid)) continue;
+    seen.add(pid);
+    queue.push({ url: l.url.split('?')[0], profileId: pid, name: l.name || '', status: 'pending', addedAt: new Date().toISOString() });
+    if (queue.length >= MESSAGE_CAP_PER_RUN) break;
+  }
+
+  if (!queue.length) {
+    await log('📨 auto-message: no new profiles to message — all already sent or queue empty');
+    return;
+  }
+
+  await log(`📨 auto-message: queuing ${queue.length} new profile(s)…`);
+  await chrome.storage.local.set({ messageQueue: queue });
+  await processMessageQueue();
+}
+
+/**
  * Processes messageQueue from storage one by one.
- * For each pending entry, extracts the profileId, opens a messaging compose tab,
- * sends the intro message via profile-messenger.js, then moves to the next.
- * Human-like pause of 20-40 s between each send.
+ * For each pending entry, opens a messaging/compose tab, sends the intro
+ * message via profile-messenger.js, then persists the sent profileId to
+ * messagedProfiles to prevent duplicate sends on future runs.
  */
 async function processMessageQueue() {
   const { messageQueue = [] } = await chrome.storage.local.get('messageQueue');
@@ -794,11 +834,8 @@ async function processMessageQueue() {
     mq[idx].status = 'running';
     await chrome.storage.local.set({ messageQueue: mq });
 
-    // Build the compose URL from the /in/ profile URL
-    const profileIdMatch = item.url.match(/\/in\/([^/?#]+)/);
-    const profileId = profileIdMatch ? profileIdMatch[1] : null;
-    const composeUrl = profileId
-      ? `https://www.linkedin.com/messaging/compose/?recipient=${profileId}`
+    const composeUrl = item.profileId
+      ? `https://www.linkedin.com/messaging/compose/?recipient=${item.profileId}`
       : item.url;
 
     const responded = await openTabAndWait(composeUrl, 'profile-messenger', {}, 90_000);
@@ -809,6 +846,15 @@ async function processMessageQueue() {
       mq2[idx2].status = responded ? 'sent' : 'failed';
       mq2[idx2].processedAt = new Date().toISOString();
       await chrome.storage.local.set({ messageQueue: mq2 });
+    }
+
+    // Persist to messagedProfiles so this profile is never messaged again
+    if (responded && item.profileId) {
+      const { messagedProfiles = [] } = await chrome.storage.local.get('messagedProfiles');
+      if (!messagedProfiles.includes(item.profileId)) {
+        messagedProfiles.push(item.profileId);
+        await chrome.storage.local.set({ messagedProfiles });
+      }
     }
 
     await log(`${responded ? '✓' : '✗'} message ${responded ? 'sent' : 'FAILED'}: ${item.url}`);
@@ -990,24 +1036,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
 
-  // ─── Sequential message sender ──────────────────────────────────────────────
-  if (message.action === 'SEND_MESSAGES') {
-    const urls = (message.urls || [])
-      .map(u => String(u).trim())
-      .filter(u => u && u.includes('linkedin.com/in/'));
-    if (!urls.length) {
-      sendResponse({ started: false, reason: 'no valid LinkedIn /in/ URLs provided' });
-      return true;
-    }
-    const queue = urls.map(url => ({
-      url,
-      status: 'pending',
-      addedAt: new Date().toISOString(),
-    }));
-    chrome.storage.local.set({ messageQueue: queue }).then(() => {
-      sendResponse({ started: true, count: queue.length });
-      processMessageQueue();
-    });
+  // ─── Auto message sender (popup "Send Messages Now" button) ────────────────
+  if (message.action === 'AUTO_SEND_MESSAGES') {
+    buildAndRunAutoMessageQueue()
+      .then(() => sendResponse({ started: true }))
+      .catch(async (err) => {
+        await log(`[AUTO_SEND_MESSAGES] error: ${err.message}`, 'error');
+        sendResponse({ error: err.message });
+      });
     return true;
   }
 });
