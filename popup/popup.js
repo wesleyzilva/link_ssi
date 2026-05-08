@@ -1,4 +1,4 @@
-/**
+﻿/**
  * popup.js — Popup UI controller for SSI Optimizer
  *
  * Reads activity state from chrome.storage.local and renders it.
@@ -13,26 +13,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   await safeRun(renderDayCycle);
   await safeRun(renderActivityLog);
   await safeRun(renderAnalytics);
-  await safeRun(renderNextAlarm);
-  await safeRun(renderIntervalSchedule);
+  await safeRun(renderRunCounter);
   await safeRun(renderLiveLog);
   await safeRun(renderPostQueue);
+  await safeRun(renderScenarios);
   await safeRun(renderRunNowButton);
   wireButtons();
 });
 
 // Auto-refresh when storage changes (e.g. a task just completed)
 chrome.storage.onChanged.addListener((changes) => {
-  if (changes.routineRunning || changes.lastSequenceDoneAt) renderRunNowButton();
-  if (changes.specificPostQueue) renderPostQueue();
-  if (changes.activityLog)      renderLiveLog();
-  if (changes.lastSSI)          renderSSIScores();
-  if (changes.dayCycleIndex)    renderDayCycle();
+  const safe = (fn) => fn().catch(err => console.warn('[Popup onChanged]', err));
+  if (changes.routineRunning || changes.lastSequenceDoneAt) safe(renderRunNowButton);
+  if (changes.pendingRuns || changes.currentRunNumber || changes.totalRunsSession) safe(renderRunCounter);
+  if (changes.specificPostQueue) safe(renderPostQueue);
+  if (changes.selectedScenarios) safe(renderScenarios);
+  if (changes.activityLog)      safe(renderLiveLog);
+  if (changes.lastSSI)          { safe(renderSSIScores); safe(renderActivityLog); }
+  if (changes.dayCycleIndex)    safe(renderDayCycle);
   if (changes.acceptedConnections || changes.lastConnectionTracking || changes.lastFollowUp || changes.ssiScores) {
-    renderAnalytics();
+    safe(renderAnalytics);
   }
   if (changes.lastProspecting || changes.lastEngagement || changes.lastRelationshipBuild || changes.lastUsedExpression) {
-    renderActivityLog();
+    safe(renderActivityLog);
   }
 });
 
@@ -100,7 +103,7 @@ async function renderActivityLog() {
   const exprEl = document.getElementById('log-last-expr');
   if (data.lastUsedExpression) {
     const { expr, index } = data.lastUsedExpression;
-    const total = 15; // CONTENT_SEARCH_EXPRESSIONS.length
+    const total = 27; // CONTENT_SEARCH_EXPRESSIONS.length
     const nextIdx = (index + 1) % total;
     exprEl.textContent = `#${index + 1}/${total}: ${expr}`;
     exprEl.title = `Next: #${nextIdx + 1}/${total}`;
@@ -179,65 +182,78 @@ async function renderPostQueue() {
   }).join('');
 }
 
-// ─── Next alarm ───────────────────────────────────────────────────────────────
-async function renderNextAlarm() {
-  const el = document.getElementById('next-alarm');
-  const alarms = await chrome.alarms.getAll();
+// ─── Run counter ──────────────────────────────────────────────────────────────
 
-  if (!alarms.length) {
-    el.innerHTML =
-      'No alarms found. <button id="btn-fix-alarms" style="margin-left:6px;padding:2px 8px;font-size:11px;cursor:pointer;">📅 Fix</button>';
+async function renderRunCounter() {
+  const { pendingRuns = 0, totalRunsSession = 0, currentRunNumber = 0, runsTarget = 1 } =
+    await chrome.storage.local.get(['pendingRuns', 'totalRunsSession', 'currentRunNumber', 'runsTarget']);
 
-    const fixAlarms = async () => {
-      try { await chrome.runtime.sendMessage({ action: 'SCHEDULE_ALARMS' }); } catch { /* ok */ }
-      // Give the service worker 800 ms to register the alarms before re-reading
-      await new Promise(r => setTimeout(r, 800));
-      await renderNextAlarm();
-    };
+  const select = document.getElementById('select-run-count');
+  if (select) {
+    const opt = select.querySelector(`option[value="${runsTarget}"]`);
+    if (opt) opt.selected = true;
+  }
 
-    document.getElementById('btn-fix-alarms')?.addEventListener('click', fixAlarms);
-    // Auto-attempt once in background without blocking UI
-    fixAlarms();
+  const status = document.getElementById('run-counter-status');
+  if (!status) return;
+
+  if (pendingRuns > 0 && totalRunsSession > 0) {
+    const done = totalRunsSession - pendingRuns;
+    status.textContent = `\u23f3 Run ${currentRunNumber}/${totalRunsSession} in progress\u2026 (${done} done, ${pendingRuns} remaining)`;
+    status.className = 'comment-post-status';
+  } else if (totalRunsSession > 0 && pendingRuns === 0) {
+    status.textContent = `\u2713 All ${totalRunsSession} run(s) complete.`;
+    status.className = 'comment-post-status comment-post-status--success';
+  } else {
+    status.textContent = `Target: ${runsTarget}\u00d7 run(s). Click \u201cSet\u201d then \u201c\u25b6 Run Now\u201d.`;
+    status.className = 'comment-post-status';
+  }
+}
+
+// ─── Scenarios \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+
+/**
+ * Fetches the SCENARIOS list from the service worker, reads selectedScenarios
+ * from storage, and renders a checkbox list. Each checkbox change persists the
+ * new selection immediately so it survives popup close/reopen.
+ */
+async function renderScenarios() {
+  const listEl = document.getElementById('scenario-list');
+  if (!listEl) return;
+
+  let scenarios = [];
+  try {
+    const resp = await chrome.runtime.sendMessage({ action: 'GET_SCENARIOS' });
+    scenarios = resp?.scenarios || [];
+  } catch { scenarios = []; }
+
+  const { selectedScenarios = ['full-pipeline'] } =
+    await chrome.storage.local.get('selectedScenarios');
+  const selectedSet = new Set(selectedScenarios);
+
+  if (!scenarios.length) {
+    listEl.innerHTML = '<li class="scenario-item-loading">No scenarios available.</li>';
     return;
   }
 
-  const next = alarms.reduce((prev, curr) =>
-    curr.scheduledTime < prev.scheduledTime ? curr : prev
-  );
+  listEl.innerHTML = scenarios.map(s => `
+    <li class="scenario-item">
+      <label class="scenario-label" title="${escapeHtml(s.description)}">
+        <input type="checkbox" class="scenario-checkbox"
+          data-scenario="${escapeHtml(s.id)}"
+          ${selectedSet.has(s.id) ? 'checked' : ''}>
+        <span class="scenario-label-text">${escapeHtml(s.label)}</span>
+      </label>
+    </li>`).join('');
 
-  const brtLabel = formatDateTimeShort(new Date(next.scheduledTime).toISOString());
-  const windowLabel = next.name.includes('morning') ? '11:00 BRT — US/EU' : '21:00 BRT — APAC';
-  el.textContent = `${windowLabel} · ${brtLabel}`;
-}
-
-async function renderIntervalSchedule() {
-  // Load the saved interval from storage
-  const { intervalMinutes = 0 } = await chrome.storage.local.get('intervalMinutes');
-  const select = document.getElementById('select-interval');
-  if (!select) return;
-
-  // Pre-select the current value (or Off if none)
-  const opt = select.querySelector(`option[value="${intervalMinutes}"]`);
-  if (opt) opt.selected = true;
-
-  // Render status line
-  const status = document.getElementById('interval-status');
-  if (intervalMinutes > 0) {
-    let resp = null;
-    try { resp = await chrome.runtime.sendMessage({ action: 'GET_INTERVAL' }); } catch { /* ok */ }
-    const alarm = resp?.alarm;
-    if (alarm) {
-      const nextRun = formatDateTimeShort(new Date(alarm.scheduledTime).toISOString());
-      status.textContent = `⏱ Running every ${intervalMinutes} min · next: ${nextRun}`;
-      status.className = 'interval-status interval-status--on';
-    } else {
-      status.textContent = `Saved: every ${intervalMinutes} min (alarm not found — will restore on next reload)`;
-      status.className = 'interval-status';
-    }
-  } else {
-    status.textContent = 'No repeat interval set — runs at 11:00 and 21:00 BRT only.';
-    status.className = 'interval-status';
-  }
+  listEl.querySelectorAll('.scenario-checkbox').forEach(cb => {
+    cb.addEventListener('change', async () => {
+      const checked = [...listEl.querySelectorAll('.scenario-checkbox:checked')]
+        .map(el => el.dataset.scenario);
+      const ids = checked.length ? checked : ['full-pipeline'];
+      await chrome.storage.local.set({ selectedScenarios: ids });
+    });
+  });
 }
 
 // ─── Formatting helpers ───────────────────────────────────────────────────────
@@ -442,74 +458,20 @@ function wireButtons() {
     }, 10000);
   });
 
-  document.getElementById('btn-save-interval').addEventListener('click', async () => {
-    const select  = document.getElementById('select-interval');
-    const minutes = parseInt(select.value, 10);
-    const btn     = document.getElementById('btn-save-interval');
-    btn.disabled  = true;
-    try {
-      await chrome.runtime.sendMessage({ action: 'SCHEDULE_INTERVAL', minutes });
-    } catch { /* service worker may be waking */ }
-    // Persist locally even if SW message failed (restoreIntervalAlarm will pick it up)
-    if (minutes > 0) {
-      await chrome.storage.local.set({ intervalMinutes: minutes });
-    } else {
-      await chrome.storage.local.remove('intervalMinutes');
-    }
-    await renderIntervalSchedule();
-    btn.disabled = false;
-  });
-
   document.getElementById('open-history').addEventListener('click', (e) => {
     e.preventDefault();
     chrome.tabs.create({ url: chrome.runtime.getURL('history/history.html') });
   });
 
-  // ─── Export Links TXT ──────────────────────────────────────────────────────
-  document.getElementById('btn-export-links').addEventListener('click', async () => {
-    const btn    = document.getElementById('btn-export-links');
-    const status = document.getElementById('export-links-status');
-    btn.disabled = true;
-    try {
-      const resp = await chrome.runtime.sendMessage({ action: 'EXPORT_LINKS' });
-      status.textContent = resp?.exported
-        ? `✓ ${resp.exported} profile links exported → Downloads/link_ssi/output/`
-        : '⚠ No profile links found in storage.';
-      status.className = resp?.exported
-        ? 'comment-post-status comment-post-status--success'
-        : 'comment-post-status comment-post-status--error';
-    } catch {
-      status.textContent = '⚠ Export failed — try again.';
-      status.className = 'comment-post-status comment-post-status--error';
-    }
-    setTimeout(() => { btn.disabled = false; }, 3000);
-  });
-
-  // ─── Send Messages Now (on-demand auto queue) ──────────────────────────────
-  document.getElementById('btn-send-messages').addEventListener('click', async () => {
-    const btn    = document.getElementById('btn-send-messages');
-    const status = document.getElementById('send-messages-status');
-
-    btn.disabled = true;
-    status.textContent = '⏳ Building queue from discovered profiles…';
-    status.className = 'comment-post-status';
-
-    try {
-      const resp = await chrome.runtime.sendMessage({ action: 'AUTO_SEND_MESSAGES' });
-      if (resp?.started) {
-        status.textContent = '✓ Auto-message run started. Check Activity Log for progress.';
-        status.className = 'comment-post-status comment-post-status--success';
-      } else {
-        status.textContent = `⚠ ${resp?.error || 'Could not start.'}`;
-        status.className = 'comment-post-status comment-post-status--error';
-      }
-    } catch {
-      status.textContent = '⚠ Could not reach service worker — try again.';
-      status.className = 'comment-post-status comment-post-status--error';
-    }
-    setTimeout(() => { btn.disabled = false; }, 5000);
+  // ─── Run counter ───────────────────────────────────────────────────────────
+  document.getElementById('btn-set-runs').addEventListener('click', async () => {
+    const select = document.getElementById('select-run-count');
+    const count  = parseInt(select.value, 10);
+    await chrome.storage.local.set({ runsTarget: count });
+    await renderRunCounter();
   });
 }
+
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 

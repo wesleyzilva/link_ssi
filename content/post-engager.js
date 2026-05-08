@@ -288,6 +288,14 @@ async function engageWithPosts() {
         linksFound++;
       }
 
+      // Log the post author (name + profile URL) — deduped across runs
+      const { name: authorName, profileUrl: authorProfileUrl } = extractAuthorInfo(post);
+      const searchKeyword = (() => {
+        try { return new URL(location.href).searchParams.get('keywords') || location.pathname; }
+        catch { return location.pathname; }
+      })();
+      await saveAuthorContact(authorName, authorProfileUrl, searchKeyword);
+
       const isRecruiter = isRecruiterPost(post);
       const isDelivery  = !isRecruiter && isDeliveryPost(post);
       const commentCount = getCommentCount(post);
@@ -718,6 +726,56 @@ function extractPostUrl(post) {
     post.querySelector('a[href*="/activity-"]') ||
     post.querySelector('a[href*="urn%3Ali%3A"]');
   return link ? link.href.split('?')[0] : null;
+}
+
+/**
+ * Extracts the post author's display name and profile URL.
+ * Tries multiple selector strategies covering both feed and content-search layouts.
+ *
+ * @param {Element} post
+ * @returns {{ name: string|null, profileUrl: string|null }}
+ */
+function extractAuthorInfo(post) {
+  const link =
+    post.querySelector('.update-components-actor__container a[href*="/in/"]') ||
+    post.querySelector('.artdeco-entity-lockup__title a[href*="/in/"]') ||
+    post.querySelector('a.app-aware-link[href*="/in/"]') ||
+    post.querySelector('a[href*="/in/"]');
+  if (!link) return { name: null, profileUrl: null };
+
+  const profileUrl = (() => {
+    try { return new URL(link.href, location.origin).pathname.replace(/\/$/, ''); }
+    catch { return link.getAttribute('href') || null; }
+  })();
+
+  const nameEl =
+    post.querySelector('.update-components-actor__name') ||
+    post.querySelector('.artdeco-entity-lockup__title') ||
+    post.querySelector('.actor-name') ||
+    post.querySelector('[data-test-id="actor-name"]') ||
+    link;
+  const name = (nameEl ? nameEl.textContent : '').replace(/\s+/g, ' ').trim() || null;
+
+  return { name, profileUrl };
+}
+
+/**
+ * Saves a post author to discoveredAuthors (deduped by profileUrl).
+ * Exposed in the activity log and exportable as CSV.
+ *
+ * @param {string|null} name
+ * @param {string|null} profileUrl
+ * @param {string}      context  — e.g. "CTO startup" or the search URL keyword
+ */
+async function saveAuthorContact(name, profileUrl, context) {
+  if (!profileUrl) return;
+  try {
+    const { discoveredAuthors = [] } = await chrome.storage.local.get('discoveredAuthors');
+    if (discoveredAuthors.some(r => r.profileUrl === profileUrl)) return;
+    discoveredAuthors.push({ name: name || 'unknown', profileUrl, context, foundAt: new Date().toISOString() });
+    await chrome.storage.local.set({ discoveredAuthors: discoveredAuthors.slice(-500) });
+    await contentLog(`👤 author noted | ${name || 'unknown'} | ${profileUrl} | ${context}`);
+  } catch (e) { console.warn('[Post Engager][saveAuthorContact failed]', e); }
 }
 
 function getCommentCount(post) {

@@ -1,23 +1,24 @@
 /**
- * profile-messenger.js — Sends a fixed intro message via LinkedIn Messaging compose.
+ * profile-messenger.js — Sends an intro message via LinkedIn Messaging compose.
  *
  * Triggered by the service worker when processing the messageQueue:
  *   1. SW extracts profileId from the /in/ URL
  *   2. SW opens a tab at linkedin.com/messaging/compose/?recipient={profileId}
- *   3. SW sends { action: 'START', task: 'profile-messenger' }
- *   4. This script finds the compose box, types the intro, hits Send
+ *   3. SW sends { action: 'START', task: 'profile-messenger', messageBody?, subject? }
+ *   4. This script fills the subject line (InMail only, when present) and
+ *      the compose body, then clicks Send.
  *   5. sendResponse({ success: true }) → SW auto-closes the tab
  *
- * Message:
- *   "olá sou Wesley Gomes from Brazil..."
+ * If no messageBody is provided, falls back to the default INTRO_MESSAGE.
  */
 
 // utils/human-mimicry.js is loaded before this script by the manifest
 
 const INTRO_MESSAGE =
-  'Hi! I\'m Wesley Gomes, an Agile Project Manager from Brazil specialising in digital product delivery. ' +
-  'I help teams reach high performance through structured maturity frameworks and AI-integrated workspaces. ' +
-  'Feel free to browse my portfolio — and do reach out if there\'s any potential synergy. ' +
+  'Hi! I\'m Wesley Silva, an Agile Project Manager from Brazil specialising in nearshore ' +
+  'digital product delivery. I help teams reach high performance through structured maturity ' +
+  'frameworks and AI-integrated workspaces. Feel free to browse my portfolio — and do reach ' +
+  'out if there is any potential synergy.\n' +
   '+55 16 997212966 https://wesleyzilva.github.io/portfolioNearshoreWesIA/';
 
 // ─── Logger ───────────────────────────────────────────────────────────────────
@@ -36,7 +37,9 @@ async function contentLog(msg, level = 'info') {
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action === 'START' && message.task === 'profile-messenger') {
-    sendIntroMessage()
+    const body    = message.messageBody || null;
+    const subject = message.subject    || null;
+    sendIntroMessage(body, subject)
       .then(result => sendResponse({ success: true, ...result }))
       .catch(err => {
         contentLog(`✗ fatal: ${err.message}`, 'error');
@@ -48,9 +51,29 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
 // ─── Core ─────────────────────────────────────────────────────────────────────
 
-async function sendIntroMessage() {
+async function sendIntroMessage(messageBody = null, subject = null) {
+  const textToSend = messageBody || INTRO_MESSAGE;
   await contentLog(`▶ profile-messenger started | ${window.location.href}`);
   await randomWait(4000, 8000);
+
+  // ── Subject line (InMail only — skip gracefully for regular messages) ────────
+  if (subject) {
+    const subjectInput =
+      document.querySelector('input[name="subject"]') ||
+      document.querySelector('input[placeholder*="ubject"]') ||
+      document.querySelector('input[placeholder*="ssunto"]') ||
+      document.querySelector('.msg-form__subject-line input') ||
+      document.querySelector('.artdeco-text-input--input[name="subject"]');
+
+    if (subjectInput) {
+      subjectInput.focus();
+      document.execCommand('selectAll', false, null);
+      document.execCommand('insertText', false, subject);
+      subjectInput.dispatchEvent(new InputEvent('input', { bubbles: true }));
+      await randomWait(1000, 2000);
+      await contentLog(`✓ subject filled: ${subject}`);
+    }
+  }
 
   // Wait for the LinkedIn messaging compose box to render
   const box = await waitForComposeBox(20000);
@@ -64,7 +87,7 @@ async function sendIntroMessage() {
 
   box.focus();
   document.execCommand('selectAll', false, null);
-  document.execCommand('insertText', false, INTRO_MESSAGE);
+  document.execCommand('insertText', false, textToSend);
   box.dispatchEvent(new InputEvent('input', { bubbles: true }));
 
   await randomWait(3000, 6000); // simulate re-reading before sending

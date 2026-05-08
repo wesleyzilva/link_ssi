@@ -160,22 +160,34 @@
       <button id="btn-run-queue-now" class="btn btn--primary btn--small">▶ Run queue now</button>
     </section>
 
-    <section class="next-run">
-      <h2>Next Scheduled Run</h2>
-      <p id="next-alarm">Loading…</p>
-      <div class="interval-row">
-        <label for="select-interval">Repeat every</label>
-        <select id="select-interval">
-          <option value="0">Off</option>
-          <option value="30">30 min</option>
-          <option value="60">1 h</option>
-          <option value="90">90 min</option>
-          <option value="120">2 h</option>
-          <option value="180">3 h</option>
+    <section class="controls">
+      <h2>Scenarios</h2>
+      <p class="queue-hint">Select which scenarios to include in each run. Exports are auto-downloaded on completion — no button needed.</p>
+      <ul id="scenario-list" class="scenario-list">
+        <li class="scenario-item-loading">Loading…</li>
+      </ul>
+    </section>
+
+    <section class="controls">
+      <h2>Run</h2>
+      <p class="queue-hint">Choose how many times to run the selected scenarios back-to-back. The day cycle advances after each iteration. A 5–10 min pause is inserted between iterations.</p>
+      <div class="run-counter-row">
+        <label for="select-run-count">Runs:</label>
+        <select id="select-run-count">
+          <option value="1" selected>1×</option>
+          <option value="2">2×</option>
+          <option value="3">3×</option>
+          <option value="4">4×</option>
+          <option value="5">5×</option>
+          <option value="6">6×</option>
+          <option value="7">7×</option>
+          <option value="8">8×</option>
+          <option value="9">9×</option>
+          <option value="10">10×</option>
         </select>
-        <button id="btn-save-interval" class="btn btn--primary btn--small">Save</button>
+        <button id="btn-set-runs" class="btn btn--primary btn--small">Set</button>
       </div>
-      <p id="interval-status" class="interval-status"></p>
+      <p id="run-counter-status" class="comment-post-status"></p>
     </section>
 
     <section class="live-log">
@@ -186,17 +198,6 @@
       <div id="log-entries" class="log-entries">
         <p class="log-empty">No activity recorded yet.</p>
       </div>
-    </section>
-
-    <section class="controls">
-      <h2>Message Sender</h2>
-      <p class="queue-hint">Messages are sent automatically at the end of every daily run. Use the buttons below to export the profile list or trigger a send on demand.</p>
-      <button id="btn-export-links" class="btn btn--secondary btn--small">📋 Export Links TXT</button>
-      <p id="export-links-status" class="comment-post-status"></p>
-      <div style="margin-top:8px;">
-        <button id="btn-send-messages" class="btn btn--primary btn--small">📨 Send Messages Now</button>
-      </div>
-      <p id="send-messages-status" class="comment-post-status"></p>
     </section>
 
     <footer>

@@ -186,12 +186,14 @@ async function prospectRecruiters() {
       }
 
       // LinkedIn 2026 lazy-renders action buttons only after the card scrolls into view
-      // and receives a hover event. Scroll first, dispatch hover, then poll for buttons.
+      // and receives a hover event. Dispatch both pointer and mouse events (LinkedIn uses both).
       await scrollIntoViewAndPause(card);
       await readBeforeActing(card, 2000, 5000);
-      card.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
-      card.dispatchEvent(new MouseEvent('mouseover',  { bubbles: true, cancelable: true }));
-      await waitForButtonsInCard(card, 4000);
+      card.dispatchEvent(new PointerEvent('pointerenter', { bubbles: true }));
+      card.dispatchEvent(new MouseEvent('mouseenter',    { bubbles: true }));
+      card.dispatchEvent(new PointerEvent('pointermove',  { bubbles: true, cancelable: true }));
+      card.dispatchEvent(new MouseEvent('mouseover',      { bubbles: true, cancelable: true }));
+      await waitForButtonsInCard(card, 6000);
 
       // Try direct Connect button inside the card first
       let connectButton = getConnectButton(card);
@@ -266,13 +268,22 @@ async function prospectRecruiters() {
 // ─── DOM helpers ──────────────────────────────────────────────────────────────
 
 /**
- * Polls up to maxWait ms for at least one <button> to appear inside card.
- * LinkedIn 2026 lazy-renders action buttons after scroll/hover.
+ * Polls up to maxWait ms for the action button set to fully render inside a card.
+ * LinkedIn 2026 lazy-renders buttons after scroll/hover: first "Follow" appears, then
+ * "Connect" / "More (…)" appear a beat later. We wait for ≥2 buttons so the overflow
+ * menu button is present before we try to open it. Falls back after maxWait.
  */
-async function waitForButtonsInCard(card, maxWait = 4000) {
+async function waitForButtonsInCard(card, maxWait = 6000) {
   const deadline = Date.now() + maxWait;
   while (Date.now() < deadline) {
-    if (card.querySelectorAll('button').length > 0) return;
+    const btns = Array.from(card.querySelectorAll('button'));
+    if (btns.length >= 2) return; // Follow + More/Connect both rendered
+    if (btns.some(b => {
+      const label = (b.getAttribute('aria-label') || '').toLowerCase();
+      const text  = b.textContent.trim().toLowerCase();
+      return /^connect/i.test(label) || /^connect/i.test(text) ||
+             /^convidar/i.test(label) || /^conectar/i.test(label);
+    })) return; // Connect button appeared directly — no need to wait for More
     await new Promise(r => setTimeout(r, 300));
   }
 }
@@ -305,20 +316,42 @@ function getSearchResultCards() {
   )).filter(el => el.querySelector('a[href*="/in/"]'));
   if (byDivResult.length) { console.log(`[Recruiter Prospector] Found ${byDivResult.length} cards via div-result fallback.`); return byDivResult; }
 
-  // Strategy 5: absolute broadest — any div or li anywhere on the page with a profile link,
-  // de-duplicated to one container per unique profile
-  const allWithLink = Array.from(document.querySelectorAll('div, li')).filter(
-    el => el.querySelector('a[href*="/in/"]')
-  );
-  const seenIds = new Set();
-  const deduped = allWithLink.filter(el => {
-    const link = el.querySelector('a[href*="/in/"]');
-    const key = link ? link.href.split('?')[0] : null;
-    if (!key || seenIds.has(key)) return false;
-    seenIds.add(key);
-    return true;
-  });
-  if (deduped.length) { console.log(`[Recruiter Prospector] Found ${deduped.length} cards via broadest fallback.`); return deduped; }
+  // Strategy 5 (LinkedIn 2026): data-attribute based containers used in Chameleon/Voyager redesign
+  const byDataAttr = Array.from(document.querySelectorAll(
+    '[data-chameleon-result-urn], [data-entity-urn*="fs_miniProfile"], ' +
+    '[data-member-id], [data-view-name*="entity-result"]'
+  )).filter(el => el.querySelector('a[href*="/in/"]'));
+  if (byDataAttr.length) { console.log(`[Recruiter Prospector] Found ${byDataAttr.length} cards via data-attr strategy.`); return byDataAttr; }
+
+  // Strategy 6: walk UP from each profile link to find the closest card-like container
+  // (avoids the old "outermost ancestor per profile" bug that returned page-wide containers
+  //  containing nav, pagination and ad buttons alongside card buttons)
+  const allProfileLinks = Array.from(document.querySelectorAll('a[href*="/in/"]'));
+  const seenUrls = new Set();
+  const closestContainers = [];
+  for (const link of allProfileLinks) {
+    const key = link.href.split('?')[0];
+    if (seenUrls.has(key)) continue;
+    seenUrls.add(key);
+    // Walk up: take the closest <li>, or the closest bounded <div> that is card-sized
+    let el = link.parentElement;
+    let best = null;
+    while (el && el.tagName !== 'BODY') {
+      if (el.tagName === 'LI') { best = el; break; }
+      if (el.tagName === 'DIV') {
+        const rect = el.getBoundingClientRect();
+        // Card heuristic: taller than a line but shorter than two viewport heights,
+        // and wide enough to be a result item (not a narrow sidebar widget)
+        if (rect.height > 60 && rect.height < 500 && rect.width > 300) {
+          best = el;
+          break;
+        }
+      }
+      el = el.parentElement;
+    }
+    if (best) closestContainers.push(best);
+  }
+  if (closestContainers.length) { console.log(`[Recruiter Prospector] Found ${closestContainers.length} cards via closest-container strategy.`); return closestContainers; }
 
   console.warn('[Recruiter Prospector] All selectors failed. LinkedIn DOM may have changed.');
   return [];
@@ -371,22 +404,37 @@ async function getConnectButtonViaMore(card) {
     'button[aria-label*="Mais ações"]',
     'button[aria-label*="Mais opções"]',
     'button[aria-label*="Mais ação"]',
+    // Catch-all patterns for LinkedIn 2026 Chameleon design
+    'button.artdeco-dropdown__trigger',
+    'button[data-control-name*="overflow"]',
+    'button[data-control-name*="more"]',
   ];
   const textMatch = (b) => {
     const t = (b.getAttribute('aria-label') || b.textContent || '').trim().toLowerCase();
-    return t === 'more' || t === 'more actions' || t === 'more options' ||
-           t === 'mais' || t === 'mais ações'   || t === 'mais opções'  || t === '…';
+    // Use startsWith so "More options for John" also matches
+    return t.startsWith('more') || t === '…' || t === '...' ||
+           t.startsWith('mais') || t.includes('overflow actions');
   };
 
   let moreBtn =
     MORE_SELS.reduce((f, s) => f || card.querySelector(s), null) ||
     Array.from(card.querySelectorAll('button')).find(textMatch);
 
-  // Fallback: the More button may live outside the card's DOM subtree in a floating overlay
+  // Fallback: the More button may live outside the card's DOM subtree in a floating overlay.
+  // Use geometric proximity instead of document.querySelector (which returns the wrong card's button).
   if (!moreBtn) {
-    moreBtn =
-      MORE_SELS.reduce((f, s) => f || document.querySelector(s), null) ||
-      Array.from(document.querySelectorAll('button')).find(textMatch);
+    const cardRect = card.getBoundingClientRect();
+    const candidates = [
+      ...MORE_SELS.flatMap(s => Array.from(document.querySelectorAll(s))),
+      ...Array.from(document.querySelectorAll('button')).filter(textMatch),
+    ];
+    moreBtn = candidates.find(b => {
+      if (b.disabled) return false;
+      const rect = b.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return false;
+      // Accept the button if it sits within the card's vertical band (±60 px slack)
+      return rect.top >= cardRect.top - 60 && rect.bottom <= cardRect.bottom + 60;
+    });
   }
 
   if (!moreBtn) return null;

@@ -8,14 +8,12 @@
  *   21:00 → China / Australia morning + US West Coast late afternoon
  */
 
-import { checkGlobalTime, TARGET_WINDOWS } from '../utils/time-checker.js';
+import { TARGET_WINDOWS } from '../utils/time-checker.js';
 import { log } from '../utils/logger.js';
 
-const ALARM_NAMES = {
-  MORNING:  'ssi-routine-morning',   // 11:00 BRT — US East + Europe
-  EVENING:  'ssi-routine-evening',   // 21:00 BRT — APAC + US West
-  INTERVAL: 'ssi-routine-interval',  // Repeating interval (configured by user)
-};
+// How many sequential runs the user requested this session.
+// Stored in chrome.storage.local so progress survives a SW restart.
+// Keys: pendingRuns (countdown), totalRunsSession, currentRunNumber.
 
 /**
  * 7-day diminishing connection schedule.
@@ -43,31 +41,10 @@ const SEED_POST_URLS = [
 ];
 
 chrome.runtime.onInstalled.addListener(async () => {
-  scheduleAlarms();
-  await restoreIntervalAlarm();
-  log('Extension installed. Daily alarms registered.', 'success');
-  console.log('[SSI Optimizer] Installed. Daily alarms registered.');
+  log('Extension installed.', 'success');
+  console.log('[SSI Optimizer] Installed.');
   await seedPostQueue();
 });
-
-/**
- * Re-creates the interval alarm from storage after service-worker restart.
- * Chrome clears all alarms when the service worker is killed.
- */
-async function restoreIntervalAlarm() {
-  const { intervalMinutes = 0 } = await chrome.storage.local.get('intervalMinutes');
-  if (intervalMinutes > 0) {
-    chrome.alarms.get(ALARM_NAMES.INTERVAL, (existing) => {
-      if (!existing) {
-        chrome.alarms.create(ALARM_NAMES.INTERVAL, {
-          delayInMinutes: intervalMinutes,
-          periodInMinutes: intervalMinutes,
-        });
-        log(`[Interval] Alarm restored: every ${intervalMinutes} min.`, 'info');
-      }
-    });
-  }
-}
 
 /**
  * Adds SEED_POST_URLS to `specificPostQueue` if not already present.
@@ -96,80 +73,8 @@ async function seedPostQueue() {
   }
 }
 
-chrome.runtime.onStartup.addListener(() => {
-  scheduleAlarms();
-  restoreIntervalAlarm();
-  log('Extension started. Alarms refreshed.');
-});
-
-// ─── Alarm scheduling ────────────────────────────────────────────────────────
-
-function scheduleAlarms() {
-  chrome.alarms.clearAll(() => {
-    chrome.alarms.create(ALARM_NAMES.MORNING, {
-      when: getNextAlarmTime(11, 0),
-      periodInMinutes: 24 * 60,
-    });
-    chrome.alarms.create(ALARM_NAMES.EVENING, {
-      when: getNextAlarmTime(21, 0),
-      periodInMinutes: 24 * 60,
-    });
-    console.log('[SSI Optimizer] Alarms scheduled: 11:00 and 21:00 BRT.');
-  });
-}
-
-/**
- * Returns the timestamp (ms) of the next occurrence of HH:MM in BRT.
- * If the time has already passed today, returns tomorrow's occurrence.
- */
-function getNextAlarmTime(hours, minutes) {
-  const now = new Date();
-  const brtOffset = -3 * 60;
-  const utcNow = now.getTime() + now.getTimezoneOffset() * 60000;
-  const brtNow = new Date(utcNow + brtOffset * 60000);
-
-  const target = new Date(brtNow);
-  target.setHours(hours, minutes, 0, 0);
-
-  if (target <= brtNow) {
-    target.setDate(target.getDate() + 1);
-  }
-
-  // Convert back to UTC milliseconds
-  return target.getTime() - brtOffset * 60000;
-}
-
-// ─── Alarm handler ───────────────────────────────────────────────────────────
-
-chrome.alarms.onAlarm.addListener(async (alarm) => {
-  // ── Interval alarm (no time-window check — user opted in deliberately) ──
-  if (alarm.name === ALARM_NAMES.INTERVAL) {
-    const dailyCap = await getDailyConnectionCap();
-    await log(`[Interval] Run started. Cap today: ${dailyCap}.`, 'warn');
-    await runDailySequence(TARGET_WINDOWS.US_EU, dailyCap);
-    await advanceDayCycle();
-    return;
-  }
-
-  if (alarm.name !== ALARM_NAMES.MORNING && alarm.name !== ALARM_NAMES.EVENING) return;
-
-  const window = alarm.name === ALARM_NAMES.MORNING
-    ? TARGET_WINDOWS.US_EU
-    : TARGET_WINDOWS.APAC;
-
-  const allowed = await checkGlobalTime(window);
-  if (!allowed) {
-    console.warn('[SSI Optimizer] Time window validation failed. Skipping run.');
-    await log('Scheduled run skipped — outside allowed time window.', 'warn');
-    return;
-  }
-
-  const dailyCap = await getDailyConnectionCap();
-  console.log(`[SSI Optimizer] Starting daily routine for window: ${window} | connections cap today: ${dailyCap}`);
-  await log(`Scheduled run started. Window: ${window} | cap: ${dailyCap} connections.`);
-
-  await runDailySequence(window, dailyCap);
-  await advanceDayCycle();
+chrome.runtime.onStartup.addListener(async () => {
+  log('Extension started.');
 });
 
 // ─── Daily sequence orchestrator ─────────────────────────────────────────────
@@ -242,8 +147,6 @@ async function runDailySequence(targetWindow, dailyCap) {
     `[Summary] 🤝 Connections ${_conns} | 💬 Posts ${_posts} | 🎉 Relationships ${_rels}`,
     'success'
   );
-
-  await exportAllCsvs();
 
   await log('Step 7/7 — Auto-messaging newly discovered profiles…');
   await buildAndRunAutoMessageQueue();
@@ -431,6 +334,10 @@ const CONTENT_SEARCH_EXPRESSIONS = [
   'manager project',
   'tech recruiter experian',
   'tech recruiter information technology experian',
+  // LATAM hiring post-engagement — used by round-robin AND the dedicated engage-hiring-latam scenario
+  'hiring agile latam',
+  'hiring scrum latam',
+  'hiring delivery latam',
 ];
 
 // People-search URLs for "Localizar as pessoas certas" SSI pillar — view-only browse
@@ -457,14 +364,84 @@ const PEOPLE_SEARCH_URLS = [
   'https://www.linkedin.com/search/results/people/?keywords=tech%20recruiter%20experian&origin=FACETED_SEARCH&geoUrn=%5B%22103644278%22%2C%22102713980%22%2C%22101739942%22%2C%22104738515%22%2C%22102890883%22%2C%22102454443%22%5D&network=%5B%22S%22%2C%22O%22%5D',
   // tech recruiter experian — same geos, with Tech/IT industry filter
   'https://www.linkedin.com/search/results/people/?keywords=tech%20recruiter%20experian&origin=FACETED_SEARCH&geoUrn=%5B%22103644278%22%2C%22102713980%22%2C%22101739942%22%2C%22104738515%22%2C%22102890883%22%2C%22102454443%22%5D&network=%5B%22S%22%2C%22O%22%5D&f_I=%5B%226%22%5D',
+  // ── Persona 2: Director / Head of Talent Acquisition ──────────────────────
+  // TA leaders who decide WHERE to source — US, UK, Canada, Germany, Netherlands
+  'https://www.linkedin.com/search/results/people/?keywords=Head%20of%20Talent%20Acquisition%20technology&origin=FACETED_SEARCH&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%2C%22101174742%22%2C%22102454443%22%2C%22104738515%22%5D&f_I=%5B%2296%22%2C%226%22%2C%224%22%5D',
+  // TA Director with nearshore or LATAM scope — US, UK, Canada, Australia, France
+  'https://www.linkedin.com/search/results/people/?keywords=Director%20Talent%20Acquisition%20nearshore%20LATAM&origin=FACETED_SEARCH&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%2C%22101174742%22%2C%22101739942%22%2C%22102454443%22%5D',
+  // ── Persona 3: VP Engineering / CTO / Head of Engineering ─────────────────
+  // Decision-makers at US tech companies that hire nearshore delivery managers
+  'https://www.linkedin.com/search/results/people/?keywords=VP%20Engineering%20nearshore%20remote&origin=FACETED_SEARCH&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%2C%22101174742%22%5D&f_I=%5B%2296%22%2C%226%22%2C%224%22%5D',
+  // CTO at startup / scale-up — US, UK, Canada, Germany, Netherlands (Series A-C)
+  'https://www.linkedin.com/search/results/people/?keywords=CTO%20startup%20remote%20LATAM&origin=FACETED_SEARCH&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%2C%22101174742%22%2C%22102454443%22%2C%22104738515%22%5D&f_I=%5B%2296%22%2C%226%22%5D',
+  // Head of Engineering at companies with LATAM remote teams
+  'https://www.linkedin.com/search/results/people/?keywords=Head%20of%20Engineering%20LATAM%20remote&origin=FACETED_SEARCH&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%2C%22101174742%22%2C%22101739942%22%2C%22102454443%22%5D',
+  // ── Persona 4: Nearshore / Staff Augmentation Account Executive ───────────
+  // AEs who sell nearshore squads and need PMs — US, UK, Canada
+  'https://www.linkedin.com/search/results/people/?keywords=Account%20Executive%20nearshore%20staff%20augmentation&origin=FACETED_SEARCH&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%2C%22101174742%22%5D&f_I=%5B%2296%22%2C%226%22%2C%224%22%5D',
+  // Business Development at companies like Globant, CI&T, Encora, Softtek, Stefanini
+  'https://www.linkedin.com/search/results/people/?keywords=Business%20Development%20nearshore%20IT%20LATAM&origin=FACETED_SEARCH&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%2C%22101174742%22%2C%22102454443%22%2C%22104738515%22%5D',
+  // Delivery/Engagement Manager at nearshore vendors — peers who can refer
+  'https://www.linkedin.com/search/results/people/?keywords=Engagement%20Manager%20nearshore%20software&origin=FACETED_SEARCH&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%2C%22101174742%22%2C%22102454443%22%2C%22104738515%22%5D',
+];
+
+// Job search URLs targeting LATAM hiring managers who post "Meet the hiring team".
+// Harvested via content/job-recruiter-harvester.js (on-demand, popup button).
+const JOB_HARVEST_URLS = [
+  // "projet manager latam" — starts from page 1 (has >5 pages, harvester will follow all)
+  'https://www.linkedin.com/jobs/search/?currentJobId=4405110262&distance=100&geoId=105458072&keywords=projet%20manager%20latam&origin=JOB_SEARCH_PAGE_JOB_FILTER&refresh=true',
+  // "delivery manager" +latam
+  'https://www.linkedin.com/jobs/search/?currentJobId=4409975921&f_T=77&geoId=105056705&keywords=%22delivery%20manager%22%20%2Blatam&origin=JOB_SEARCH_PAGE_LOCATION_AUTOCOMPLETE&refresh=true&sortBy=R',
+  // "project manager" +latam
+  'https://www.linkedin.com/jobs/search/?currentJobId=4408667708&f_T=77&geoId=105056705&keywords=%22project%20manager%22%20%2Blatam&origin=JOB_SEARCH_PAGE_SEARCH_BUTTON&refresh=true&sortBy=R',
+];
+
+// LinkedIn content-search pages for LATAM hiring post engagement.
+// Converted to /feed/hashtag/ format — /search/results/content/ uses obfuscated CSS
+// that prevents reliable element selection in LinkedIn 2026.
+const LATAM_HIRING_ENGAGE_URLS = [
+  'https://www.linkedin.com/feed/hashtag/hiring-agile-latam/',
+  'https://www.linkedin.com/feed/hashtag/hiring-scrum-latam/',
+  'https://www.linkedin.com/feed/hashtag/hiring-delivery-latam/',
+];
+
+// Content-search pages for decision-maker post engagement (Persona 3 & 4).
+// Target: CTO / Head of Engineering / VP Engineering / Account Executive in IT industry.
+// post-engager.js strategy s0/s0b/s0c handles /search/results/content/ pages;
+// author names + profile URLs are saved to discoveredAuthors via saveAuthorContact().
+const EXEC_ENGAGE_URLS = [
+  // CTO startup — posts by IT-industry CTOs (SSI Insights: engage with decision-makers)
+  'https://www.linkedin.com/search/results/content/?keywords=CTO%20startup&origin=FACETED_SEARCH&authorIndustry=%5B%226%22%5D',
+  // Head of Engineering — engineering leaders in IT (signal: you follow engineering discourse)
+  'https://www.linkedin.com/search/results/content/?keywords=Head%20of%20Engineering&origin=GLOBAL_SEARCH_HEADER&authorIndustry=%5B%226%22%5D',
+  // VP Engineering — VP-level engineering leaders in IT
+  'https://www.linkedin.com/search/results/content/?keywords=VP%20Engineering&origin=GLOBAL_SEARCH_HEADER&authorIndustry=%5B%226%22%5D',
+  // Account Executive IT — nearshore/staffing AEs who broker PM placements
+  'https://www.linkedin.com/search/results/content/?keywords=Account%20Executive&origin=GLOBAL_SEARCH_HEADER&authorIndustry=%5B%226%22%5D',
+];
+
+/**
+ * Available automation scenarios.
+ * Served to the popup via GET_SCENARIOS; user selections stored as `selectedScenarios`.
+ * Each id maps to a case in runScenario().
+ */
+const SCENARIOS = [
+  { id: 'full-pipeline',       label: '🔁 Full Pipeline',         description: 'SSI · Prospect · Engage · Relationships · Track · Follow-up + Messages' },
+  { id: 'ssi-capture',         label: '📊 Capture SSI',           description: 'Read and store current SSI pillar scores (baseline before any action)' },
+  { id: 'prospect-connect',    label: '🤝 Prospect & Connect',    description: 'Find and send connection requests to tech recruiters via people search + direct URLs' },
+  { id: 'engage-insights',     label: '💬 Engage with Posts',     description: 'Like/comment on the next keyword in the round-robin rotation (SSI: Insights)' },
+  { id: 'engage-hiring-latam', label: '🎯 Engage: Hiring LATAM', description: 'Comment on all 3 hiring/agile/scrum/delivery LATAM hashtag feeds (SSI: Insights)' },
+  { id: 'engage-exec-posts',   label: '🏢 Engage: Exec Posts',    description: 'Comment on posts by CTO/VP Eng/Head of Eng/Account Exec — logs author names + links' },
+  { id: 'build-relationships', label: '🔔 Build Relationships',   description: 'Birthday/anniversary congrats + connection tracking + follow-up messages (SSI: Relationships)' },
+  { id: 'job-harvest',         label: '🔍 Job Recruiter Harvest', description: 'Scrape LinkedIn jobs → connect + follow + message new recruiters' },
 ];
 
 // Direct people-search URLs for global (non-Brazilian) profiles — network=O (3rd degree+)
 // These are user-validated URLs that target genuinely global audiences.
 // Rotated each run, processed with full connect cap (split with Step 2).
 const RECRUITER_DIRECT_CONNECT_URLS = [
-  // 1st–3rd degree, "eua" keyword — US-oriented global professionals
-  'https://www.linkedin.com/search/results/people/?keywords=eua&origin=GLOBAL_SEARCH_HEADER&network=%5B%22O%22%5D',
+  // VP Engineering remote LATAM — 3rd degree — US, UK, Canada (direct hiring authority)
+  'https://www.linkedin.com/search/results/people/?keywords=VP%20Engineering%20remote%20LATAM&origin=FACETED_SEARCH&network=%5B%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%2C%22101174742%22%5D&f_I=%5B%2296%22%2C%226%22%5D',
   // 3rd degree, "europe" keyword — France, Netherlands, US, Portugal, UK, Germany
   'https://www.linkedin.com/search/results/people/?keywords=europe&origin=FACETED_SEARCH&network=%5B%22O%22%5D&geoUrn=%5B%22101165590%22%2C%22105015875%22%2C%22103644278%22%2C%22106204383%22%2C%22101174742%22%2C%22104738515%22%5D',
   // "hiring project manager" — 1st+2nd+3rd degree — US, UK, Canada, Germany, Netherlands, France
@@ -487,8 +464,8 @@ const RECRUITER_DIRECT_CONNECT_URLS = [
 
 /**
  * Returns the next content-search expression using round-robin rotation.
- * Cycles through all 15 expressions before any repeats.
- * Stores `exprQueueIndex` (0–14) in chrome.storage.local.
+ * Cycles through all 27 expressions before any repeats.
+ * Stores `exprQueueIndex` (0–26) in chrome.storage.local.
  */
 async function getNextSearchExpression() {
   const { exprQueueIndex = 0 } = await chrome.storage.local.get('exprQueueIndex');
@@ -658,6 +635,201 @@ function randomWait(minMs, maxMs) {
   return new Promise((resolve) => setTimeout(resolve, delay));
 }
 
+// ─── Run counter ──────────────────────────────────────────────────────────────
+
+/**
+ * Runs the full daily sequence N times (1–10), advancing the day cycle after each.
+ * Between runs, waits 5–10 minutes to respect LinkedIn rate limits.
+ * Tracks progress in storage so the popup can display "Run K/N".
+ *
+ * Storage keys used: pendingRuns (countdown), totalRunsSession, currentRunNumber
+ */
+async function runNTimes(n) {
+  const safeN = Math.max(1, Math.min(10, n));
+  await chrome.storage.local.set({ pendingRuns: safeN, totalRunsSession: safeN, currentRunNumber: 0 });
+
+  for (let i = 0; i < safeN; i++) {
+    await chrome.storage.local.set({ currentRunNumber: i + 1 });
+    const cap = await getDailyConnectionCap();
+    await log(`[Run ${i + 1}/${safeN}] Starting. Connection cap: ${cap}.`, 'warn');
+    await runDailySequence(TARGET_WINDOWS.US_EU, cap);
+    await advanceDayCycle();
+
+    const remaining = safeN - i - 1;
+    await chrome.storage.local.set({ pendingRuns: remaining });
+
+    if (remaining > 0) {
+      const waitMs = (5 + Math.floor(Math.random() * 6)) * 60 * 1000; // 5–10 min
+      await log(`[Run ${i + 1}/${safeN}] Done. Waiting ${Math.round(waitMs / 60000)} min before run ${i + 2}…`, 'info');
+      await new Promise(resolve => setTimeout(resolve, waitMs));
+    }
+  }
+
+  await chrome.storage.local.set({ pendingRuns: 0 });
+  await log(`[RunCounter] All ${safeN} run(s) complete.`, 'success');
+}
+
+// ─── Scenario runner ──────────────────────────────────────────────────────────
+
+/**
+ * Compares a batch of profile IDs against the all-time set stored in
+ * `allTimeProfiles`. Logs new/returning/duplicate stats and persists the
+ * updated set.
+ *
+ * @param {string[]} profileIds
+ * @param {string}   label      — prefix shown in the log line (e.g. 'JobHarvest')
+ */
+async function computeProfileStats(profileIds, label) {
+  const { allTimeProfiles = [] } = await chrome.storage.local.get('allTimeProfiles');
+  const allTimeSet = new Set(allTimeProfiles);
+
+  const batchSet  = new Set();
+  let duplicates  = 0;
+  let newCount    = 0;
+  let returning   = 0;
+
+  for (const pid of profileIds) {
+    if (batchSet.has(pid)) { duplicates++; continue; }
+    batchSet.add(pid);
+    if (allTimeSet.has(pid)) { returning++; } else { newCount++; allTimeSet.add(pid); }
+  }
+
+  const total  = batchSet.size;
+  const newPct = total > 0 ? Math.round((newCount / total) * 100) : 0;
+  await log(
+    `[${label}] ${newCount} new (${newPct}%), ${returning} returning, ${duplicates} duplicates in batch`,
+    'info'
+  );
+
+  await chrome.storage.local.set({ allTimeProfiles: [...allTimeSet] });
+}
+
+/**
+ * Likes/comments on posts in all 3 LATAM hiring hashtag feeds.
+ * Used exclusively by the 'engage-hiring-latam' scenario.
+ */
+async function engageHiringLatam() {
+  for (let i = 0; i < LATAM_HIRING_ENGAGE_URLS.length; i++) {
+    const url = LATAM_HIRING_ENGAGE_URLS[i];
+    await log(`[EngageHiringLatam] ${i + 1}/${LATAM_HIRING_ENGAGE_URLS.length}: ${url}`, 'info');
+    await openTabAndWait(url, 'post-engager', {}, 90_000);
+    if (i < LATAM_HIRING_ENGAGE_URLS.length - 1) await randomWait(5000, 10000);
+  }
+}
+
+/**
+ * Likes/comments on posts from decision-maker content searches
+ * (CTO / Head of Engineering / VP Engineering / Account Executive — IT industry).
+ * post-engager.js saves every post author name + profile URL to discoveredAuthors.
+ * Used exclusively by the 'engage-exec-posts' scenario.
+ */
+async function engageExecPosts() {
+  for (let i = 0; i < EXEC_ENGAGE_URLS.length; i++) {
+    const url = EXEC_ENGAGE_URLS[i];
+    await log(`[EngageExecPosts] ${i + 1}/${EXEC_ENGAGE_URLS.length}: ${url}`, 'info');
+    await openTabAndWait(url, 'post-engager', {}, 90_000);
+    if (i < EXEC_ENGAGE_URLS.length - 1) await randomWait(5000, 10000);
+  }
+}
+
+/**
+ * Dispatches a single scenario by id, using the provided connection cap.
+ *
+ * @param {string} scenarioId — must match one of the ids in SCENARIOS
+ * @param {number} dailyCap
+ */
+async function runScenario(scenarioId, dailyCap) {
+  await log(`[Scenario] Running: ${scenarioId} (cap ${dailyCap})`, 'warn');
+  switch (scenarioId) {
+    case 'full-pipeline':
+      await runDailySequence(TARGET_WINDOWS.US_EU, dailyCap);
+      break;
+    case 'ssi-capture': {
+      const ssiUrl = 'https://www.linkedin.com/sales/ssi';
+      await openTabAndWait(ssiUrl, 'ssi-monitor', {}, 60_000);
+      break;
+    }
+    case 'prospect-connect': {
+      const searchUrl = await buildSearchUrl(TARGET_WINDOWS.US_EU);
+      await openTabAndWait(searchUrl, 'recruiter-prospector', { dailyCap }, 90_000);
+      await advancePeopleQueue();
+      break;
+    }
+    case 'engage-insights': {
+      const { expr, url } = await getNextSearchExpression();
+      await log(`[Scenario] Engaging hashtag: ${expr}`, 'info');
+      await openTabAndWait(url, 'post-engager', {}, 90_000);
+      await advanceExprQueue();
+      break;
+    }
+    case 'engage-hiring-latam':
+      await engageHiringLatam();
+      break;
+    case 'engage-exec-posts':
+      await engageExecPosts();
+      break;
+    case 'build-relationships':
+      await openTabAndWait('https://www.linkedin.com/mynetwork/catch-up/birthday/', 'relationship-builder', {}, 90_000);
+      await openTabAndWait('https://www.linkedin.com/mynetwork/invitation-manager/sent/', 'connection-tracker', {}, 60_000);
+      await openTabAndWait('https://www.linkedin.com/messaging/', 'follow-up-sender', {}, 90_000);
+      break;
+    case 'job-harvest':
+      await harvestJobRecruiterUrls();
+      break;
+    default:
+      await log(`[Scenario] Unknown scenario id: ${scenarioId}`, 'error');
+  }
+}
+
+/**
+ * Runs the selected scenarios N times back-to-back.
+ * Advances the day cycle and auto-exports named CSVs after each iteration.
+ * Inserts a 5–10 min pause between iterations.
+ *
+ * @param {string[]} scenarioIds
+ * @param {number}   n
+ */
+async function runSelectedScenarios(scenarioIds, n) {
+  const safeN = Math.max(1, Math.min(10, n));
+  const ids   = Array.isArray(scenarioIds) && scenarioIds.length ? scenarioIds : ['full-pipeline'];
+
+  await chrome.storage.local.set({
+    pendingRuns: safeN, totalRunsSession: safeN, currentRunNumber: 0,
+    activeScenarios: ids,
+  });
+
+  for (let i = 0; i < safeN; i++) {
+    await chrome.storage.local.set({ currentRunNumber: i + 1 });
+    const cap = await getDailyConnectionCap();
+    await log(`[RunSelected ${i + 1}/${safeN}] Scenarios: ${ids.join(', ')} | cap: ${cap}`, 'warn');
+
+    for (const id of ids) {
+      await runScenario(id, cap);
+    }
+
+    await advanceDayCycle();
+
+    // Auto-export with a slug derived from the selected scenario ids
+    const slug = ids.map(s => s.replace(/-/g, '')).join('_').slice(0, 40);
+    await exportAllCsvs(slug);
+
+    const remaining = safeN - i - 1;
+    await chrome.storage.local.set({ pendingRuns: remaining });
+
+    if (remaining > 0) {
+      const waitMs = (5 + Math.floor(Math.random() * 6)) * 60 * 1000; // 5–10 min
+      await log(
+        `[RunSelected ${i + 1}/${safeN}] Done. Waiting ${Math.round(waitMs / 60000)} min before run ${i + 2}…`,
+        'info'
+      );
+      await new Promise(resolve => setTimeout(resolve, waitMs));
+    }
+  }
+
+  await chrome.storage.local.set({ pendingRuns: 0 });
+  await log(`[RunSelected] All ${safeN} run(s) complete.`, 'success');
+}
+
 // ─── CSV auto-export ──────────────────────────────────────────────────────────
 
 function csvRow(values) {
@@ -677,103 +849,77 @@ function downloadCsvFromSW(filename, headers, rows) {
 }
 
 /**
- * Exports all discovered /in/ profile URLs to a plain-text file — one URL per line.
- * Saved to Downloads/link_ssi/output/links-{ts}.txt for manual review.
+ * FILE 1 — activity-log-{ts}.csv
+ * Pure chronological activity log. Headers: Date | Level | Script | Message
  */
-function downloadLinksTxt(profileUrls, ts) {
-  if (!profileUrls.length) return;
-  const content = profileUrls.join('\n');
-  const dataUrl = 'data:text/plain;charset=utf-8,' + encodeURIComponent(content);
-  chrome.downloads.download({ url: dataUrl, filename: `link_ssi/output/links-${ts}.txt`, saveAs: false });
+async function exportLogCsv(scenarioId = '') {
+  const { activityLog = [] } = await chrome.storage.local.get('activityLog');
+  const ts = new Date().toISOString().slice(0, 16).replace('T', '-').replace(':', '');
+  const slug = scenarioId ? `${scenarioId}-` : '';
+  const HEADERS = ['Date', 'Level', 'Script', 'Message'];
+  const rows = [...activityLog]
+    .sort((a, b) => new Date(b.ts) - new Date(a.ts))
+    .map(e => [e.ts || '', e.level || 'info', e.script || '', e.msg || '']);
+  downloadCsvFromSW(`activity-log-${slug}${ts}.csv`, HEADERS, rows);
+  return rows.length;
 }
 
 /**
- * Exports ALL activity data into a single chronological CSV.
- *
- * Headers: Category | Date | Type | Name | Detail | URL
- *   Connection   → type=connection-sent | name=person name | detail=profileId | url=profileUrl
- *   Post         → type=like/comment/follow | name='' | detail=postId | url=postUrl
- *   Relationship → type=birthday/anniversary | name=person name | detail=message | url=profileUrl
- *   Log          → type=info/warn/error/success | name=script | detail=message | url=''
- *   SSI          → type=ssi-score | name='' | detail=total:X brand:X people:X insights:X rel:X | url=''
- *   AcceptedConn → type=accepted | name=person name | detail=followUpSent | url=profileUrl
- *   Email        → type=email-found | name=email | detail=postId | url=postUrl
- *   Link         → type=link-discovered | name=context | detail='' | url=url
+ * FILE 2 — leads-{ts}.csv
+ * Unified leads list for hiring searches (PM / Delivery Manager / Agile / Scrum Master in LATAM).
+ * Combines all profile sources: recruiters, discovered profiles, sent connections, accepted, emails.
+ * Headers: Type | Name | Email | ProfileURL | JobURL | Source | Date | Status
  */
-async function exportAllCsvs() {
-  // Debounce: skip if exported within the last 3 minutes to prevent double-CSV
-  // when multiple content scripts send EXPORT_LOGS at the same time as the sequence end.
-  const { _lastCsvExportAt } = await chrome.storage.local.get('_lastCsvExportAt');
-  const now = Date.now();
-  if (_lastCsvExportAt && now - _lastCsvExportAt < 3 * 60 * 1000) {
-    console.log('[SSI Optimizer] exportAllCsvs skipped — debounce (< 3 min since last export)');
-    return;
-  }
-  await chrome.storage.local.set({ _lastCsvExportAt: now });
-
+async function exportLeadsCsv(scenarioId = '') {
   const data = await chrome.storage.local.get([
-    'connections', 'postInteractions', 'relationships', 'activityLog', 'ssiScores',
-    'discoveredLinks', 'acceptedConnections', 'extractedEmails',
+    'jobRecruiters', 'discoveredLinks', 'acceptedConnections', 'connections', 'extractedEmails',
   ]);
   const ts = new Date().toISOString().slice(0, 16).replace('T', '-').replace(':', '');
-
-  const HEADERS = ['Category', 'Date', 'Type', 'Name', 'Detail', 'URL'];
+  const slug = scenarioId ? `${scenarioId}-` : '';
+  const HEADERS = ['Type', 'Name', 'Email', 'ProfileURL', 'JobURL', 'Source', 'Date', 'Status'];
   const rows = [];
 
-  for (const c of (data.connections || [])) {
-    rows.push(['Connection', c.sentAt || '', 'connection-sent', c.name || c.profileId || '', c.profileId || '', c.profileUrl || `https://www.linkedin.com/in/${c.profileId}/`]);
+  for (const [pid, r] of Object.entries(data.jobRecruiters || {})) {
+    rows.push(['Recruiter', r.name || pid, '', r.profileUrl || `https://www.linkedin.com/in/${pid}/`, r.sourceJobUrl || '', 'job-harvest', r.foundAt || '', r.messageSent ? 'messaged' : 'new']);
   }
-
-  for (const p of (data.postInteractions || [])) {
-    rows.push(['Post', p.interactedAt || '', p.action || 'like', '', p.postId || '', p.postUrl || '']);
-  }
-
-  for (const r of (data.relationships || [])) {
-    rows.push(['Relationship', r.touchedAt || '', r.eventType || '', r.name || r.profileId || '', r.messageSent || '', r.profileUrl || `https://www.linkedin.com/in/${r.profileId}/`]);
-  }
-
-  for (const e of [...(data.activityLog || [])]) {
-    rows.push(['Log', e.ts || '', e.level || 'info', e.script || '', e.msg || '', '']);
-  }
-
-  for (const s of (data.ssiScores || [])) {
-    const detail = `total:${s.total ?? '?'} brand:${s.brand ?? '?'} people:${s.people ?? '?'} insights:${s.insights ?? '?'} rel:${s.relationships ?? '?'}`;
-    rows.push(['SSI', s.capturedAt || s.date || '', 'ssi-score', '', detail, '']);
-  }
-
-  for (const a of (data.acceptedConnections || [])) {
-    rows.push(['AcceptedConn', a.acceptedAt || '', 'accepted', a.name || '', a.followUpSent ? 'follow-up-sent' : 'pending', a.profileUrl || `https://www.linkedin.com/in/${a.profileId}/`]);
-  }
-
-  for (const em of (data.extractedEmails || [])) {
-    rows.push(['Email', em.foundAt || '', 'email-found', em.email || '', em.postId || '', em.postUrl || '']);
-  }
-
   for (const l of (data.discoveredLinks || [])) {
-    rows.push(['Link', l.ts || '', 'link-discovered', l.context || '', l.name || '', l.url || '']);
+    if (!l.url?.includes('/in/')) continue;
+    rows.push(['Profile', l.name || '', '', l.url, '', l.context || 'discovery', l.ts || '', 'discovered']);
+  }
+  for (const a of (data.acceptedConnections || [])) {
+    rows.push(['Accepted', a.name || a.profileId || '', '', a.profileUrl || `https://www.linkedin.com/in/${a.profileId}/`, '', 'connection', a.acceptedAt || '', a.followUpSent ? 'follow-up-sent' : 'connected']);
+  }
+  for (const c of (data.connections || [])) {
+    rows.push(['ConnectionSent', c.name || c.profileId || '', '', c.profileUrl || `https://www.linkedin.com/in/${c.profileId}/`, '', 'prospecting', c.sentAt || '', 'sent']);
+  }
+  for (const em of (data.extractedEmails || [])) {
+    rows.push(['Email', '', em.email || '', '', em.postUrl || '', 'email-extract', em.foundAt || '', 'extracted']);
   }
 
-  // Sort all rows chronologically (column index 1 = Date)
-  rows.sort((a, b) => new Date(b[1]) - new Date(a[1]));
+  rows.sort((a, b) => new Date(b[6]) - new Date(a[6]));
+  downloadCsvFromSW(`leads-${slug}${ts}.csv`, HEADERS, rows);
+  return rows.length;
+}
 
-  downloadCsvFromSW(`activity-history-${ts}.csv`, HEADERS, rows);
+/**
+ * Exports both CSVs. When scenarioId is provided the filenames include a scenario
+ * slug and the 3-min debounce is bypassed (each named run always produces a file).
+ * When called without a scenarioId (legacy paths), the debounce still applies.
+ */
+async function exportAllCsvs(scenarioId = '') {
+  if (!scenarioId) {
+    const { _lastCsvExportAt } = await chrome.storage.local.get('_lastCsvExportAt');
+    const now = Date.now();
+    if (_lastCsvExportAt && now - _lastCsvExportAt < 3 * 60 * 1000) {
+      console.log('[SSI Optimizer] exportAllCsvs skipped — debounce (< 3 min since last export)');
+      return;
+    }
+    await chrome.storage.local.set({ _lastCsvExportAt: now });
+  }
 
-  // Export a plain-text file with only /in/ profile URLs for manual review
-  const profileUrls = [...new Set(
-    (data.discoveredLinks || []).map(l => l.url).filter(u => u && u.includes('/in/'))
-  )];
-  if (profileUrls.length) downloadLinksTxt(profileUrls, ts);
-
-  const counts = {
-    links: (data.discoveredLinks || []).length,
-    accepted: (data.acceptedConnections || []).length,
-    emails: (data.extractedEmails || []).length,
-    logs: (data.activityLog || []).length,
-  };
-  await log(
-    `Auto-CSV export complete — ${counts.links} links, ${counts.accepted} accepted, ${counts.emails} emails, ${counts.logs} log entries → Downloads/link_ssi/output/`,
-    'success'
-  );
+  const [logCount, leadsCount] = await Promise.all([exportLogCsv(scenarioId), exportLeadsCsv(scenarioId)]);
+  const label = scenarioId || 'output';
+  await log(`Exports: ${logCount} log + ${leadsCount} leads → ${label}/ (Downloads/link_ssi/output/)`, 'success');
 }
 // ─── Sequential message-queue processor ──────────────────────────────────────
 
@@ -838,7 +984,11 @@ async function processMessageQueue() {
       ? `https://www.linkedin.com/messaging/compose/?recipient=${item.profileId}`
       : item.url;
 
-    const responded = await openTabAndWait(composeUrl, 'profile-messenger', {}, 90_000);
+    const responded = await openTabAndWait(
+      composeUrl, 'profile-messenger',
+      { messageBody: item.messageBody || null, subject: item.subject || null },
+      90_000
+    );
 
     const { messageQueue: mq2 = [] } = await chrome.storage.local.get('messageQueue');
     const idx2 = mq2.findIndex(m => m.url === item.url);
@@ -881,18 +1031,16 @@ const TASK_URLS = {
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action === 'RUN_NOW') {
-    getDailyConnectionCap().then(async (cap) => {
-      const { routineRunning } = await chrome.storage.local.get('routineRunning');
-      if (routineRunning) {
-        sendResponse({ alreadyRunning: true });
-        return;
+    chrome.storage.local.get(['routineRunning', 'runsTarget', 'selectedScenarios']).then(
+      async ({ routineRunning, runsTarget = 1, selectedScenarios }) => {
+        if (routineRunning) { sendResponse({ alreadyRunning: true }); return; }
+        const ids = Array.isArray(selectedScenarios) && selectedScenarios.length
+          ? selectedScenarios : ['full-pipeline'];
+        runSelectedScenarios(ids, runsTarget)
+          .catch(async (err) => log(`[RunNow] error: ${err.message}`, 'error'));
+        sendResponse({ started: true });
       }
-      await log(`[Manual] Full sequence triggered. Cap today: ${cap}.`, 'warn');
-      runDailySequence(TARGET_WINDOWS.US_EU, cap)
-        .then(() => advanceDayCycle())
-        .catch(async (err) => log(`[Manual] Sequence error: ${err.message}`, 'error'));
-      sendResponse({ started: true });
-    });
+    );
     return true;
   }
 
@@ -989,50 +1137,38 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
 
-  if (message.action === 'SCHEDULE_ALARMS') {
-    scheduleAlarms();
-    log('Alarms rescheduled via popup.', 'info');
-    sendResponse({ scheduled: true });
-    return true;
-  }
-
-  if (message.action === 'SCHEDULE_INTERVAL') {
-    const { minutes } = message;
-    chrome.alarms.clear(ALARM_NAMES.INTERVAL, () => {
-      if (minutes > 0) {
-        chrome.alarms.create(ALARM_NAMES.INTERVAL, {
-          delayInMinutes: minutes,
-          periodInMinutes: minutes,
-        });
-        chrome.storage.local.set({ intervalMinutes: minutes });
-        log(`[Interval] Scheduled every ${minutes} min.`, 'success');
-        sendResponse({ scheduled: true, minutes });
-      } else {
-        chrome.storage.local.remove('intervalMinutes');
-        log('[Interval] Interval schedule cleared.', 'info');
-        sendResponse({ scheduled: false });
+  if (message.action === 'RUN_N_TIMES') {
+    const { count = 1 } = message;
+    chrome.storage.local.get('routineRunning').then(async ({ routineRunning }) => {
+      if (routineRunning) {
+        sendResponse({ alreadyRunning: true });
+        return;
       }
+      runNTimes(count)
+        .catch(async (err) => log(`[RunNTimes] error: ${err.message}`, 'error'));
+      sendResponse({ started: true });
     });
     return true;
   }
 
-  if (message.action === 'GET_INTERVAL') {
-    chrome.alarms.get(ALARM_NAMES.INTERVAL, (alarm) => {
-      sendResponse({ alarm: alarm ?? null });
-    });
+  // ─── Export both CSVs on demand ─────────────────────────────────────────────
+  if (message.action === 'EXPORT_LEADS') {
+    exportLeadsCsv()
+      .then(count => sendResponse({ exported: count }))
+      .catch(async (err) => {
+        await log(`[EXPORT_LEADS] error: ${err.message}`, 'error');
+        sendResponse({ error: err.message });
+      });
     return true;
   }
 
-  // ─── Links export ───────────────────────────────────────────────────────────
-  if (message.action === 'EXPORT_LINKS') {
-    chrome.storage.local.get('discoveredLinks').then(({ discoveredLinks = [] }) => {
-      const profileUrls = [...new Set(
-        discoveredLinks.map(l => l.url).filter(u => u && u.includes('/in/'))
-      )];
-      const ts = new Date().toISOString().slice(0, 16).replace('T', '-').replace(':', '');
-      downloadLinksTxt(profileUrls, ts);
-      sendResponse({ exported: profileUrls.length });
-    });
+  if (message.action === 'EXPORT_LOG') {
+    exportLogCsv()
+      .then(count => sendResponse({ exported: count }))
+      .catch(async (err) => {
+        await log(`[EXPORT_LOG] error: ${err.message}`, 'error');
+        sendResponse({ error: err.message });
+      });
     return true;
   }
 
@@ -1046,4 +1182,147 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       });
     return true;
   }
+
+  // ─── Job recruiter harvester (popup "Harvest Job Recruiters" button) ───────
+  if (message.action === 'HARVEST_JOB_RECRUITERS') {
+    harvestJobRecruiterUrls()
+      .then(result => sendResponse({ started: true, totalJobs: result.totalJobs, totalRecruiters: result.totalRecruiters, totalEmails: result.totalEmails }))
+      .catch(async (err) => {
+        await log(`[HARVEST_JOB_RECRUITERS] error: ${err.message}`, 'error');
+        sendResponse({ error: err.message });
+      });
+    return true;
+  }
+
+  // ─── Scenario management ───────────────────────────────────────────────
+  if (message.action === 'GET_SCENARIOS') {
+    sendResponse({ scenarios: SCENARIOS });
+    return true;
+  }
+
+  if (message.action === 'SET_SELECTED_SCENARIOS') {
+    const { scenarioIds = [] } = message;
+    chrome.storage.local.set({ selectedScenarios: scenarioIds }).then(() => {
+      sendResponse({ saved: true });
+    });
+    return true;
+  }
 });
+
+/**
+ * Opens each JOB_HARVEST_URLS in sequence, running job-recruiter-harvester.js
+ * in each tab. Collected recruiter /in/ profiles flow into discoveredLinks,
+ * which the auto-message queue then processes.
+ *
+ * After all search pages are harvested, each NEW recruiter's profile is opened
+ * via profile-connector.js so they are followed and a connection request is sent.
+ * Cap: HARVEST_CONNECT_CAP per run to respect LinkedIn's daily limits.
+ */
+const HARVEST_CONNECT_CAP = 20;
+
+// Message sent to newly harvested recruiters who have not yet been contacted.
+// Subject mirrors the LinkedIn InMail subject line (filled when the DOM provides a field).
+const RECRUITER_OUTREACH_SUBJECT = 'BR Agile Project Manager - Nearshore';
+const RECRUITER_OUTREACH_MESSAGE =
+  'Hello,\n\n' +
+  'I am Wesley Silva, an Agile Project Manager based in Brazil, specialising in ' +
+  'nearshore delivery and digital transformation.\n\n' +
+  'Could I be of value to one of your current or upcoming projects?\n\n' +
+  'Please feel free to explore my portfolio:\n' +
+  'https://wesleyzilva.github.io/portfolioNearshoreWesIA/\n\n' +
+  'Thank you for your time.\n\n' +
+  'Best regards,\n' +
+  'Wesley\n' +
+  '+55 16 997212966';
+
+async function harvestJobRecruiterUrls() {
+  await log(`[JobHarvest] Starting harvest across ${JOB_HARVEST_URLS.length} search URL(s).`, 'info');
+  let totalJobs = 0;
+  let totalRecruiters = 0;
+  let totalEmails = 0;
+  const allNewProfileUrls = [];
+
+  for (let i = 0; i < JOB_HARVEST_URLS.length; i++) {
+    const url = JOB_HARVEST_URLS[i];
+    await log(`[JobHarvest] URL ${i + 1}/${JOB_HARVEST_URLS.length}: ${url}`, 'info');
+
+    // 120 s per URL — jobs pages are slow to render
+    await openTabAndWait(url, 'job-recruiter-harvester', {}, 120_000);
+
+    // Read the summary written by the content script
+    const { lastJobHarvest } = await chrome.storage.local.get('lastJobHarvest');
+    if (lastJobHarvest) {
+      totalJobs       += lastJobHarvest.jobsScanned   ?? 0;
+      totalRecruiters += lastJobHarvest.recruitersFound ?? 0;
+      totalEmails     += lastJobHarvest.emailsFound    ?? 0;
+      if (Array.isArray(lastJobHarvest.newProfileUrls)) {
+        allNewProfileUrls.push(...lastJobHarvest.newProfileUrls);
+      }
+    }
+
+    if (i < JOB_HARVEST_URLS.length - 1) {
+      await randomWait(8000, 15000);
+    }
+  }
+
+  await log(
+    `[JobHarvest] Harvest complete — ${totalJobs} jobs, ${totalRecruiters} new recruiter(s), ${totalEmails} email(s).`,
+    'success'
+  );
+
+  // ── Connect + Follow each new recruiter ──────────────────────────────────
+  const uniqueNewUrls = [...new Set(allNewProfileUrls)].slice(0, HARVEST_CONNECT_CAP);
+  {
+    const pids = uniqueNewUrls
+      .map(u => { const m = u.match(/\/in\/([^/?#]+)/); return m ? m[1] : null; })
+      .filter(Boolean);
+    if (pids.length) await computeProfileStats(pids, 'JobHarvest');
+  }
+  if (uniqueNewUrls.length > 0) {
+    await log(`[JobHarvest] Opening ${uniqueNewUrls.length} new recruiter profile(s) for connect+follow (cap ${HARVEST_CONNECT_CAP}).`, 'info');
+    for (let j = 0; j < uniqueNewUrls.length; j++) {
+      const profileUrl = uniqueNewUrls[j];
+      await log(`[JobHarvest] Profile ${j + 1}/${uniqueNewUrls.length}: ${profileUrl}`, 'info');
+      // dailyCap: 999 — profile-connector's own dedup prevents duplicate actions
+      await openTabAndWait(profileUrl, 'profile-connector', { dailyCap: 999 }, 60_000);
+      if (j < uniqueNewUrls.length - 1) {
+        await randomWait(6000, 12000);
+      }
+    }
+    await log(`[JobHarvest] Connect+follow pass complete.`, 'success');
+  } else {
+    await log(`[JobHarvest] No new recruiter profiles to visit.`, 'info');
+  }
+
+  // ── Message each new recruiter (first contact only) ──────────────────────
+  if (uniqueNewUrls.length > 0) {
+    const { messagedProfiles = [] } = await chrome.storage.local.get('messagedProfiles');
+    const alreadyMessaged = new Set(messagedProfiles);
+
+    const recruiterQueue = uniqueNewUrls
+      .map(url => {
+        const m = url.match(/\/in\/([^/?#]+)/);
+        const pid = m ? m[1] : null;
+        return pid && !alreadyMessaged.has(pid)
+          ? { url: url.split('?')[0], profileId: pid, status: 'pending',
+              messageBody: RECRUITER_OUTREACH_MESSAGE, subject: RECRUITER_OUTREACH_SUBJECT,
+              addedAt: new Date().toISOString() }
+          : null;
+      })
+      .filter(Boolean);
+
+    if (recruiterQueue.length > 0) {
+      await log(`[JobHarvest] Queuing ${recruiterQueue.length} recruiter(s) for outreach message.`, 'info');
+      // Merge with existing messageQueue so the daily auto-queue is not overwritten
+      const { messageQueue: existing = [] } = await chrome.storage.local.get('messageQueue');
+      const existingUrls = new Set(existing.map(e => e.url));
+      const merged = [...existing, ...recruiterQueue.filter(r => !existingUrls.has(r.url))];
+      await chrome.storage.local.set({ messageQueue: merged });
+      await processMessageQueue();
+    } else {
+      await log(`[JobHarvest] All harvested recruiters already contacted — no new outreach.`, 'info');
+    }
+  }
+
+  return { totalJobs, totalRecruiters, totalEmails };
+}

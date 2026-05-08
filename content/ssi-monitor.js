@@ -25,6 +25,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     captureSSIScores().then((scores) => {
       sendResponse({ success: true, scores });
     }).catch((error) => {
+      contentLog(`✗ ssi-monitor fatal: ${error.message}`, 'error');
       console.error('[SSI Monitor] Failed to capture scores:', error);
       sendResponse({ success: false, error: error.message });
     });
@@ -76,7 +77,7 @@ function extractScoresFromDOM() {
   const totalEl = document.querySelector('[data-test-ssi-overall-score]');
   const pillars = document.querySelectorAll('[data-test-ssi-component-score]');
   if (totalEl && pillars.length >= 4) {
-    console.log('[SSI Monitor] Scores via data-test attributes.');
+    contentLog('[SSI] Selector: data-test attributes matched.');
     return sanitiseScores({
       total:         parseInt(totalEl.textContent.trim(), 10) || 0,
       brand:         parseInt(pillars[0].textContent.trim(), 10) || 0,
@@ -89,7 +90,7 @@ function extractScoresFromDOM() {
   // Strategy 2: class-based (LinkedIn 2022-2024 design)
   const classEls = document.querySelectorAll('.social-selling-index-score__value');
   if (classEls.length >= 5) {
-    console.log('[SSI Monitor] Scores via .social-selling-index-score__value.');
+    contentLog('[SSI] Selector: .social-selling-index-score__value matched.');
     return sanitiseScores({
       total:         parseInt(classEls[0].textContent.trim(), 10) || 0,
       brand:         parseInt(classEls[1].textContent.trim(), 10) || 0,
@@ -102,7 +103,7 @@ function extractScoresFromDOM() {
   // Strategy 3: aria-label or data-* on score items (Sales Navigator redesign)
   const ssiItems = document.querySelectorAll('[data-ssi-score], [aria-label*="SSI"], .ssi-index__score-value');
   if (ssiItems.length >= 5) {
-    console.log('[SSI Monitor] Scores via ssi-index selector.');
+    contentLog('[SSI] Selector: ssi-index / aria-label matched.');
     return sanitiseScores({
       total:         parseInt(ssiItems[0].textContent.trim(), 10) || 0,
       brand:         parseInt(ssiItems[1].textContent.trim(), 10) || 0,
@@ -121,13 +122,13 @@ function extractScoresFromDOM() {
     .map(el => parseInt(el.textContent.trim(), 10))
     .filter(n => !isNaN(n) && n >= 0 && n <= 100);
   if (nums.length >= 5) {
-    console.log('[SSI Monitor] Scores via broad numeric scan:', nums);
+    contentLog(`[SSI] Selector: broad numeric scan matched — raw: ${nums.slice(0, 5).join(', ')}`, 'warn');
     return sanitiseScores({ total: nums[0], brand: nums[1], people: nums[2], insights: nums[3], relationships: nums[4] });
   }
 
-  // Log what IS on the page to help debug
-  console.warn('[SSI Monitor] All strategies failed. Page title:', document.title);
-  console.warn('[SSI Monitor] Body classes:', document.body.className.slice(0, 200));
+  // All strategies failed — persist enough context to diagnose LinkedIn DOM changes
+  const bodySnippet = (document.body.innerText || '').replace(/\s+/g, ' ').slice(0, 400);
+  contentLog(`[SSI] All selectors failed. title="${document.title}" | body: ${bodySnippet}`, 'error');
   return null;
 }
 
@@ -142,7 +143,7 @@ function sanitiseScores({ total, brand, people, insights, relationships }) {
   const isBrandBad = brand === total || brand > 25;
   if (isBrandBad) {
     const recalculated = Math.max(0, total - people - insights - relationships);
-    console.warn(`[SSI Monitor] brand:${brand} looks like duplicate of total:${total} — recalculating brand as ${recalculated}`);
+    contentLog(`[SSI] brand:${brand} looks wrong (total:${total}) — recalculated as ${recalculated}`, 'warn');
     brand = recalculated;
   }
   return { total, brand, people, insights, relationships };
