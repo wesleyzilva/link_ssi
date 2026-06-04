@@ -340,12 +340,69 @@ footer a:hover {
   margin-top: 8px;
 }
 
+<<<<<<< HEAD
 .comment-post-row {
+=======
+#jobs-leads-summary {
+  margin-top: 8px;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+/* ─── Cycle engine section ───────────────────────────────────────────────── */
+
+.cycle {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.cycle-status {
+  font-size: 12px;
+  margin: 6px 0 10px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 3px solid var(--color-border);
+}
+
+.cycle-status.running {
+  border-left-color: #2ecc71;
+}
+
+.cycle-status.stopped {
+  border-left-color: #f39c12;
+}
+
+.cycle-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.btn--cycle {
+  font-size: 12px;
+  padding: 6px 8px;
+}
+
+.btn--stop {
+  background: rgba(231, 76, 60, 0.15);
+}
+
+.btn--stop:hover:not(:disabled) {
+  background: rgba(231, 76, 60, 0.3);
+}
+
+.job-keyword-row {
+>>>>>>> d82b910 (feat: novos coletores (job, lead, detail) e refresh popup/manifest)
   display: flex;
   gap: 6px;
   margin-top: 8px;
 }
 
+<<<<<<< HEAD
 .input-url {
   flex: 1;
   padding: 6px 8px;
@@ -417,6 +474,21 @@ footer a:hover {
 .btn--secondary:hover {
   background: var(--color-primary);
   color: #fff;
+=======
+.job-keyword-row input {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 12px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+}
+
+.btn--small {
+  padding: 4px 10px;
+  font-size: 12px;
+>>>>>>> d82b910 (feat: novos coletores (job, lead, detail) e refresh popup/manifest)
 }
 
 /* ─── Live log ───────────────────────────────────────────────────────────── */

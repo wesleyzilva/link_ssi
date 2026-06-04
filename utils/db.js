@@ -93,3 +93,94 @@ async function getAllRecruiters() {
   const { processedRecruiters = {} } = await chrome.storage.local.get('processedRecruiters');
   return Object.entries(processedRecruiters).map(([profileId, v]) => ({ profileId, ...v }));
 }
+
+// ─── Jobs (PM / Delivery / Agile) ─────────────────────────────────────────────
+
+async function hasJob(jobId) {
+  const { jobs = [] } = await chrome.storage.local.get('jobs');
+  return jobs.some(j => j.jobId === jobId);
+}
+
+async function saveJob(job) {
+  const { jobs = [] } = await chrome.storage.local.get('jobs');
+  if (jobs.some(j => j.jobId === job.jobId)) return false;
+  jobs.push({ capturedAt: new Date().toISOString(), processed: false, ...job });
+  await chrome.storage.local.set({ jobs: jobs.slice(-1000) });
+  return true;
+}
+
+async function getJobs() {
+  const { jobs = [] } = await chrome.storage.local.get('jobs');
+  return jobs;
+}
+
+/**
+ * Returns up to `limit` jobs that have not been opened/detail-extracted yet,
+ * oldest-first so the rotation cycles through everything fairly.
+ */
+async function getUnprocessedJobs(limit = 5) {
+  const { jobs = [] } = await chrome.storage.local.get('jobs');
+  return jobs
+    .filter(j => !j.processed)
+    .sort((a, b) => new Date(a.capturedAt) - new Date(b.capturedAt))
+    .slice(0, limit);
+}
+
+/**
+ * Merges details (recruiter, emails, description, externalApplyUrl, ...)
+ * into the job record and flips processed=true.
+ */
+async function markJobProcessed(jobId, details = {}) {
+  const { jobs = [] } = await chrome.storage.local.get('jobs');
+  let changed = false;
+  const next = jobs.map(j => {
+    if (j.jobId !== jobId) return j;
+    changed = true;
+    return { ...j, ...details, processed: true, processedAt: new Date().toISOString() };
+  });
+  if (changed) await chrome.storage.local.set({ jobs: next });
+  return changed;
+}
+
+// ─── Leads (emails + hiring CTAs found in posts/profiles) ────────────────────
+
+async function saveLead(lead) {
+  const { leads = [] } = await chrome.storage.local.get('leads');
+  // Dedup by (email || sourceUrl)
+  const key = (lead.email || '').toLowerCase() + '|' + (lead.sourceUrl || '');
+  if (leads.some(l => ((l.email || '').toLowerCase() + '|' + (l.sourceUrl || '')) === key)) return false;
+  leads.push({ capturedAt: new Date().toISOString(), processed: false, ...lead });
+  await chrome.storage.local.set({ leads: leads.slice(-1000) });
+  return true;
+}
+
+async function getLeads() {
+  const { leads = [] } = await chrome.storage.local.get('leads');
+  return leads;
+}
+
+/**
+ * Returns up to `limit` leads that have a LinkedIn profile URL and have not
+ * been profile-visited yet. Oldest-first.
+ */
+async function getUnprocessedLeads(limit = 5) {
+  const { leads = [] } = await chrome.storage.local.get('leads');
+  return leads
+    .filter(l => !l.processed && /linkedin\.com\/in\//.test(l.sourceUrl || ''))
+    .sort((a, b) => new Date(a.capturedAt) - new Date(b.capturedAt))
+    .slice(0, limit);
+}
+
+async function markLeadProcessed(sourceUrl, details = {}) {
+  if (!sourceUrl) return false;
+  const norm = sourceUrl.split('?')[0];
+  const { leads = [] } = await chrome.storage.local.get('leads');
+  let changed = false;
+  const next = leads.map(l => {
+    if ((l.sourceUrl || '').split('?')[0] !== norm) return l;
+    changed = true;
+    return { ...l, ...details, processed: true, processedAt: new Date().toISOString() };
+  });
+  if (changed) await chrome.storage.local.set({ leads: next });
+  return changed;
+}

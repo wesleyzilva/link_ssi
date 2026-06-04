@@ -67,6 +67,24 @@
       "matches": ["https://www.linkedin.com/jobs/search/*"],
       "js": ["utils/human-mimicry.js", "utils/db.js", "content/job-recruiter-harvester.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.linkedin.com/jobs/search/*",
+        "https://www.linkedin.com/jobs/collections/*"
+      ],
+      "js": ["utils/human-mimicry.js", "utils/db.js", "content/job-collector.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.linkedin.com/jobs/view/*"],
+      "js": ["utils/human-mimicry.js", "utils/db.js", "content/job-detail-extractor.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.linkedin.com/in/*"],
+      "js": ["utils/human-mimicry.js", "utils/db.js", "content/lead-extractor.js"],
+      "run_at": "document_idle"
     }
   ],
 

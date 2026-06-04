@@ -6,6 +6,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
+<<<<<<< HEAD
   // Each render function is isolated so one failure never blocks the rest.
   // wireButtons() MUST always run — broken buttons are worse than broken data.
   const safeRun = (fn) => fn().catch(err => console.warn('[Popup]', err));
@@ -18,6 +19,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   await safeRun(renderPostQueue);
   await safeRun(renderScenarios);
   await safeRun(renderRunNowButton);
+=======
+  await renderSSIScores();
+  await renderDayCycle();
+  await renderActivityLog();
+  await renderAnalytics();
+  await renderNextAlarm();
+  await renderLiveLog();
+  await renderJobsLeadsSummary();
+  await renderCycleStatus();
+>>>>>>> d82b910 (feat: novos coletores (job, lead, detail) e refresh popup/manifest)
   wireButtons();
 });
 
@@ -37,7 +48,54 @@ chrome.storage.onChanged.addListener((changes) => {
   if (changes.lastProspecting || changes.lastEngagement || changes.lastRelationshipBuild || changes.lastUsedExpression) {
     safe(renderActivityLog);
   }
+  if (changes.jobs || changes.leads || changes.lastJobCollect) renderJobsLeadsSummary();
+  if (changes.cycleState) renderCycleStatus();
 });
+
+async function renderJobsLeadsSummary() {
+  const el = document.getElementById('jobs-leads-summary');
+  if (!el) return;
+  const { jobs = [], leads = [], lastJobCollect } = await chrome.storage.local.get(['jobs', 'leads', 'lastJobCollect']);
+  const jobsProcessed = jobs.filter(j => j.processed).length;
+  const jobsPending = jobs.length - jobsProcessed;
+  const leadsProcessed = leads.filter(l => l.processed).length;
+  const leadsPending = leads.length - leadsProcessed;
+  const last = lastJobCollect
+    ? ` · last: ${new Date(lastJobCollect.runAt).toLocaleTimeString()} (+${lastJobCollect.saved}/${lastJobCollect.seen})`
+    : '';
+  el.textContent =
+    `Jobs: ${jobs.length} (${jobsPending} pending · ${jobsProcessed} processed) · ` +
+    `Leads: ${leads.length} (${leadsPending} pending · ${leadsProcessed} done)${last}`;
+}
+
+async function renderCycleStatus() {
+  const el = document.getElementById('cycle-status');
+  if (!el) return;
+  let resp;
+  try {
+    resp = await chrome.runtime.sendMessage({ action: 'CYCLE_STATUS' });
+  } catch { return; }
+  if (!resp || !resp.state) return;
+  const { state, stepNames, stepCount, periodMinutes } = resp;
+  el.classList.remove('running', 'stopped');
+  if (state.running) {
+    const idx = (state.currentStep || 0) % stepCount;
+    const next = stepNames[idx] || '?';
+    const last = state.lastTickAt ? new Date(state.lastTickAt).toLocaleTimeString() : '—';
+    el.classList.add('running');
+    el.textContent =
+      `▶ Running · cycle #${state.totalCycles || 0} · next step ${idx + 1}/${stepCount}: "${next}" ` +
+      `· last tick ${last} · period ${periodMinutes} min`;
+  } else if (state.currentStep > 0 || state.totalCycles > 0) {
+    const idx = (state.currentStep || 0) % stepCount;
+    el.classList.add('stopped');
+    el.textContent =
+      `⏸ Stopped at step ${idx + 1}/${stepCount} ("${stepNames[idx]}") · ` +
+      `cycle #${state.totalCycles || 0} · press Continue to resume`;
+  } else {
+    el.textContent = 'Idle. Press Start to begin a perpetual cycle.';
+  }
+}
 
 // ─── SSI Scores ───────────────────────────────────────────────────────────────
 
@@ -376,6 +434,7 @@ function wireButtons() {
     renderLiveLog();
   });
 
+<<<<<<< HEAD
   document.getElementById('btn-comment-post').addEventListener('click', async () => {
     const input  = document.getElementById('input-post-url');
     const status = document.getElementById('comment-post-status');
@@ -457,6 +516,66 @@ function wireButtons() {
       btn.textContent = '▶ Run queue now';
     }, 10000);
   });
+=======
+  const dlBtn = document.getElementById('btn-download-csvs');
+  if (dlBtn) {
+    dlBtn.addEventListener('click', async () => {
+      dlBtn.disabled = true;
+      const original = dlBtn.textContent;
+      dlBtn.textContent = 'Exporting…';
+      try {
+        await chrome.runtime.sendMessage({ action: 'DOWNLOAD_CSVS' });
+      } catch { /* ignore */ }
+      setTimeout(() => { dlBtn.disabled = false; dlBtn.textContent = original; }, 3000);
+    });
+  }
+
+  const customBtn = document.getElementById('btn-job-custom');
+  const customInput = document.getElementById('job-keyword-input');
+  if (customBtn && customInput) {
+    const runCustom = async () => {
+      const keyword = customInput.value.trim();
+      if (!keyword) { customInput.focus(); return; }
+      customBtn.disabled = true;
+      try {
+        await chrome.runtime.sendMessage({ action: 'RUN_TASK', task: 'job-collector', keyword });
+      } catch { /* ignore */ }
+      setTimeout(() => { customBtn.disabled = false; }, 5000);
+    };
+    customBtn.addEventListener('click', runCustom);
+    customInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') runCustom(); });
+  }
+
+  const openTopBtn = document.getElementById('btn-open-top');
+  if (openTopBtn) {
+    openTopBtn.addEventListener('click', async () => {
+      openTopBtn.disabled = true;
+      try {
+        await chrome.runtime.sendMessage({ action: 'OPEN_TOP_JOBS', cap: 5 });
+      } catch { /* ignore */ }
+      setTimeout(() => { openTopBtn.disabled = false; }, 3000);
+    });
+  }
+
+  // ─── Cycle engine controls ───────────────────────────────────────────────
+  const cycleAction = async (action, btn) => {
+    btn.disabled = true;
+    try {
+      await chrome.runtime.sendMessage({ action });
+    } catch { /* ignore */ }
+    await renderCycleStatus();
+    setTimeout(() => { btn.disabled = false; }, 2000);
+  };
+  const startBtn = document.getElementById('btn-cycle-start');
+  if (startBtn) startBtn.addEventListener('click', () => cycleAction('CYCLE_START', startBtn));
+  const continueBtn = document.getElementById('btn-cycle-continue');
+  if (continueBtn) continueBtn.addEventListener('click', () => cycleAction('CYCLE_CONTINUE', continueBtn));
+  const stopBtn = document.getElementById('btn-cycle-stop');
+  if (stopBtn) stopBtn.addEventListener('click', () => cycleAction('CYCLE_STOP', stopBtn));
+
+  // Refresh cycle status every 5s while popup is open (lastTickAt drifts)
+  setInterval(renderCycleStatus, 5000);
+>>>>>>> d82b910 (feat: novos coletores (job, lead, detail) e refresh popup/manifest)
 
   document.getElementById('open-history').addEventListener('click', (e) => {
     e.preventDefault();

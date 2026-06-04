@@ -115,6 +115,34 @@
       </table>
     </section>
 
+    <section class="cycle">
+      <h2>Cycle Engine</h2>
+      <p id="cycle-status" class="cycle-status">Idle.</p>
+      <div class="cycle-buttons">
+        <button
+          class="btn btn--cycle"
+          id="btn-cycle-start"
+          title="Reset to step 0 and start the perpetual cycle"
+        >
+          ▶ Start
+        </button>
+        <button
+          class="btn btn--cycle"
+          id="btn-cycle-continue"
+          title="Resume from the saved step (after stop/crash)"
+        >
+          ⏵ Continue
+        </button>
+        <button
+          class="btn btn--cycle btn--stop"
+          id="btn-cycle-stop"
+          title="Stop after the current step; position is preserved"
+        >
+          ⏸ Stop
+        </button>
+      </div>
+    </section>
+
     <section class="controls">
       <h2>Manual Triggers</h2>
       <div class="controls-grid">
@@ -134,7 +162,52 @@
         <button class="btn btn--task" data-task="follow-up-sender">
           📩 Follow-up
         </button>
+        <button class="btn btn--task" data-task="job-collector">💼 Jobs</button>
+        <button
+          class="btn btn--task"
+          data-task="process-jobs"
+          title="Open the next N unprocessed jobs and extract recruiter + emails"
+        >
+          🔎 Process
+        </button>
+        <button
+          class="btn btn--task"
+          data-task="process-leads"
+          title="Visit the next N unprocessed lead profiles"
+        >
+          🌐 Leads
+        </button>
+        <button
+          class="btn"
+          id="btn-open-top"
+          title="Open top unprocessed jobs in foreground tabs for manual review"
+        >
+          📂 Open Top
+        </button>
+        <button
+          class="btn"
+          id="btn-download-csvs"
+          title="Export all CSVs to Downloads/link_ssi/output/"
+        >
+          ⬇️ CSV
+        </button>
       </div>
+      <div class="job-keyword-row">
+        <input
+          type="text"
+          id="job-keyword-input"
+          placeholder="Custom job keyword (optional)"
+          maxlength="80"
+        />
+        <button
+          class="btn btn--small"
+          id="btn-job-custom"
+          title="Run job-collector with this keyword"
+        >
+          ▶
+        </button>
+      </div>
+      <p class="hint" id="jobs-leads-summary">Jobs: 0 · Leads: 0</p>
     </section>
 
     <section class="controls">
@@ -201,7 +274,11 @@
     </section>
 
     <footer>
-      <a href="https://www.linkedin.com/sales/ssi" target="_blank" id="open-ssi"
+      <a
+        href="https://www.linkedin.com/sales/ssi"
+        target="_blank"
+        rel="noopener noreferrer"
+        id="open-ssi"
         >Open SSI Dashboard ↗</a
       >
       <a href="#" id="open-history">📋 View Full History</a>

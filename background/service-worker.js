@@ -116,10 +116,28 @@ async function runDailySequence(targetWindow, dailyCap) {
     await openTabAndWait(postEngageUrl, 'post-engager', {});
     await advanceExprQueue();
 
+<<<<<<< HEAD
     await log('Step 3b/6 — Commenting on queued specific posts…');
     await processSpecificPostQueue();
 
     await log('Step 4/6 — Building relationships (birthdays + anniversaries + job changes)…');
+=======
+    await log('Step 3b/5 — Collecting job postings (PM / Delivery / Agile)…');
+    const { keyword: jobKw, index: jobIdx } = await getNextJobKeyword();
+    await log(`Job keyword ${jobIdx + 1}/${JOB_SEARCH_KEYWORDS.length}: "${jobKw}"`);
+    await openTabAndWait(buildJobSearchUrl(jobKw), 'job-collector', { keyword: jobKw });
+    await advanceJobQueue();
+
+    await log('Step 3c/5 — Processing unprocessed jobs (recruiter + emails)…');
+    const processedCount = await processUnprocessedJobs(5);
+    await log(`Job-detail pass: ${processedCount} jobs processed.`);
+
+    await log('Step 3d/5 — Visiting unprocessed lead profiles…');
+    const leadsProcessed = await processUnprocessedLeads(5);
+    await log(`Lead-profile pass: ${leadsProcessed} leads visited.`);
+
+    await log('Step 4/5 — Building relationships (birthdays + anniversaries)…');
+>>>>>>> d82b910 (feat: novos coletores (job, lead, detail) e refresh popup/manifest)
     await openTabAndWait('https://www.linkedin.com/mynetwork/catch-up/birthday/', 'relationship-builder', { pageType: 'birthday' });
     await openTabAndWait('https://www.linkedin.com/mynetwork/catch-up/work_anniversaries/', 'relationship-builder', { pageType: 'anniversary' });
     await openTabAndWait('https://www.linkedin.com/mynetwork/catch-up/job_changes/', 'relationship-builder', { pageType: 'new_job' });
@@ -462,6 +480,19 @@ const RECRUITER_DIRECT_CONNECT_URLS = [
   'https://www.linkedin.com/search/results/people/?keywords=startup%20delivery%20manager%20remote%20latam&origin=GLOBAL_SEARCH_HEADER&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%2C%22102713980%22%2C%22104738515%22%2C%22102890883%22%2C%22105015875%22%2C%22106157047%22%5D',
 ];
 
+// Job search keywords — PM / Delivery / Agile target roles, past week, remote-friendly
+const JOB_SEARCH_KEYWORDS = [
+  'Project Manager',
+  'Project Delivery Manager',
+  'Delivery Manager',
+  'Program Manager',
+  'Agile Master',
+  'Agile Coach',
+  'Scrum Master',
+  'Engineering Manager',
+  'IT Project Manager',
+];
+
 /**
  * Returns the next content-search expression using round-robin rotation.
  * Cycles through all 27 expressions before any repeats.
@@ -504,6 +535,7 @@ async function advancePeopleQueue() {
   console.log(`[SSI Optimizer] People queue advanced: ${peopleQueueIndex} → ${next}`);
 }
 
+<<<<<<< HEAD
 async function getNextDirectConnectUrl() {
   const { directConnectIndex = 0 } = await chrome.storage.local.get('directConnectIndex');
   const idx = directConnectIndex % RECRUITER_DIRECT_CONNECT_URLS.length;
@@ -516,6 +548,112 @@ async function advanceDirectConnectQueue() {
   const next = (directConnectIndex + 1) % RECRUITER_DIRECT_CONNECT_URLS.length;
   await chrome.storage.local.set({ directConnectIndex: next });
   console.log(`[SSI Optimizer] Direct connect queue advanced: ${directConnectIndex} → ${next}`);
+=======
+async function getNextJobKeyword() {
+  const { jobQueueIndex = 0 } = await chrome.storage.local.get('jobQueueIndex');
+  const idx = jobQueueIndex % JOB_SEARCH_KEYWORDS.length;
+  return { keyword: JOB_SEARCH_KEYWORDS[idx], index: idx };
+}
+
+async function advanceJobQueue() {
+  const { jobQueueIndex = 0 } = await chrome.storage.local.get('jobQueueIndex');
+  const next = (jobQueueIndex + 1) % JOB_SEARCH_KEYWORDS.length;
+  await chrome.storage.local.set({ jobQueueIndex: next });
+  console.log(`[SSI Optimizer] Job queue advanced: ${jobQueueIndex} → ${next} (next: "${JOB_SEARCH_KEYWORDS[next]}")`);
+}
+
+function buildJobSearchUrl(keyword) {
+  // f_TPR=r604800 = past week; f_WT=2 includes remote
+  const kw = encodeURIComponent(keyword);
+  return (
+    `https://www.linkedin.com/jobs/search/?keywords=${kw}` +
+    `&f_TPR=r604800` +
+    `&sortBy=DD`
+  );
+}
+
+/**
+ * Cyclic processor: opens up to `cap` jobs that have not been detail-extracted
+ * yet, lets job-detail-extractor.js scrape recruiter + emails + description,
+ * and marks them processed=true so the next cycle skips them.
+ * Service-worker imports of db.js are not available here, so we read storage
+ * directly using the same `jobs` array shape that utils/db.js writes.
+ */
+async function processUnprocessedJobs(cap = 5) {
+  const { jobs = [] } = await chrome.storage.local.get('jobs');
+  const pending = jobs
+    .filter(j => !j.processed && j.url)
+    .sort((a, b) => new Date(a.capturedAt) - new Date(b.capturedAt))
+    .slice(0, cap);
+
+  if (pending.length === 0) {
+    await log('[job-detail] no unprocessed jobs in queue.');
+    return 0;
+  }
+
+  await log(`[job-detail] opening ${pending.length} job(s) in sequence…`);
+  let done = 0;
+  for (const job of pending) {
+    try {
+      await openTabAndWait(job.url, 'job-detail', { jobId: job.jobId });
+      done++;
+      // small spacer between detail pages (human-like)
+      await randomWait(4000, 9000);
+    } catch (e) {
+      await log(`[job-detail] error on ${job.jobId}: ${e.message}`, 'error');
+    }
+  }
+  return done;
+}
+
+/**
+ * Cyclic processor for leads: opens up to `cap` LinkedIn profiles found in
+ * the leads store but not yet visited (processed=false), letting
+ * lead-extractor.js re-scan them and flipping processed=true via
+ * markLeadProcessed.
+ */
+async function processUnprocessedLeads(cap = 5) {
+  const { leads = [] } = await chrome.storage.local.get('leads');
+  const pending = leads
+    .filter(l => !l.processed && /linkedin\.com\/in\//.test(l.sourceUrl || ''))
+    .sort((a, b) => new Date(a.capturedAt) - new Date(b.capturedAt))
+    .slice(0, cap);
+
+  if (pending.length === 0) {
+    await log('[lead-process] no unprocessed leads in queue.');
+    return 0;
+  }
+
+  await log(`[lead-process] opening ${pending.length} profile(s) in sequence…`);
+  let done = 0;
+  for (const lead of pending) {
+    try {
+      const url = lead.sourceUrl.split('?')[0];
+      await openTabAndWait(url, 'lead-extractor', { markSourceUrl: url });
+      done++;
+      await randomWait(5000, 11000);
+    } catch (e) {
+      await log(`[lead-process] error on ${lead.sourceUrl}: ${e.message}`, 'error');
+    }
+  }
+  return done;
+}
+
+/**
+ * Opens the top-N unprocessed jobs in visible foreground tabs for human review.
+ * Does not call any content script — purely a convenience launcher.
+ */
+async function openTopJobs(cap = 5) {
+  const { jobs = [] } = await chrome.storage.local.get('jobs');
+  const pending = jobs
+    .filter(j => !j.processed && j.url)
+    .sort((a, b) => new Date(a.capturedAt) - new Date(b.capturedAt))
+    .slice(0, cap);
+  for (const job of pending) {
+    chrome.tabs.create({ url: job.url, active: false });
+  }
+  return pending.length;
+>>>>>>> d82b910 (feat: novos coletores (job, lead, detail) e refresh popup/manifest)
 }
 
 function buildPostEngageUrl() {
@@ -855,6 +993,7 @@ function downloadCsvFromSW(filename, headers, rows) {
 async function exportLogCsv(scenarioId = '') {
   const { activityLog = [] } = await chrome.storage.local.get('activityLog');
   const ts = new Date().toISOString().slice(0, 16).replace('T', '-').replace(':', '');
+<<<<<<< HEAD
   const slug = scenarioId ? `${scenarioId}-` : '';
   const HEADERS = ['Date', 'Level', 'Script', 'Message'];
   const rows = [...activityLog]
@@ -862,6 +1001,77 @@ async function exportLogCsv(scenarioId = '') {
     .map(e => [e.ts || '', e.level || 'info', e.script || '', e.msg || '']);
   downloadCsvFromSW(`activity-log-${slug}${ts}.csv`, HEADERS, rows);
   return rows.length;
+=======
+
+  const conns = [...(data.connections || [])].sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt));
+  downloadCsvFromSW(`connections-${ts}.csv`,
+    ['Date', 'Name', 'Profile URL', 'Profile ID'],
+    conns.map(c => [c.sentAt, c.name || c.profileId, c.profileUrl || `https://www.linkedin.com/in/${c.profileId}/`, c.profileId]));
+
+  const posts = [...(data.postInteractions || [])].sort((a, b) => new Date(b.interactedAt) - new Date(a.interactedAt));
+  downloadCsvFromSW(`post-interactions-${ts}.csv`,
+    ['Date', 'Action', 'Post URL', 'Post ID'],
+    posts.map(p => [p.interactedAt, p.action || 'like', p.postUrl || '', p.postId]));
+
+  const rels = [...(data.relationships || [])].sort((a, b) => new Date(b.touchedAt) - new Date(a.touchedAt));
+  downloadCsvFromSW(`relationships-${ts}.csv`,
+    ['Date', 'Name', 'Event Type', 'Message Sent', 'Profile URL', 'Profile ID'],
+    rels.map(r => [r.touchedAt, r.name || r.profileId, r.eventType, r.messageSent || '',
+      r.profileUrl || `https://www.linkedin.com/in/${r.profileId}/`, r.profileId]));
+
+  const logs = [...(data.activityLog || [])].reverse();
+  downloadCsvFromSW(`activity-log-${ts}.csv`,
+    ['Date', 'Level', 'Script', 'Message'],
+    logs.map(e => [e.ts, e.level || 'info', e.script || '', e.msg || '']));
+
+  const ssi = [...(data.ssiScores || [])].sort((a, b) => new Date(b.capturedAt) - new Date(a.capturedAt));
+  downloadCsvFromSW(`ssi-scores-${ts}.csv`,
+    ['Date', 'CapturedAt', 'Total', 'Brand', 'People', 'Insights', 'Relationships'],
+    ssi.map(s => [s.date || (s.capturedAt || '').slice(0, 10), s.capturedAt,
+      s.total ?? '', s.brand ?? '', s.people ?? '', s.insights ?? '', s.relationships ?? '']));
+
+  // Links discovered — for human validation
+  const links = [...(data.discoveredLinks || [])].sort((a, b) => new Date(b.ts) - new Date(a.ts));
+  downloadCsvFromSW(`discovered-links-${ts}.csv`,
+    ['Date', 'Context', 'URL', 'Profile ID', 'Name'],
+    links.map(l => [l.ts, l.context || '', l.url || '', l.profileId || '', l.name || '']));
+
+  // Accepted connections — for ROI tracking and outreach review
+  const accepted = [...(data.acceptedConnections || [])].sort((a, b) => new Date(b.acceptedAt) - new Date(a.acceptedAt));
+  downloadCsvFromSW(`accepted-connections-${ts}.csv`,
+    ['AcceptedAt', 'Name', 'Profile URL', 'Profile ID', 'SentAt', 'FollowUpSent', 'FollowUpAt'],
+    accepted.map(a => [a.acceptedAt, a.name || '', a.profileUrl || '', a.profileId || '',
+      a.sentAt || '', a.followUpSent ? 'yes' : 'no', a.followUpAt || '']));
+
+  // Jobs harvested (PM / Delivery / Agile)
+  const jobs = [...(data.jobs || [])].sort((a, b) => new Date(b.capturedAt) - new Date(a.capturedAt));
+  downloadCsvFromSW(`jobs-${ts}.csv`,
+    ['CapturedAt', 'Processed', 'ProcessedAt', 'Title', 'Company', 'Location',
+     'PostedAgo', 'Keyword', 'URL', 'JobID',
+     'RecruiterName', 'RecruiterHeadline', 'RecruiterProfile',
+     'Emails', 'ExternalApply', 'Insights', 'DescriptionSnippet'],
+    jobs.map(j => [
+      j.capturedAt, j.processed ? 'yes' : 'no', j.processedAt || '',
+      j.title || '', j.company || '', j.location || '',
+      j.postedAgo || '', j.keyword || '', j.url || '', j.jobId || '',
+      j.recruiter?.name || '', j.recruiter?.headline || '', j.recruiter?.profileUrl || '',
+      (j.emails || []).join('; '),
+      j.externalApplyUrl || '', j.insights || '',
+      (j.descriptionSnippet || '').replace(/\s+/g, ' ').slice(0, 240),
+    ]));
+
+  // Leads (emails + hiring CTAs extracted from posts/profiles)
+  const leads = [...(data.leads || [])].sort((a, b) => new Date(b.capturedAt) - new Date(a.capturedAt));
+  downloadCsvFromSW(`leads-${ts}.csv`,
+    ['CapturedAt', 'Processed', 'ProcessedAt', 'Email', 'Name', 'Context',
+     'JobID', 'Snippet', 'SourceURL'],
+    leads.map(l => [l.capturedAt, l.processed ? 'yes' : 'no', l.processedAt || '',
+      l.email || '', l.name || '', l.context || '',
+      l.jobId || '',
+      (l.snippet || '').slice(0, 240), l.sourceUrl || '']));
+
+  await log(`Auto-CSV export complete — ${links.length} links, ${accepted.length} accepted, ${jobs.length} jobs, ${leads.length} leads, ${logs.length} log entries → Downloads/link_ssi/output/`, 'success');
+>>>>>>> d82b910 (feat: novos coletores (job, lead, detail) e refresh popup/manifest)
 }
 
 /**
@@ -1027,7 +1237,180 @@ const TASK_URLS = {
   'relationship-builder': 'https://www.linkedin.com/mynetwork/catch-up/birthday/',
   'connection-tracker': 'https://www.linkedin.com/mynetwork/invitation-manager/sent/',
   'follow-up-sender': 'https://www.linkedin.com/messaging/',
+  'job-collector': null,  // built dynamically per-run via buildJobSearchUrl()
+  'process-jobs': null,   // not a URL task — handled inline below
+  'process-leads': null,  // not a URL task — handled inline below
 };
+
+// ─── Cyclic engine (persistent across SW restarts) ───────────────────────────
+//
+// A "cycle" is a fixed ordered list of steps. Each tick (driven by a chrome
+// alarm) executes ONE step and advances `currentStep`. State lives in
+// chrome.storage.local under `cycleState`, so a SW crash or browser restart
+// resumes from exactly where it stopped — nothing is lost.
+//
+// Controls (popup → SW messages):
+//   CYCLE_START     → reset position to 0 and begin
+//   CYCLE_STOP      → set running=false, clear alarm (position preserved)
+//   CYCLE_CONTINUE  → resume from currentStep (after stop or crash)
+//   CYCLE_STATUS    → return cycleState for UI rendering
+
+const CYCLE_TICK_ALARM = 'cycle-tick';
+const CYCLE_PERIOD_MINUTES = 2;        // throttled — humane between steps
+const CYCLE_FIRST_DELAY_MIN = 0.1;     // ~6s before first tick
+
+// Each step is independent and safe to retry (dedupe lives in the DB layer).
+// Keep step durations short (<60s); long content scripts handle their own caps.
+const CYCLE_STEPS = [
+  {
+    name: 'job-collector',
+    run: async () => {
+      const { keyword, index } = await getNextJobKeyword();
+      await log(`[Cycle] job-collector keyword ${index + 1}/${JOB_SEARCH_KEYWORDS.length}: "${keyword}"`);
+      await openTabAndWait(buildJobSearchUrl(keyword), 'job-collector', { keyword });
+      await advanceJobQueue();
+    },
+  },
+  {
+    name: 'process-jobs',
+    run: async () => { await processUnprocessedJobs(3); },
+  },
+  {
+    name: 'process-leads',
+    run: async () => { await processUnprocessedLeads(3); },
+  },
+  {
+    name: 'post-engager',
+    run: async () => {
+      const { expr, index, url } = await getNextSearchExpression();
+      await log(`[Cycle] post-engager keyword ${index + 1}/${CONTENT_SEARCH_EXPRESSIONS.length}: "${expr}"`);
+      await openTabAndWait(url, 'post-engager', {});
+      await advanceExprQueue();
+    },
+  },
+  {
+    name: 'connection-tracker',
+    run: async () => {
+      await openTabAndWait(
+        'https://www.linkedin.com/mynetwork/invitation-manager/sent/',
+        'connection-tracker',
+        {},
+      );
+    },
+  },
+];
+
+async function getCycleState() {
+  const { cycleState } = await chrome.storage.local.get('cycleState');
+  return cycleState || {
+    running: false,
+    currentStep: 0,
+    totalCycles: 0,
+    lastStepName: null,
+    lastTickAt: null,
+    cycleStartedAt: null,
+  };
+}
+
+async function setCycleState(patch) {
+  const cur = await getCycleState();
+  const next = { ...cur, ...patch };
+  await chrome.storage.local.set({ cycleState: next });
+  return next;
+}
+
+async function startCycle({ reset } = { reset: true }) {
+  const cur = await getCycleState();
+  await setCycleState({
+    running: true,
+    currentStep: reset ? 0 : (cur.currentStep || 0),
+    cycleStartedAt: reset ? new Date().toISOString() : cur.cycleStartedAt,
+    totalCycles: reset ? 0 : (cur.totalCycles || 0),
+  });
+  chrome.alarms.create(CYCLE_TICK_ALARM, {
+    delayInMinutes: CYCLE_FIRST_DELAY_MIN,
+    periodInMinutes: CYCLE_PERIOD_MINUTES,
+  });
+  await log(
+    `[Cycle] ${reset ? 'STARTED' : 'CONTINUED'} — step ${(reset ? 0 : (cur.currentStep || 0)) % CYCLE_STEPS.length}/${CYCLE_STEPS.length}, period ${CYCLE_PERIOD_MINUTES} min`,
+    'success',
+  );
+}
+
+async function stopCycle() {
+  await setCycleState({ running: false });
+  chrome.alarms.clear(CYCLE_TICK_ALARM);
+  await log('[Cycle] STOPPED — position preserved, use Continue to resume.', 'warn');
+}
+
+async function onCycleTick() {
+  const state = await getCycleState();
+  if (!state.running) return;
+
+  const idx = (state.currentStep || 0) % CYCLE_STEPS.length;
+  const step = CYCLE_STEPS[idx];
+
+  await log(`[Cycle] tick #${state.currentStep} — running "${step.name}"`);
+  await setCycleState({ lastTickAt: new Date().toISOString(), lastStepName: step.name });
+
+  try {
+    await step.run();
+  } catch (e) {
+    await log(`[Cycle] step "${step.name}" error: ${e.message}`, 'error');
+  }
+
+  // Re-read state in case STOP was pressed while step was running
+  const after = await getCycleState();
+  if (!after.running) {
+    await log('[Cycle] stop requested mid-step — exiting without advance.', 'warn');
+    return;
+  }
+
+  const wasLast = idx === CYCLE_STEPS.length - 1;
+  await setCycleState({
+    currentStep: (state.currentStep || 0) + 1,
+    totalCycles: wasLast ? (after.totalCycles || 0) + 1 : (after.totalCycles || 0),
+  });
+
+  if (wasLast) {
+    await log(`[Cycle] ✓ completed full cycle #${(after.totalCycles || 0) + 1} — exporting CSVs`, 'success');
+    try { await exportAllCsvs(); } catch (e) { /* logged inside */ }
+  }
+}
+
+// Resume on SW wake-up if cycle was running (browser restart, SW crash, etc.)
+chrome.runtime.onStartup.addListener(async () => {
+  const state = await getCycleState();
+  if (state.running) {
+    chrome.alarms.create(CYCLE_TICK_ALARM, {
+      delayInMinutes: CYCLE_FIRST_DELAY_MIN,
+      periodInMinutes: CYCLE_PERIOD_MINUTES,
+    });
+    await log(`[Cycle] auto-resumed at step ${(state.currentStep || 0) % CYCLE_STEPS.length} (cycle #${state.totalCycles || 0})`, 'success');
+  }
+});
+
+// Also catch the case where the SW was unloaded and a fresh install/update
+// happened: if cycleState says running, re-arm the alarm.
+chrome.runtime.onInstalled.addListener(async () => {
+  const state = await getCycleState();
+  if (state.running) {
+    chrome.alarms.create(CYCLE_TICK_ALARM, {
+      delayInMinutes: CYCLE_FIRST_DELAY_MIN,
+      periodInMinutes: CYCLE_PERIOD_MINUTES,
+    });
+    await log('[Cycle] re-armed alarm after onInstalled (state was running)', 'success');
+  }
+});
+
+// Route the cycle tick from the global alarm listener.
+// The existing onAlarm handler ignores anything other than MORNING/EVENING;
+// we add a separate listener so the cycle tick is independent.
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === CYCLE_TICK_ALARM) {
+    onCycleTick().catch((err) => log(`[Cycle] tick error: ${err.message}`, 'error'));
+  }
+});
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action === 'RUN_NOW') {
@@ -1048,6 +1431,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     const { task } = message;
     getDailyConnectionCap().then(async (cap) => {
       await log(`[Manual] Single task triggered: ${task}.`, 'warn');
+<<<<<<< HEAD
 
       if (task === 'post-queue') {
         await processSpecificPostQueue();
@@ -1059,16 +1443,111 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       const url = task === 'recruiter-prospector'
         ? await buildSearchUrl(TARGET_WINDOWS.US_EU)
         : TASK_URLS[task];
+=======
+      let url, payload = {};
+      if (task === 'recruiter-prospector') {
+        url = buildSearchUrl(TARGET_WINDOWS.US_EU);
+        payload = { dailyCap: cap };
+      } else if (task === 'job-collector') {
+        const customKw = (message.keyword || '').trim();
+        let keyword, index;
+        if (customKw) {
+          keyword = customKw;
+          index = -1;
+          await log(`[Manual] Custom job keyword: "${keyword}"`);
+        } else {
+          const next = await getNextJobKeyword();
+          keyword = next.keyword;
+          index = next.index;
+          await log(`[Manual] Job keyword ${index + 1}/${JOB_SEARCH_KEYWORDS.length}: "${keyword}"`);
+        }
+        url = buildJobSearchUrl(keyword);
+        payload = { keyword };
+      } else if (task === 'process-jobs') {
+        const requested = Number(message.cap) || 5;
+        const cap2 = Math.max(1, Math.min(15, requested));
+        await log(`[Manual] Processing unprocessed jobs (cap=${cap2})…`);
+        const n = await processUnprocessedJobs(cap2);
+        await log(`[Manual] Job-detail pass complete — ${n} processed.`, 'success');
+        sendResponse({ done: true, processed: n });
+        return;
+      } else if (task === 'process-leads') {
+        const requested = Number(message.cap) || 5;
+        const cap2 = Math.max(1, Math.min(15, requested));
+        await log(`[Manual] Processing unprocessed leads (cap=${cap2})…`);
+        const n = await processUnprocessedLeads(cap2);
+        await log(`[Manual] Lead-profile pass complete — ${n} processed.`, 'success');
+        sendResponse({ done: true, processed: n });
+        return;
+      } else {
+        url = TASK_URLS[task];
+      }
+>>>>>>> d82b910 (feat: novos coletores (job, lead, detail) e refresh popup/manifest)
       if (!url) {
         await log(`[Manual] Unknown task: ${task}`, 'error');
         sendResponse({ error: 'Unknown task' });
         return;
       }
-      const payload = task === 'recruiter-prospector' ? { dailyCap: cap } : {};
       await openTabAndWait(url, task, payload);
+      if (task === 'job-collector' && !message.keyword) await advanceJobQueue();
       await log(`[Manual] Task complete: ${task}.`, 'success');
       sendResponse({ done: true });
     });
+    return true;
+  }
+
+  // Popup-triggered manual CSV export of all current data
+  if (message.action === 'DOWNLOAD_CSVS') {
+    exportAllCsvs()
+      .then(() => sendResponse({ exported: true }))
+      .catch(async (err) => {
+        await log(`[DOWNLOAD_CSVS] error: ${err.message}`, 'error');
+        sendResponse({ error: err.message });
+      });
+    return true;
+  }
+
+  // Open the top-N unprocessed jobs in visible foreground tabs for human review
+  if (message.action === 'OPEN_TOP_JOBS') {
+    const cap = Math.max(1, Math.min(15, Number(message.cap) || 5));
+    openTopJobs(cap)
+      .then(async (n) => {
+        await log(`[Manual] Opened ${n} top job(s) in foreground tabs.`, 'success');
+        sendResponse({ opened: n });
+      })
+      .catch(async (err) => {
+        await log(`[OPEN_TOP_JOBS] error: ${err.message}`, 'error');
+        sendResponse({ error: err.message });
+      });
+    return true;
+  }
+
+  // ─── Cyclic engine controls ───────────────────────────────────────────────
+  if (message.action === 'CYCLE_START') {
+    startCycle({ reset: true })
+      .then(async () => sendResponse({ started: true, state: await getCycleState() }))
+      .catch(async (err) => { await log(`[CYCLE_START] ${err.message}`, 'error'); sendResponse({ error: err.message }); });
+    return true;
+  }
+  if (message.action === 'CYCLE_STOP') {
+    stopCycle()
+      .then(async () => sendResponse({ stopped: true, state: await getCycleState() }))
+      .catch(async (err) => { await log(`[CYCLE_STOP] ${err.message}`, 'error'); sendResponse({ error: err.message }); });
+    return true;
+  }
+  if (message.action === 'CYCLE_CONTINUE') {
+    startCycle({ reset: false })
+      .then(async () => sendResponse({ continued: true, state: await getCycleState() }))
+      .catch(async (err) => { await log(`[CYCLE_CONTINUE] ${err.message}`, 'error'); sendResponse({ error: err.message }); });
+    return true;
+  }
+  if (message.action === 'CYCLE_STATUS') {
+    getCycleState().then((state) => sendResponse({
+      state,
+      stepCount: CYCLE_STEPS.length,
+      stepNames: CYCLE_STEPS.map(s => s.name),
+      periodMinutes: CYCLE_PERIOD_MINUTES,
+    }));
     return true;
   }
 

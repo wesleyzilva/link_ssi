@@ -73,6 +73,7 @@ function isRecruiterPost(post) {
   return hasRecruiterTitle || hasJobKeyword;
 }
 
+<<<<<<< HEAD
 const DELIVERY_KEYWORDS = [
   'delivery', 'software delivery', 'product delivery', 'on-time delivery', 'delivery team',
   'delivery lead', 'delivery manager', 'delivery excellence', 'delivery pipeline',
@@ -85,6 +86,55 @@ const DELIVERY_KEYWORDS = [
 function isDeliveryPost(post) {
   const text = (post.textContent || '').toLowerCase();
   return DELIVERY_KEYWORDS.some(kw => text.includes(kw));
+=======
+// ─── Lead extraction (emails + hiring CTAs in post text) ─────────────────────
+
+const EMAIL_REGEX = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
+const EMAIL_BLOCKLIST = /@(linkedin\.com|example\.com|email\.com|domain\.com|test\.com|sentry\.io)$/i;
+
+async function scanPostForLeads(post, postUrl) {
+  try {
+    const text = post.textContent || '';
+    if (!text) return 0;
+    const matches = text.match(EMAIL_REGEX) || [];
+    const isHiring = isRecruiterPost(post);
+    const authorEl = post.querySelector('.update-components-actor__name, .artdeco-entity-lockup__title');
+    const authorName = (authorEl?.textContent || '').replace(/\s+/g, ' ').trim();
+    const snippet = text.replace(/\s+/g, ' ').trim().slice(0, 300);
+
+    let savedCount = 0;
+    for (const raw of matches) {
+      const email = raw.toLowerCase();
+      if (EMAIL_BLOCKLIST.test(email)) continue;
+      const wasNew = await saveLead({
+        email,
+        name: authorName,
+        context: isHiring ? 'hiring-post-email' : 'post-email',
+        snippet,
+        sourceUrl: postUrl || window.location.href,
+      });
+      if (wasNew) savedCount++;
+    }
+
+    // Save hiring posts even with no email (lead by intent)
+    if (isHiring && matches.length === 0) {
+      const wasNew = await saveLead({
+        email: '',
+        name: authorName,
+        context: 'hiring-post-no-email',
+        snippet,
+        sourceUrl: postUrl || window.location.href,
+      });
+      if (wasNew) savedCount++;
+    }
+
+    if (savedCount) await contentLog(`👤 LEADS saved=${savedCount} from post ${postUrl || ''}`, 'success');
+    return savedCount;
+  } catch (e) {
+    await contentLog(`✗ lead scan error: ${e.message}`, 'error');
+    return 0;
+  }
+>>>>>>> d82b910 (feat: novos coletores (job, lead, detail) e refresh popup/manifest)
 }
 
 // ─── Comment templates (short, direct, no emojis that trigger spam filters) ──
@@ -288,6 +338,7 @@ async function engageWithPosts() {
         linksFound++;
       }
 
+<<<<<<< HEAD
       // Log the post author (name + profile URL) — deduped across runs
       const { name: authorName, profileUrl: authorProfileUrl } = extractAuthorInfo(post);
       const searchKeyword = (() => {
@@ -295,6 +346,10 @@ async function engageWithPosts() {
         catch { return location.pathname; }
       })();
       await saveAuthorContact(authorName, authorProfileUrl, searchKeyword);
+=======
+      // Scan post text for emails / hiring leads — non-blocking, no caps
+      await scanPostForLeads(post, postUrl);
+>>>>>>> d82b910 (feat: novos coletores (job, lead, detail) e refresh popup/manifest)
 
       const isRecruiter = isRecruiterPost(post);
       const isDelivery  = !isRecruiter && isDeliveryPost(post);
