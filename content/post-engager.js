@@ -73,7 +73,6 @@ function isRecruiterPost(post) {
   return hasRecruiterTitle || hasJobKeyword;
 }
 
-<<<<<<< HEAD
 const DELIVERY_KEYWORDS = [
   'delivery', 'software delivery', 'product delivery', 'on-time delivery', 'delivery team',
   'delivery lead', 'delivery manager', 'delivery excellence', 'delivery pipeline',
@@ -86,7 +85,8 @@ const DELIVERY_KEYWORDS = [
 function isDeliveryPost(post) {
   const text = (post.textContent || '').toLowerCase();
   return DELIVERY_KEYWORDS.some(kw => text.includes(kw));
-=======
+}
+
 // ─── Lead extraction (emails + hiring CTAs in post text) ─────────────────────
 
 const EMAIL_REGEX = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
@@ -134,7 +134,6 @@ async function scanPostForLeads(post, postUrl) {
     await contentLog(`✗ lead scan error: ${e.message}`, 'error');
     return 0;
   }
->>>>>>> d82b910 (feat: novos coletores (job, lead, detail) e refresh popup/manifest)
 }
 
 // ─── Comment templates (short, direct, no emojis that trigger spam filters) ──
@@ -338,7 +337,6 @@ async function engageWithPosts() {
         linksFound++;
       }
 
-<<<<<<< HEAD
       // Log the post author (name + profile URL) — deduped across runs
       const { name: authorName, profileUrl: authorProfileUrl } = extractAuthorInfo(post);
       const searchKeyword = (() => {
@@ -346,10 +344,9 @@ async function engageWithPosts() {
         catch { return location.pathname; }
       })();
       await saveAuthorContact(authorName, authorProfileUrl, searchKeyword);
-=======
+
       // Scan post text for emails / hiring leads — non-blocking, no caps
       await scanPostForLeads(post, postUrl);
->>>>>>> d82b910 (feat: novos coletores (job, lead, detail) e refresh popup/manifest)
 
       const isRecruiter = isRecruiterPost(post);
       const isDelivery  = !isRecruiter && isDeliveryPost(post);
