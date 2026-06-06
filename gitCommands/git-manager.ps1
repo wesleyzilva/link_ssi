@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-    Gerenciador Git interativo para o repositorio imprimaMais.
+    Gerenciador Git interativo universal — funciona com qualquer repositorio.
 
 .DESCRIPTION
     Menu completo organizado por fluxo de trabalho:
@@ -16,24 +16,34 @@
       5. Baixar do remoto (pull)
 
     ENVIAR ALTERACOES:
-      6. Commitar com mensagem aleatoria
+      6. Commitar (mensagem aleatoria ou personalizada)
       7. Subir para o remoto (push)
+      8. Sincronizar (pull --rebase + push)
 
     PUBLICACAO:
-      8. Deploy para GitHub Pages (build + deploy)
+      9.  Deploy / Build (Node.js, Maven, Gradle, Python, Shell — auto-detectado)
+      10. Force Redeploy (republica sem perguntas)
 
-        WORKSPACE:
-            9. Baixar repositorio e adicionar ao workspace
-            10. Remover repositorio do workspace
+    WORKSPACE:
+      11. Baixar repositorio e adicionar ao workspace
+      12. Remover repositorio do workspace
+
+    AVANCADO:
+      13. Force push para main
+      14. Renomear branch / pasta local / repo remoto
 
       0. Sair
 
 .USAGE
-    cd C:\repositorio\imprimaMais\gitCommands
+    # Executar a partir de qualquer subpasta do repo:
     .\git-manager.ps1
 
-    Ou informando outro caminho de repositorio:
-    .\git-manager.ps1 -RepoPath "C:\outro\repo"
+    # Apontar para um repo especifico:
+    .\git-manager.ps1 -RepoPath "C:\projetos\meu-repo"
+
+.NOTES
+    Stacks suportadas no deploy: Node.js, Maven (mvnw/mvn), Gradle (gradlew/gradle),
+    Python (pip/poetry/uv), Shell script (deploy.sh), Docker Compose.
 #>
 
 param(
@@ -44,7 +54,10 @@ Set-StrictMode -Off
 $ErrorActionPreference = 'Continue'
 
 $WorkspaceRoot = Split-Path $RepoPath -Parent
-$WorkspaceFile = Join-Path $WorkspaceRoot 'repositorios.code-workspace'
+
+# Auto-detect any *.code-workspace file in the parent folder
+$_wsFiles = @(Get-ChildItem -Path $WorkspaceRoot -Filter '*.code-workspace' -File -ErrorAction SilentlyContinue)
+$WorkspaceFile = if ($_wsFiles.Count -gt 0) { $_wsFiles[0].FullName } else { Join-Path $WorkspaceRoot 'workspace.code-workspace' }
 
 # ---------------------------------------------------------------------------
 # Mensagens aleatorias de commit
@@ -668,64 +681,139 @@ function Show-RepoInfo {
 }
 
 # ---------------------------------------------------------------------------
-# OPCAO 8 - Deploy para GitHub Pages
-# OPCAO 11 - Force Redeploy (republica sem checagens)
+# Detecta a stack do projeto e retorna opcoes de build/deploy
+# ---------------------------------------------------------------------------
+function Get-DeployOptions {
+    $opts = [System.Collections.Generic.List[PSCustomObject]]::new()
+
+    # ── Node.js ──────────────────────────────────────────────────────────────
+    $pkgFile = Join-Path $RepoPath 'package.json'
+    if (Test-Path $pkgFile) {
+        $pkg = Get-Content $pkgFile -Raw | ConvertFrom-Json
+        $scripts = @($pkg.scripts.PSObject.Properties.Name)
+        # deploy* scripts first, then build
+        foreach ($s in ($scripts | Where-Object { $_ -like 'deploy*' })) {
+            $opts.Add([PSCustomObject]@{ Stack = 'node'; Label = "npm run $s"; Cmd = "npm run $s"; Color = 'Green' })
+        }
+        if ($scripts -contains 'build' -and $opts.Count -eq 0) {
+            $opts.Add([PSCustomObject]@{ Stack = 'node'; Label = 'npm run build'; Cmd = 'npm run build'; Color = 'Cyan' })
+        }
+    }
+
+    # ── Maven ────────────────────────────────────────────────────────────────
+    if (Test-Path (Join-Path $RepoPath 'pom.xml')) {
+        $mvn = if (Test-Path (Join-Path $RepoPath 'mvnw'))  { './mvnw' }
+               elseif (Test-Path (Join-Path $RepoPath 'mvnw.cmd')) { '.\mvnw.cmd' }
+               else { 'mvn' }
+        $opts.Add([PSCustomObject]@{ Stack = 'maven'; Label = "$mvn clean package -DskipTests"; Cmd = "$mvn clean package -DskipTests"; Color = 'Yellow' })
+        $opts.Add([PSCustomObject]@{ Stack = 'maven'; Label = "$mvn clean install -DskipTests"; Cmd = "$mvn clean install -DskipTests"; Color = 'Yellow' })
+    }
+
+    # ── Gradle ───────────────────────────────────────────────────────────────
+    if ((Test-Path (Join-Path $RepoPath 'build.gradle')) -or (Test-Path (Join-Path $RepoPath 'build.gradle.kts'))) {
+        $gradle = if (Test-Path (Join-Path $RepoPath 'gradlew')) { './gradlew' }
+                  elseif (Test-Path (Join-Path $RepoPath 'gradlew.bat')) { '.\gradlew.bat' }
+                  else { 'gradle' }
+        $opts.Add([PSCustomObject]@{ Stack = 'gradle'; Label = "$gradle build"; Cmd = "$gradle build"; Color = 'Yellow' })
+        $opts.Add([PSCustomObject]@{ Stack = 'gradle'; Label = "$gradle clean build -x test"; Cmd = "$gradle clean build -x test"; Color = 'Yellow' })
+    }
+
+    # ── Python ───────────────────────────────────────────────────────────────
+    $hasPyProject = Test-Path (Join-Path $RepoPath 'pyproject.toml')
+    $hasSetup     = Test-Path (Join-Path $RepoPath 'setup.py')
+    $hasReqs      = Test-Path (Join-Path $RepoPath 'requirements.txt')
+    if ($hasPyProject -or $hasSetup -or $hasReqs) {
+        if ($hasPyProject) {
+            $pyContent = Get-Content (Join-Path $RepoPath 'pyproject.toml') -Raw
+            if ($pyContent -match 'poetry') {
+                $opts.Add([PSCustomObject]@{ Stack = 'python'; Label = 'poetry build'; Cmd = 'poetry build'; Color = 'Cyan' })
+            }
+            elseif ($pyContent -match 'hatch') {
+                $opts.Add([PSCustomObject]@{ Stack = 'python'; Label = 'hatch build'; Cmd = 'hatch build'; Color = 'Cyan' })
+            }
+            else {
+                $opts.Add([PSCustomObject]@{ Stack = 'python'; Label = 'pip install -e .'; Cmd = 'pip install -e .'; Color = 'Cyan' })
+            }
+        }
+        elseif ($hasSetup) {
+            $opts.Add([PSCustomObject]@{ Stack = 'python'; Label = 'python setup.py build'; Cmd = 'python setup.py build'; Color = 'Cyan' })
+        }
+        if ($hasReqs) {
+            $opts.Add([PSCustomObject]@{ Stack = 'python'; Label = 'pip install -r requirements.txt'; Cmd = 'pip install -r requirements.txt'; Color = 'Cyan' })
+        }
+    }
+
+    # ── Docker Compose ───────────────────────────────────────────────────────
+    $composeFile = @('docker-compose.yml','docker-compose.yaml','compose.yml','compose.yaml') |
+        Where-Object { Test-Path (Join-Path $RepoPath $_) } | Select-Object -First 1
+    if ($composeFile) {
+        $opts.Add([PSCustomObject]@{ Stack = 'docker'; Label = 'docker compose up --build -d'; Cmd = 'docker compose up --build -d'; Color = 'Magenta' })
+        $opts.Add([PSCustomObject]@{ Stack = 'docker'; Label = 'docker compose build'; Cmd = 'docker compose build'; Color = 'Magenta' })
+    }
+
+    # ── Shell deploy script ───────────────────────────────────────────────────
+    foreach ($sh in @('deploy.sh','build.sh','release.sh','publish.sh')) {
+        $shPath = Join-Path $RepoPath $sh
+        if (Test-Path $shPath) {
+            $opts.Add([PSCustomObject]@{ Stack = 'shell'; Label = "bash $sh"; Cmd = "bash $sh"; Color = 'White' })
+        }
+    }
+
+    # ── Makefile ─────────────────────────────────────────────────────────────
+    if (Test-Path (Join-Path $RepoPath 'Makefile')) {
+        $opts.Add([PSCustomObject]@{ Stack = 'make'; Label = 'make build'; Cmd = 'make build'; Color = 'White' })
+        $opts.Add([PSCustomObject]@{ Stack = 'make'; Label = 'make deploy'; Cmd = 'make deploy'; Color = 'Green' })
+    }
+
+    return $opts
+}
+
+# ---------------------------------------------------------------------------
+# OPCAO 9 - Build / Deploy (multi-stack auto-detectado)
+# OPCAO 10 - Force Redeploy (republica sem checagens)
 # ---------------------------------------------------------------------------
 function Invoke-DeployPages {
     param([switch]$Force)
-    Write-Header 'DEPLOY PARA GITHUB PAGES'
+    Write-Header 'BUILD / DEPLOY'
 
-    $packageFile = Join-Path $RepoPath 'package.json'
-    if (-not (Test-Path $packageFile)) {
-        Write-Err 'package.json nao encontrado. Este nao parece ser um projeto Node.js.'
-        return
-    }
-
-    # Descobrir scripts de deploy disponiveis no package.json
-    $pkgJson = Get-Content $packageFile -Raw | ConvertFrom-Json
-    $allScripts = $pkgJson.scripts.PSObject.Properties.Name
-
-    $deployOptions = [System.Collections.Generic.List[PSCustomObject]]::new()
-    if ($allScripts -contains 'deploy:pages') {
-        $deployOptions.Add([PSCustomObject]@{ Label = 'GitHub Pages (sem dominio proprio)'; Script = 'deploy:pages'; Color = 'Green' })
-    }
-    if ($allScripts -contains 'deploy:domain') {
-        $deployOptions.Add([PSCustomObject]@{ Label = 'Dominio proprio (CNAME configurado)'; Script = 'deploy:domain'; Color = 'Yellow' })
-    }
-    # fallback: qualquer script que comece com 'deploy' e nao seja alias dos dois acima
-    foreach ($s in ($allScripts | Where-Object { $_ -like 'deploy*' -and $_ -notin @('deploy:pages', 'deploy:domain') })) {
-        $deployOptions.Add([PSCustomObject]@{ Label = $s; Script = $s; Color = 'Cyan' })
-    }
+    $deployOptions = Get-DeployOptions
 
     if ($deployOptions.Count -eq 0) {
-        Write-Err 'Nenhum script de deploy encontrado no package.json.'
-        return
+        Write-Warn 'Nenhuma stack reconhecida (package.json / pom.xml / build.gradle / pyproject.toml / Makefile / deploy.sh / docker-compose.yml).'
+        Write-Info 'Insira o comando de build manualmente:'
+        $manual = (Read-Host '  Comando (Enter = cancelar)').Trim()
+        if ([string]::IsNullOrWhiteSpace($manual)) { return }
+        $deployOptions.Add([PSCustomObject]@{ Stack = 'manual'; Label = $manual; Cmd = $manual; Color = 'White' })
     }
 
     $deployScript = $null
+    $deployCmd    = $null
     if ($deployOptions.Count -eq 1) {
-        $deployScript = $deployOptions[0].Script
-        Write-Info "Usando: $deployScript"
+        $deployScript = $deployOptions[0].Label
+        $deployCmd    = $deployOptions[0].Cmd
+        Write-Info "Stack detectada: $($deployOptions[0].Stack.ToUpper())"
+        Write-Info "Comando: $deployCmd"
     }
     else {
         $letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-        Write-Host '  Modalidade de deploy:' -ForegroundColor White
+        Write-Host '  Opcoes detectadas:' -ForegroundColor White
         for ($i = 0; $i -lt $deployOptions.Count; $i++) {
-            $opt = $deployOptions[$i]
+            $opt    = $deployOptions[$i]
             $letter = $letters[$i]
-            $default = if ($i -eq 0) { '   [padrao]' } else { '' }
-            Write-Host "    $letter) $($opt.Label)$default" -ForegroundColor $opt.Color
+            $default = if ($i -eq 0) { '  [padrao]' } else { '' }
+            Write-Host "    [$letter] [$($opt.Stack.ToUpper())] $($opt.Label)$default" -ForegroundColor $opt.Color
         }
         Write-Host ''
         $deployMode = (Read-Host '  Escolha (Enter = A)').Trim().ToUpper()
         if ($deployMode -eq '') { $deployMode = 'A' }
-        $idx = $letters.IndexOf($deployMode[0])
+        $idx = $letters.IndexOf([char]$deployMode[0])
         if ($idx -lt 0 -or $idx -ge $deployOptions.Count) {
             Write-Err 'Opcao invalida. Cancelado.'
             return
         }
-        $deployScript = $deployOptions[$idx].Script
-        Write-Info "Modalidade: $($deployOptions[$idx].Label)"
+        $deployScript = $deployOptions[$idx].Label
+        $deployCmd    = $deployOptions[$idx].Cmd
+        Write-Info "Stack: $($deployOptions[$idx].Stack.ToUpper()) | Comando: $deployCmd"
     }
     Write-Host ''
 
@@ -739,7 +827,7 @@ function Invoke-DeployPages {
             Write-Warn 'Ha alteracoes nao commitadas:'
             $statusLines | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkYellow }
             Write-Host ''
-            $resp = Read-Host '  Deseja commitar antes do deploy? (s/N)'
+            $resp = Read-Host '  Deseja commitar antes do build/deploy? (s/N)'
             if ($resp -match '^[sS]$') {
                 Invoke-RandomCommit
                 Write-Host ''
@@ -747,77 +835,53 @@ function Invoke-DeployPages {
         }
     }
 
-    Write-Info "Executando build e deploy ($deployScript)..."
+    Write-Info "Executando: $deployCmd"
     Set-Location $RepoPath
-    $deployOut = npm run $deployScript 2>&1
+    $deployOut = Invoke-Expression $deployCmd 2>&1
     if ($LASTEXITCODE -eq 0) {
-        Write-OK 'Deploy para GitHub Pages concluido com sucesso!'
-        $deployOut | Select-Object -Last 10 | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
+        Write-OK "Build/deploy concluido com sucesso! [$deployScript]"
+        $deployOut | Select-Object -Last 15 | ForEach-Object { Write-Host "  $_" -ForegroundColor Gray }
 
-        # Detectar URL de producao dinamicamente a partir do package.json / CNAME
-        $siteUrl = $null
-
-        $cnameFile = Join-Path $RepoPath 'public\CNAME'
-        if (-not (Test-Path $cnameFile)) { $cnameFile = Join-Path $RepoPath 'CNAME' }
-        if (Test-Path $cnameFile) {
-            $cname = (Get-Content $cnameFile -Raw).Trim()
-            if ($cname) { $siteUrl = "https://$cname/" }
-        }
-
-        if (-not $siteUrl) {
-            $remote = (git remote get-url origin 2>&1) | Select-Object -First 1
-            if ($remote -match 'github\.com[:/](.+?)(?:\.git)?$') {
-                $slug = $Matches[1]           # ex: wesleyzilva/dradaianaferraz_gold
-                $parts = $slug -split '/'
-                $siteUrl = "https://$($parts[0]).github.io/$($parts[1])/"
+        # Post-deploy links only for Node.js GitHub Pages deploys
+        $isGhPages = $deployScript -match 'deploy' -and (Test-Path (Join-Path $RepoPath 'package.json'))
+        if ($isGhPages) {
+            $siteUrl = $null
+            $cnameFile = Join-Path $RepoPath 'public\CNAME'
+            if (-not (Test-Path $cnameFile)) { $cnameFile = Join-Path $RepoPath 'CNAME' }
+            if (Test-Path $cnameFile) {
+                $cname = (Get-Content $cnameFile -Raw).Trim()
+                if ($cname) { $siteUrl = "https://$cname/" }
             }
-        }
+            if (-not $siteUrl) {
+                $remote = (git remote get-url origin 2>&1) | Select-Object -First 1
+                if ($remote -match 'github\.com[:/](.+?)(?:\.git)?$') {
+                    $slug  = $Matches[1]
+                    $parts = $slug -split '/'
+                    $siteUrl = "https://$($parts[0]).github.io/$($parts[1])/"
+                }
+            }
+            $lastCommit = (git log --oneline -1 2>&1) | Select-Object -First 1
+            $remote     = (git remote get-url origin 2>&1) | Select-Object -First 1
+            $repoSlug   = if ($remote -match 'github\.com[:/](.+?)(?:\.git)?$') { $Matches[1] } else { $null }
+            $actionsUrl = if ($repoSlug) { "https://github.com/$repoSlug/actions" } else { $null }
+            $commitUrl  = if ($repoSlug -and $lastCommit -match '^([0-9a-f]+)') { "https://github.com/$repoSlug/commit/$($Matches[1])" } else { $null }
 
-        Write-Host ''
-        Write-Host '  ============================================' -ForegroundColor Cyan
-        Write-Host '  VALIDACOES POS-DEPLOY' -ForegroundColor Cyan
-        Write-Host '  ============================================' -ForegroundColor Cyan
-        # Coleta dados do commit e repo remoto para exibir nas validacoes
-        $lastCommit = (git log --oneline -1 2>&1) | Select-Object -First 1
-        $remote = (git remote get-url origin 2>&1) | Select-Object -First 1
-        $repoSlug = if ($remote -match 'github\.com[:/](.+?)(?:\.git)?$') { $Matches[1] } else { $null }
-        $actionsUrl = if ($repoSlug) { "https://github.com/$repoSlug/actions" } else { $null }
-        $commitUrl = if ($repoSlug -and $lastCommit -match '^([0-9a-f]+)') { "https://github.com/$repoSlug/commit/$($Matches[1])" } else { $null }
-
-        if ($siteUrl) {
-            Write-Host "  Site publicado em: $siteUrl" -ForegroundColor White
             Write-Host ''
-            Write-Host '  [1] Pagina principal (carregamento e visual)' -ForegroundColor Yellow
-            Write-Host "      $siteUrl" -ForegroundColor Gray
-            Write-Host ''
-            Write-Host '  [2] Rich Results Test (schema.org / SEO estruturado)' -ForegroundColor Yellow
-            Write-Host "      https://search.google.com/test/rich-results?url=$([Uri]::EscapeDataString($siteUrl))" -ForegroundColor Gray
-            Write-Host ''
-            Write-Host '  [3] PageSpeed / Core Web Vitals' -ForegroundColor Yellow
-            Write-Host "      https://pagespeed.web.dev/analysis?url=$([Uri]::EscapeDataString($siteUrl))" -ForegroundColor Gray
-            Write-Host ''
-            Write-Host '  [4] LinkedIn Post Inspector (preview OG)' -ForegroundColor Yellow
-            Write-Host "      https://www.linkedin.com/post-inspector/inspect/$([Uri]::EscapeDataString($siteUrl))" -ForegroundColor Gray
-            Write-Host ''
-            Write-Host '  [5] Google Search Console — Inspecionar URL' -ForegroundColor Yellow
-            Write-Host '      https://search.google.com/search-console' -ForegroundColor Gray
+            Write-Host '  ============================================' -ForegroundColor Cyan
+            Write-Host '  VALIDACOES POS-DEPLOY' -ForegroundColor Cyan
+            Write-Host '  ============================================' -ForegroundColor Cyan
+            if ($siteUrl) {
+                Write-Host "  Site: $siteUrl" -ForegroundColor White
+                Write-Host "  PageSpeed : https://pagespeed.web.dev/analysis?url=$([Uri]::EscapeDataString($siteUrl))" -ForegroundColor Gray
+                Write-Host "  LinkedIn  : https://www.linkedin.com/post-inspector/inspect/$([Uri]::EscapeDataString($siteUrl))" -ForegroundColor Gray
+            }
+            if ($actionsUrl) { Write-Host "  Actions   : $actionsUrl" -ForegroundColor Gray }
+            if ($commitUrl)  { Write-Host "  Commit    : $commitUrl"  -ForegroundColor Gray }
+            Write-Host '  ============================================' -ForegroundColor Cyan
         }
-        if ($actionsUrl) {
-            Write-Host ''
-            Write-Host '  [6] GitHub Actions — status do workflow de deploy' -ForegroundColor Yellow
-            Write-Host "      $actionsUrl" -ForegroundColor Gray
-        }
-        if ($commitUrl) {
-            Write-Host ''
-            Write-Host '  [7] Ultimo commit no remoto' -ForegroundColor Yellow
-            Write-Host "      $lastCommit" -ForegroundColor DarkGray
-            Write-Host "      $commitUrl" -ForegroundColor Gray
-        }
-        Write-Host '  ============================================' -ForegroundColor Cyan
-        Write-Host ''
     }
     else {
-        Write-Err 'Deploy falhou:'
+        Write-Err 'Build/deploy falhou:'
         $deployOut | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
     }
 }
