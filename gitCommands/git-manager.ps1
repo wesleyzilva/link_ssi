@@ -702,9 +702,9 @@ function Get-DeployOptions {
 
     # ── Maven ────────────────────────────────────────────────────────────────
     if (Test-Path (Join-Path $RepoPath 'pom.xml')) {
-        $mvn = if (Test-Path (Join-Path $RepoPath 'mvnw'))  { './mvnw' }
-               elseif (Test-Path (Join-Path $RepoPath 'mvnw.cmd')) { '.\mvnw.cmd' }
-               else { 'mvn' }
+        $mvn = if (Test-Path (Join-Path $RepoPath 'mvnw')) { './mvnw' }
+        elseif (Test-Path (Join-Path $RepoPath 'mvnw.cmd')) { '.\mvnw.cmd' }
+        else { 'mvn' }
         $opts.Add([PSCustomObject]@{ Stack = 'maven'; Label = "$mvn clean package -DskipTests"; Cmd = "$mvn clean package -DskipTests"; Color = 'Yellow' })
         $opts.Add([PSCustomObject]@{ Stack = 'maven'; Label = "$mvn clean install -DskipTests"; Cmd = "$mvn clean install -DskipTests"; Color = 'Yellow' })
     }
@@ -712,16 +712,16 @@ function Get-DeployOptions {
     # ── Gradle ───────────────────────────────────────────────────────────────
     if ((Test-Path (Join-Path $RepoPath 'build.gradle')) -or (Test-Path (Join-Path $RepoPath 'build.gradle.kts'))) {
         $gradle = if (Test-Path (Join-Path $RepoPath 'gradlew')) { './gradlew' }
-                  elseif (Test-Path (Join-Path $RepoPath 'gradlew.bat')) { '.\gradlew.bat' }
-                  else { 'gradle' }
+        elseif (Test-Path (Join-Path $RepoPath 'gradlew.bat')) { '.\gradlew.bat' }
+        else { 'gradle' }
         $opts.Add([PSCustomObject]@{ Stack = 'gradle'; Label = "$gradle build"; Cmd = "$gradle build"; Color = 'Yellow' })
         $opts.Add([PSCustomObject]@{ Stack = 'gradle'; Label = "$gradle clean build -x test"; Cmd = "$gradle clean build -x test"; Color = 'Yellow' })
     }
 
     # ── Python ───────────────────────────────────────────────────────────────
     $hasPyProject = Test-Path (Join-Path $RepoPath 'pyproject.toml')
-    $hasSetup     = Test-Path (Join-Path $RepoPath 'setup.py')
-    $hasReqs      = Test-Path (Join-Path $RepoPath 'requirements.txt')
+    $hasSetup = Test-Path (Join-Path $RepoPath 'setup.py')
+    $hasReqs = Test-Path (Join-Path $RepoPath 'requirements.txt')
     if ($hasPyProject -or $hasSetup -or $hasReqs) {
         if ($hasPyProject) {
             $pyContent = Get-Content (Join-Path $RepoPath 'pyproject.toml') -Raw
@@ -744,15 +744,15 @@ function Get-DeployOptions {
     }
 
     # ── Docker Compose ───────────────────────────────────────────────────────
-    $composeFile = @('docker-compose.yml','docker-compose.yaml','compose.yml','compose.yaml') |
-        Where-Object { Test-Path (Join-Path $RepoPath $_) } | Select-Object -First 1
+    $composeFile = @('docker-compose.yml', 'docker-compose.yaml', 'compose.yml', 'compose.yaml') |
+    Where-Object { Test-Path (Join-Path $RepoPath $_) } | Select-Object -First 1
     if ($composeFile) {
         $opts.Add([PSCustomObject]@{ Stack = 'docker'; Label = 'docker compose up --build -d'; Cmd = 'docker compose up --build -d'; Color = 'Magenta' })
         $opts.Add([PSCustomObject]@{ Stack = 'docker'; Label = 'docker compose build'; Cmd = 'docker compose build'; Color = 'Magenta' })
     }
 
     # ── Shell deploy script ───────────────────────────────────────────────────
-    foreach ($sh in @('deploy.sh','build.sh','release.sh','publish.sh')) {
+    foreach ($sh in @('deploy.sh', 'build.sh', 'release.sh', 'publish.sh')) {
         $shPath = Join-Path $RepoPath $sh
         if (Test-Path $shPath) {
             $opts.Add([PSCustomObject]@{ Stack = 'shell'; Label = "bash $sh"; Cmd = "bash $sh"; Color = 'White' })
@@ -787,10 +787,10 @@ function Invoke-DeployPages {
     }
 
     $deployScript = $null
-    $deployCmd    = $null
+    $deployCmd = $null
     if ($deployOptions.Count -eq 1) {
         $deployScript = $deployOptions[0].Label
-        $deployCmd    = $deployOptions[0].Cmd
+        $deployCmd = $deployOptions[0].Cmd
         Write-Info "Stack detectada: $($deployOptions[0].Stack.ToUpper())"
         Write-Info "Comando: $deployCmd"
     }
@@ -798,7 +798,7 @@ function Invoke-DeployPages {
         $letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         Write-Host '  Opcoes detectadas:' -ForegroundColor White
         for ($i = 0; $i -lt $deployOptions.Count; $i++) {
-            $opt    = $deployOptions[$i]
+            $opt = $deployOptions[$i]
             $letter = $letters[$i]
             $default = if ($i -eq 0) { '  [padrao]' } else { '' }
             Write-Host "    [$letter] [$($opt.Stack.ToUpper())] $($opt.Label)$default" -ForegroundColor $opt.Color
@@ -812,7 +812,7 @@ function Invoke-DeployPages {
             return
         }
         $deployScript = $deployOptions[$idx].Label
-        $deployCmd    = $deployOptions[$idx].Cmd
+        $deployCmd = $deployOptions[$idx].Cmd
         Write-Info "Stack: $($deployOptions[$idx].Stack.ToUpper()) | Comando: $deployCmd"
     }
     Write-Host ''
@@ -855,16 +855,16 @@ function Invoke-DeployPages {
             if (-not $siteUrl) {
                 $remote = (git remote get-url origin 2>&1) | Select-Object -First 1
                 if ($remote -match 'github\.com[:/](.+?)(?:\.git)?$') {
-                    $slug  = $Matches[1]
+                    $slug = $Matches[1]
                     $parts = $slug -split '/'
                     $siteUrl = "https://$($parts[0]).github.io/$($parts[1])/"
                 }
             }
             $lastCommit = (git log --oneline -1 2>&1) | Select-Object -First 1
-            $remote     = (git remote get-url origin 2>&1) | Select-Object -First 1
-            $repoSlug   = if ($remote -match 'github\.com[:/](.+?)(?:\.git)?$') { $Matches[1] } else { $null }
+            $remote = (git remote get-url origin 2>&1) | Select-Object -First 1
+            $repoSlug = if ($remote -match 'github\.com[:/](.+?)(?:\.git)?$') { $Matches[1] } else { $null }
             $actionsUrl = if ($repoSlug) { "https://github.com/$repoSlug/actions" } else { $null }
-            $commitUrl  = if ($repoSlug -and $lastCommit -match '^([0-9a-f]+)') { "https://github.com/$repoSlug/commit/$($Matches[1])" } else { $null }
+            $commitUrl = if ($repoSlug -and $lastCommit -match '^([0-9a-f]+)') { "https://github.com/$repoSlug/commit/$($Matches[1])" } else { $null }
 
             Write-Host ''
             Write-Host '  ============================================' -ForegroundColor Cyan
@@ -876,7 +876,7 @@ function Invoke-DeployPages {
                 Write-Host "  LinkedIn  : https://www.linkedin.com/post-inspector/inspect/$([Uri]::EscapeDataString($siteUrl))" -ForegroundColor Gray
             }
             if ($actionsUrl) { Write-Host "  Actions   : $actionsUrl" -ForegroundColor Gray }
-            if ($commitUrl)  { Write-Host "  Commit    : $commitUrl"  -ForegroundColor Gray }
+            if ($commitUrl) { Write-Host "  Commit    : $commitUrl"  -ForegroundColor Gray }
             Write-Host '  ============================================' -ForegroundColor Cyan
         }
     }
