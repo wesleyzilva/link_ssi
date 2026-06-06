@@ -1,0 +1,40 @@
+﻿Category,Date,Type,Name,Detail,URL
+Log,2026-05-09T12:31:58.111Z,success,recruiter-prospector,■ recruiter-prospector DONE | 0 sent / 7 checked,
+Log,2026-05-09T12:31:58.110Z,info,recruiter-prospector,■ no more pages after page 1 — stopping pagination,
+Log,2026-05-09T12:31:53.127Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/ginni-digpaul-20316b280/ — no connect button (viewed),
+Log,2026-05-09T12:31:53.121Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-09T12:29:53.123Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/ginni-digpaul-20316b280/
+Log,2026-05-09T12:29:53.122Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/lucassieverding/ — no connect button (viewed),
+Log,2026-05-09T12:29:53.119Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-09T12:27:53.121Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/lucassieverding/
+Log,2026-05-09T12:27:53.120Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/lucassieverding/ — no connect button (viewed),
+Log,2026-05-09T12:27:53.117Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-09T12:25:53.114Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/lucassieverding/
+Log,2026-05-09T12:25:53.113Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/lucassieverding/ — no connect button (viewed),
+Log,2026-05-09T12:25:53.111Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-09T12:23:53.120Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/lucassieverding/
+Log,2026-05-09T12:23:53.119Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/aryan-yadav-428ab4390/ — no connect button (viewed),
+Log,2026-05-09T12:23:53.117Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-09T12:22:16.127Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/aryan-yadav-428ab4390/
+Log,2026-05-09T12:22:16.126Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/aryan-yadav-428ab4390/ — no connect button (viewed),
+Log,2026-05-09T12:22:16.123Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-09T12:21:56.125Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/aryan-yadav-428ab4390/
+Log,2026-05-09T12:21:56.124Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/aryan-yadav-428ab4390/ — no connect button (viewed),
+Log,2026-05-09T12:21:56.121Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-09T12:21:39.122Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/aryan-yadav-428ab4390/
+Log,2026-05-09T12:21:39.120Z,info,recruiter-prospector,page 1/10 — 7 cards found,
+Log,2026-05-09T12:21:32.627Z,info,recruiter-prospector,▶ recruiter-prospector started | https://www.linkedin.com/search/results/people/?keywords=Tech%20Recruiter%20Information%20Technology&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%2C%22102713980%22%2C%22101739942%22%2C%22104738515%22%2C%22102890883%22%2C%22102454443%22%2C%22105015875%22%2C%22106157047%22%5D&spellCorrectionEnabled=true&prioritizeMessage=false,
+Log,2026-05-09T12:21:28.135Z,info,,Step 2/6 — Prospecting Tech Recruiters via keyword search (cap: 7)…,
+Log,2026-05-09T12:21:28.125Z,success,,■ ssi-monitor (dom) | total:51 brand:16 people:14 insights:14 rel:7,
+Log,2026-05-09T12:21:28.124Z,warn,,[SSI] brand:51 looks wrong (total:51) — recalculated as 16,
+SSI,2026-05-09T12:21:28.124Z,ssi-score,,total:51 brand:16 people:14 insights:14 rel:7,
+Log,2026-05-09T12:21:18.655Z,warn,,"⚠ voyager SSI path ""/identity/profiles/me/ssi"" failed: [Voyager] HTTP 404 on /identity/profiles/me/ssi",
+Log,2026-05-09T12:21:18.655Z,warn,,⚠ all Voyager paths failed — falling back to DOM scraping,
+Log,2026-05-09T12:21:18.438Z,warn,,"⚠ voyager SSI path ""/identity/dash/profileSocialSelling?q=me"" failed: [Voyager] HTTP 404 on /identity/dash/profileSocialSelling?q=me",
+Log,2026-05-09T12:21:18.210Z,warn,,"⚠ voyager SSI path ""/identity/dash/profileSocialSelling?q=me&projection=(ssiScore,ssiScoreBreakdown)"" failed: [Voyager] HTTP 404 on /identity/dash/profileSocialSelling?q=me&projection=(ssiScore,ssiScoreBreakdown)",
+Log,2026-05-09T12:21:17.995Z,info,,▶ ssi-monitor started | https://www.linkedin.com/sales/ssi,
+Log,2026-05-09T12:21:13.767Z,info,,Step 1/6 — Capturing SSI scores…,
+Log,2026-05-09T12:21:13.766Z,warn,,[Scenario] Running: full-pipeline (cap 15),
+Log,2026-05-09T12:21:13.765Z,warn,,"[RunSelected 1/1] Scenarios: full-pipeline, ssi-capture, pillar-3-insights, engage-exec-posts | cap: 15",
+Log,2026-05-09T12:20:51.477Z,success,,[PostQueue] 3 seed post(s) added to queue.,
+Log,2026-05-09T12:20:51.476Z,success,,Extension installed.,

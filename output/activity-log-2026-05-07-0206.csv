@@ -1,0 +1,26 @@
+﻿Date,Level,Script,Message
+2026-05-07T02:06:41.597Z,info,job-recruiter-harvester,"  · Card 5: no ""Meet the hiring team"" section"
+2026-05-07T02:06:27.603Z,info,job-recruiter-harvester,"  · Card 4: no ""Meet the hiring team"" section"
+2026-05-07T02:06:13.604Z,info,job-recruiter-harvester,"  · Card 3: no ""Meet the hiring team"" section"
+2026-05-07T02:06:01.593Z,info,job-recruiter-harvester,"  · Card 2: no ""Meet the hiring team"" section"
+2026-05-07T02:05:53.721Z,warn,,[job-recruiter-harvester] content script did not respond after 15 retries — skipping
+2026-05-07T02:05:46.596Z,info,job-recruiter-harvester,"  · Card 1: no ""Meet the hiring team"" section"
+2026-05-07T02:05:33.605Z,info,job-recruiter-harvester,Found 7 job cards on page 1
+2026-05-07T02:05:33.601Z,info,job-recruiter-harvester,📄 Processing page 1…
+2026-05-07T02:05:26.823Z,info,job-recruiter-harvester,▶ job-recruiter-harvester started | https://www.linkedin.com/jobs/search/?currentJobId=4409975921&f_T=77&geoId=105056705&keywords=%22delivery%20manager%22%20%2Blatam&origin=JOB_SEARCH_PAGE_LOCATION_AUTOCOMPLETE&refresh=true&sortBy=R
+2026-05-07T02:05:22.497Z,info,,[JobHarvest] URL 2/3: https://www.linkedin.com/jobs/search/?currentJobId=4409975921&f_T=77&geoId=105056705&keywords=%22delivery%20manager%22%20%2Blatam&origin=JOB_SEARCH_PAGE_LOCATION_AUTOCOMPLETE&refresh=true&sortBy=R
+2026-05-07T02:05:08.555Z,warn,,[job-recruiter-harvester] timed out after 120 s — continuing sequence
+2026-05-07T02:04:58.591Z,info,job-recruiter-harvester,"  · Card 7: no ""Meet the hiring team"" section"
+2026-05-07T02:04:41.591Z,success,job-recruiter-harvester,"  ✓ Card 6: saved 1 recruiter(s) — View Vijaya Bandi’s verified profile graphic, View Vijaya Bandi’s verified profile"
+2026-05-07T02:04:27.606Z,info,job-recruiter-harvester,"  · Card 5: no ""Meet the hiring team"" section"
+2026-05-07T02:04:09.598Z,success,job-recruiter-harvester,"  ✓ Card 4: saved 1 recruiter(s) — Niksha Wadhwa, View Niksha Wadhwa’s verified profile"
+2026-05-07T02:03:56.597Z,info,job-recruiter-harvester,"  · Card 3: no ""Meet the hiring team"" section"
+2026-05-07T02:03:43.603Z,info,job-recruiter-harvester,"  · Card 2: no ""Meet the hiring team"" section"
+2026-05-07T02:03:29.602Z,success,job-recruiter-harvester,"  ✓ Card 1: saved 1 recruiter(s) — Venkat J Swaroop, View Venkat J Swaroop’s verified profile"
+2026-05-07T02:03:16.609Z,info,job-recruiter-harvester,Found 7 job cards on page 1
+2026-05-07T02:03:16.608Z,info,job-recruiter-harvester,📄 Processing page 1…
+2026-05-07T02:03:12.835Z,info,job-recruiter-harvester,▶ job-recruiter-harvester started | https://www.linkedin.com/jobs/search/?currentJobId=4405110262&distance=100&geoId=105458072&keywords=projet%20manager%20latam&origin=JOB_SEARCH_PAGE_JOB_FILTER&refresh=true
+2026-05-07T02:03:08.538Z,info,,[JobHarvest] URL 1/3: https://www.linkedin.com/jobs/search/?currentJobId=4405110262&distance=100&geoId=105458072&keywords=projet%20manager%20latam&origin=JOB_SEARCH_PAGE_JOB_FILTER&refresh=true
+2026-05-07T02:03:08.537Z,info,,[JobHarvest] Starting harvest across 3 search URL(s).
+2026-05-07T02:02:32.749Z,success,,[PostQueue] 3 seed post(s) added to queue.
+2026-05-07T02:02:32.748Z,success,,Extension installed.

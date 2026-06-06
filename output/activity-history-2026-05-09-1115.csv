@@ -1,0 +1,441 @@
+﻿Category,Date,Type,Name,Detail,URL
+Log,2026-05-08T13:19:02.130Z,success,recruiter-prospector,■ recruiter-prospector DONE | 0 sent / 121 checked,
+Log,2026-05-08T13:19:02.127Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/shruti-verma-866aa676/ — no connect button (viewed),
+Log,2026-05-08T13:19:02.121Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:18:45.130Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/shruti-verma-866aa676/
+Log,2026-05-08T13:18:45.126Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/ajit-s-708a71231/ — no connect button (viewed),
+Log,2026-05-08T13:18:45.120Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:18:28.131Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/ajit-s-708a71231/
+Log,2026-05-08T13:18:28.128Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/ajit-s-708a71231/ — no connect button (viewed),
+Log,2026-05-08T13:18:28.122Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:18:12.129Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/ajit-s-708a71231/
+Log,2026-05-08T13:18:12.125Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/ajit-s-708a71231/ — no connect button (viewed),
+Log,2026-05-08T13:18:12.119Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:17:55.129Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/ajit-s-708a71231/
+Log,2026-05-08T13:17:55.126Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/harleen-kaur-uppal-197276333/ — no connect button (viewed),
+Log,2026-05-08T13:17:55.120Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:17:40.122Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/harleen-kaur-uppal-197276333/
+Log,2026-05-08T13:17:40.117Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/anusha-d-150bb028a/ — no connect button (viewed),
+Log,2026-05-08T13:17:40.111Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:17:24.131Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/anusha-d-150bb028a/
+Log,2026-05-08T13:17:24.128Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/michaelreynolds5/ — no connect button (viewed),
+Log,2026-05-08T13:17:24.123Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:17:08.137Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/michaelreynolds5/
+Log,2026-05-08T13:17:08.133Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/apparao-puli-592b5a252/ — no connect button (viewed),
+Log,2026-05-08T13:17:08.125Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:16:51.136Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/apparao-puli-592b5a252/
+Log,2026-05-08T13:16:51.130Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/jason-love-618057174/ — no connect button (viewed),
+Log,2026-05-08T13:16:51.124Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:16:38.124Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/jason-love-618057174/
+Log,2026-05-08T13:16:38.120Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/shivam-pandey-b967221a1/ — no connect button (viewed),
+Log,2026-05-08T13:16:38.111Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:16:23.127Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/shivam-pandey-b967221a1/
+Log,2026-05-08T13:16:23.124Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/monika-dahat-639a41228/ — no connect button (viewed),
+Log,2026-05-08T13:16:23.118Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:16:07.121Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/monika-dahat-639a41228/
+Log,2026-05-08T13:16:07.117Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/revathi-yalagala-889ab0247/ — no connect button (viewed),
+Log,2026-05-08T13:16:07.113Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:15:49.129Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/revathi-yalagala-889ab0247/
+Log,2026-05-08T13:15:49.125Z,info,recruiter-prospector,page 10/10 — 12 cards found,
+Log,2026-05-08T13:15:44.128Z,info,recruiter-prospector,▶ page 10 — waiting for SPA render...,
+Log,2026-05-08T13:15:39.124Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/aarthi-sharma-2350b7231/ — no connect button (viewed),
+Log,2026-05-08T13:15:39.119Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:15:21.127Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/aarthi-sharma-2350b7231/
+Log,2026-05-08T13:15:21.122Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/gowthami-shekar-85a322268/ — no connect button (viewed),
+Log,2026-05-08T13:15:21.116Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:15:04.127Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/gowthami-shekar-85a322268/
+Log,2026-05-08T13:15:04.124Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/taylor-b-19122195/ — no connect button (viewed),
+Log,2026-05-08T13:15:04.117Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:14:48.122Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/taylor-b-19122195/
+Log,2026-05-08T13:14:48.119Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/joseph-adam-64032221a/ — no connect button (viewed),
+Log,2026-05-08T13:14:48.114Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:14:36.130Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/joseph-adam-64032221a/
+Log,2026-05-08T13:14:36.127Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/mavuluri-prakyath-307911207/ — no connect button (viewed),
+Log,2026-05-08T13:14:36.122Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:14:19.119Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/mavuluri-prakyath-307911207/
+Log,2026-05-08T13:14:19.116Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/sushma-prasanna-647244233/ — no connect button (viewed),
+Log,2026-05-08T13:14:19.110Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:14:03.133Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/sushma-prasanna-647244233/
+Log,2026-05-08T13:14:03.130Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/muhammad-saif-ullah-55046a13a/ — no connect button (viewed),
+Log,2026-05-08T13:14:03.123Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:13:46.132Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/muhammad-saif-ullah-55046a13a/
+Log,2026-05-08T13:13:46.129Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/andrew-symonds-204735235/ — no connect button (viewed),
+Log,2026-05-08T13:13:46.123Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:13:30.125Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/andrew-symonds-204735235/
+Log,2026-05-08T13:13:30.118Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/paras-gupta-322372169/ — no connect button (viewed),
+Log,2026-05-08T13:13:30.112Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:13:15.135Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/paras-gupta-322372169/
+Log,2026-05-08T13:13:15.130Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/nalla-chandana-goud-695a89292/ — no connect button (viewed),
+Log,2026-05-08T13:13:15.125Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:12:59.132Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/nalla-chandana-goud-695a89292/
+Log,2026-05-08T13:12:59.127Z,info,recruiter-prospector,page 9/10 — 10 cards found,
+Log,2026-05-08T13:12:52.133Z,info,recruiter-prospector,▶ page 9 — waiting for SPA render...,
+Log,2026-05-08T13:12:47.129Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/vidhi-viswakarma-1024811b5/ — no connect button (viewed),
+Log,2026-05-08T13:12:47.124Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:12:33.133Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/vidhi-viswakarma-1024811b5/
+Log,2026-05-08T13:12:33.127Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/christiana-nwokocha/ — no connect button (viewed),
+Log,2026-05-08T13:12:33.121Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:12:16.126Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/christiana-nwokocha/
+Log,2026-05-08T13:12:16.122Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/chaitra-harsha-54b62523b/ — no connect button (viewed),
+Log,2026-05-08T13:12:16.117Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:12:00.129Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/chaitra-harsha-54b62523b/
+Log,2026-05-08T13:12:00.124Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/yunus-s-748a95163/ — no connect button (viewed),
+Log,2026-05-08T13:12:00.117Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:11:46.133Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/yunus-s-748a95163/
+Log,2026-05-08T13:11:46.130Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/ambika-akkivalli-a6516a30b/ — no connect button (viewed),
+Log,2026-05-08T13:11:46.125Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:11:27.128Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/ambika-akkivalli-a6516a30b/
+Log,2026-05-08T13:11:27.124Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/atul-kumar-baaa46242/ — no connect button (viewed),
+Log,2026-05-08T13:11:27.117Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:11:12.128Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/atul-kumar-baaa46242/
+Log,2026-05-08T13:11:12.124Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/utkarsh-kr-1a085461/ — no connect button (viewed),
+Log,2026-05-08T13:11:12.118Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:10:55.129Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/utkarsh-kr-1a085461/
+Log,2026-05-08T13:10:55.124Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/yashveer-singh-bb6b88243/ — no connect button (viewed),
+Log,2026-05-08T13:10:55.119Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:10:41.120Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/yashveer-singh-bb6b88243/
+Log,2026-05-08T13:10:41.117Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/tanusha-bejjam-1236371a0/ — no connect button (viewed),
+Log,2026-05-08T13:10:41.112Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:10:27.130Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/tanusha-bejjam-1236371a0/
+Log,2026-05-08T13:10:27.127Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/yukti-ramchandani/ — no connect button (viewed),
+Log,2026-05-08T13:10:27.122Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:10:11.122Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/yukti-ramchandani/
+Log,2026-05-08T13:10:11.118Z,info,recruiter-prospector,page 8/10 — 10 cards found,
+Log,2026-05-08T13:10:04.131Z,info,recruiter-prospector,▶ page 8 — waiting for SPA render...,
+Log,2026-05-08T13:10:00.118Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/kumari-bajpai-1806a720b/ — no connect button (viewed),
+Log,2026-05-08T13:10:00.113Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:09:44.123Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/kumari-bajpai-1806a720b/
+Log,2026-05-08T13:09:44.119Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/akshay-kumar-260522126/ — no connect button (viewed),
+Log,2026-05-08T13:09:44.114Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:09:27.120Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/akshay-kumar-260522126/
+Log,2026-05-08T13:09:27.117Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/komal-kumari-90a4611b4/ — no connect button (viewed),
+Log,2026-05-08T13:09:27.112Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:09:11.136Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/komal-kumari-90a4611b4/
+Log,2026-05-08T13:09:11.132Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/arti-ds/ — no connect button (viewed),
+Log,2026-05-08T13:09:11.124Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:08:51.121Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/arti-ds/
+Log,2026-05-08T13:08:51.118Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/justin-holshouser-35199199/ — no connect button (viewed),
+Log,2026-05-08T13:08:51.111Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:08:36.122Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/justin-holshouser-35199199/
+Log,2026-05-08T13:08:36.118Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/prasanna-kumar-2262861a3/ — no connect button (viewed),
+Log,2026-05-08T13:08:36.113Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:08:19.125Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/prasanna-kumar-2262861a3/
+Log,2026-05-08T13:08:19.121Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/safa-kabiri/ — no connect button (viewed),
+Log,2026-05-08T13:08:19.113Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:08:04.129Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/safa-kabiri/
+Log,2026-05-08T13:08:04.126Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/ali-rashid-8750a225b/ — no connect button (viewed),
+Log,2026-05-08T13:08:04.121Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:07:48.126Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/ali-rashid-8750a225b/
+Log,2026-05-08T13:07:48.123Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/jayshreevachhani/ — no connect button (viewed),
+Log,2026-05-08T13:07:48.117Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:07:32.125Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/jayshreevachhani/
+Log,2026-05-08T13:07:32.121Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/jayshreevachhani/ — no connect button (viewed),
+Log,2026-05-08T13:07:32.115Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:07:19.129Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/jayshreevachhani/
+Log,2026-05-08T13:07:19.124Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/eddiegraham/ — no connect button (viewed),
+Log,2026-05-08T13:07:19.119Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:07:02.121Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/eddiegraham/
+Log,2026-05-08T13:07:02.116Z,info,recruiter-prospector,page 7/10 — 11 cards found,
+Log,2026-05-08T13:06:55.132Z,info,recruiter-prospector,▶ page 7 — waiting for SPA render...,
+Log,2026-05-08T13:06:51.129Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/vedika-sutar-935735147/ — no connect button (viewed),
+Log,2026-05-08T13:06:51.123Z,warn,recruiter-prospector,"[Diag] no connect btn found | card buttons: ""Follow"" aria=""Follow Vedika Sutar""",
+Link,2026-05-08T13:06:42.121Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/vedika-sutar-935735147/
+Log,2026-05-08T13:06:42.117Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/nagajyoti-j-165010160/ — no connect button (viewed),
+Log,2026-05-08T13:06:42.111Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:06:25.132Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/nagajyoti-j-165010160/
+Log,2026-05-08T13:06:25.128Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/amreen-md-71b150247/ — no connect button (viewed),
+Log,2026-05-08T13:06:25.122Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:06:11.127Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/amreen-md-71b150247/
+Log,2026-05-08T13:06:11.124Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/azahar-syed-a00107214/ — no connect button (viewed),
+Log,2026-05-08T13:06:11.118Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:05:55.040Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/azahar-syed-a00107214/
+Log,2026-05-08T13:05:55.037Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/jillian-goss-3706446/ — no connect button (viewed),
+Log,2026-05-08T13:05:55.031Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:05:42.612Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/jillian-goss-3706446/
+Log,2026-05-08T13:05:42.609Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/shane-m-631a8218/ — no connect button (viewed),
+Log,2026-05-08T13:05:42.604Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:05:30.969Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/shane-m-631a8218/
+Log,2026-05-08T13:05:30.966Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/richard-lewis-785292309/ — no connect button (viewed),
+Log,2026-05-08T13:05:30.961Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:05:16.764Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/richard-lewis-785292309/
+Log,2026-05-08T13:05:16.761Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/shaik-parveen-b62bb8b5/ — no connect button (viewed),
+Log,2026-05-08T13:05:16.756Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:05:04.346Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/shaik-parveen-b62bb8b5/
+Log,2026-05-08T13:05:04.343Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/shaik-parveen-b62bb8b5/ — no connect button (viewed),
+Log,2026-05-08T13:05:04.338Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:04:50.877Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/shaik-parveen-b62bb8b5/
+Log,2026-05-08T13:04:50.874Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/renuka-y-168ba0233/ — no connect button (viewed),
+Log,2026-05-08T13:04:50.870Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:04:36.315Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/renuka-y-168ba0233/
+Log,2026-05-08T13:04:36.312Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/sapna-v-290ab0242/ — no connect button (viewed),
+Log,2026-05-08T13:04:36.307Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:04:23.432Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/sapna-v-290ab0242/
+Log,2026-05-08T13:04:23.428Z,info,recruiter-prospector,page 6/10 — 11 cards found,
+Log,2026-05-08T13:04:19.256Z,info,recruiter-prospector,▶ page 6 — waiting for SPA render...,
+Log,2026-05-08T13:04:13.411Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/vickivelacion/ — no connect button (viewed),
+Log,2026-05-08T13:04:13.407Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:03:59.226Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/vickivelacion/
+Log,2026-05-08T13:03:59.222Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/nicoleemurphy/ — no connect button (viewed),
+Log,2026-05-08T13:03:59.218Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:03:47.395Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/nicoleemurphy/
+Log,2026-05-08T13:03:47.392Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/abhishek-singh-948828194/ — no connect button (viewed),
+Log,2026-05-08T13:03:47.388Z,warn,recruiter-prospector,"[Diag] no connect btn found | card buttons: ""Following"" aria=""Following, click to unfollow Abhishek Singh""",
+Link,2026-05-08T13:03:36.545Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/abhishek-singh-948828194/
+Log,2026-05-08T13:03:36.541Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/vladimir-demin-28a04b88/ — no connect button (viewed),
+Log,2026-05-08T13:03:36.536Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:03:20.128Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/vladimir-demin-28a04b88/
+Log,2026-05-08T13:03:20.125Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/velumuri-kirti-a45ab5202/ — no connect button (viewed),
+Log,2026-05-08T13:03:20.119Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:03:05.395Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/velumuri-kirti-a45ab5202/
+Log,2026-05-08T13:03:05.392Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/sapna-75a1021b4/ — no connect button (viewed),
+Log,2026-05-08T13:03:05.387Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:02:52.111Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/sapna-75a1021b4/
+Log,2026-05-08T13:02:52.107Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/sidnassir/ — no connect button (viewed),
+Log,2026-05-08T13:02:52.102Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:02:36.129Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/sidnassir/
+Log,2026-05-08T13:02:36.126Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/anubhav-bsn/ — no connect button (viewed),
+Log,2026-05-08T13:02:36.119Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:02:20.133Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/anubhav-bsn/
+Log,2026-05-08T13:02:20.128Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/jaison-k-195243106/ — no connect button (viewed),
+Log,2026-05-08T13:02:20.120Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:02:05.123Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/jaison-k-195243106/
+Log,2026-05-08T13:02:05.119Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/kanika-joshi-5a82b9216/ — no connect button (viewed),
+Log,2026-05-08T13:02:05.114Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:01:47.127Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/kanika-joshi-5a82b9216/
+Log,2026-05-08T13:01:47.123Z,info,recruiter-prospector,page 5/10 — 10 cards found,
+Log,2026-05-08T13:01:42.137Z,info,recruiter-prospector,▶ page 5 — waiting for SPA render...,
+Log,2026-05-08T13:01:38.121Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/ganga-bhavani-197a0a205/ — no connect button (viewed),
+Log,2026-05-08T13:01:38.116Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:01:20.121Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/ganga-bhavani-197a0a205/
+Log,2026-05-08T13:01:20.117Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/ananda-p-6377b09b/ — no connect button (viewed),
+Log,2026-05-08T13:01:20.111Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:01:05.128Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/ananda-p-6377b09b/
+Log,2026-05-08T13:01:05.124Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/sarika96/ — no connect button (viewed),
+Log,2026-05-08T13:01:05.119Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:00:49.126Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/sarika96/
+Log,2026-05-08T13:00:49.123Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/l-mohan-60a055175/ — no connect button (viewed),
+Log,2026-05-08T13:00:49.119Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:00:31.121Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/l-mohan-60a055175/
+Log,2026-05-08T13:00:31.117Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/shraddha-chaudhari-35270325/ — no connect button (viewed),
+Log,2026-05-08T13:00:31.112Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:00:18.121Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/shraddha-chaudhari-35270325/
+Log,2026-05-08T13:00:18.118Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/santhosh-chittumalla-b40201b7/ — no connect button (viewed),
+Log,2026-05-08T13:00:18.114Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T13:00:04.125Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/santhosh-chittumalla-b40201b7/
+Log,2026-05-08T13:00:04.122Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/balaji-b-66013523b/ — no connect button (viewed),
+Log,2026-05-08T13:00:04.116Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:59:50.125Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/balaji-b-66013523b/
+Log,2026-05-08T12:59:50.122Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/bethmurray/ — no connect button (viewed),
+Log,2026-05-08T12:59:50.117Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:59:33.118Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/bethmurray/
+Log,2026-05-08T12:59:33.116Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/sk-tazeem-farogh-ahmed-38690555/ — no connect button (viewed),
+Log,2026-05-08T12:59:33.110Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:59:15.133Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/sk-tazeem-farogh-ahmed-38690555/
+Log,2026-05-08T12:59:15.129Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/vikk-b-9b1778224/ — no connect button (viewed),
+Log,2026-05-08T12:59:15.122Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:58:59.118Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/vikk-b-9b1778224/
+Log,2026-05-08T12:58:59.115Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/vikk-b-9b1778224/ — no connect button (viewed),
+Log,2026-05-08T12:58:59.110Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:58:41.124Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/vikk-b-9b1778224/
+Log,2026-05-08T12:58:41.119Z,info,recruiter-prospector,page 4/10 — 11 cards found,
+Log,2026-05-08T12:58:35.141Z,info,recruiter-prospector,▶ page 4 — waiting for SPA render...,
+Log,2026-05-08T12:58:30.128Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/vikk-b-9b1778224/ — no connect button (viewed),
+Log,2026-05-08T12:58:30.123Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:58:16.120Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/vikk-b-9b1778224/
+Log,2026-05-08T12:58:16.118Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/vikk-b-9b1778224/ — no connect button (viewed),
+Log,2026-05-08T12:58:16.114Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:57:58.121Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/vikk-b-9b1778224/
+Log,2026-05-08T12:57:58.119Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/resu-raj-958227195/ — no connect button (viewed),
+Log,2026-05-08T12:57:58.114Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:57:43.120Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/resu-raj-958227195/
+Log,2026-05-08T12:57:43.117Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/srikanth-ravall1a8478518b/ — no connect button (viewed),
+Log,2026-05-08T12:57:43.113Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:57:29.123Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/srikanth-ravall1a8478518b/
+Log,2026-05-08T12:57:29.119Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/markandeya-sambu-bb1a95237/ — no connect button (viewed),
+Log,2026-05-08T12:57:29.115Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:57:14.124Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/markandeya-sambu-bb1a95237/
+Log,2026-05-08T12:57:14.121Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/alekhya-gunasani-a23498230/ — no connect button (viewed),
+Log,2026-05-08T12:57:14.116Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:56:59.126Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/alekhya-gunasani-a23498230/
+Log,2026-05-08T12:56:59.123Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/kpandey001/ — no connect button (viewed),
+Log,2026-05-08T12:56:59.118Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:56:43.116Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/kpandey001/
+Log,2026-05-08T12:56:43.113Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/ekozodaeva/ — no connect button (viewed),
+Log,2026-05-08T12:56:43.109Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:56:30.129Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/ekozodaeva/
+Log,2026-05-08T12:56:30.125Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/ekozodaeva/ — no connect button (viewed),
+Log,2026-05-08T12:56:30.119Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:56:17.127Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/ekozodaeva/
+Log,2026-05-08T12:56:17.125Z,info,recruiter-prospector,"↷ https://www.linkedin.com/in/luanarochaviana/en/ — skipped (locale-suffixed URL, likely BR)",
+Log,2026-05-08T12:56:17.122Z,info,recruiter-prospector,"↷ https://www.linkedin.com/in/luanarochaviana/en/ — skipped (locale-suffixed URL, likely BR)",
+Log,2026-05-08T12:56:17.120Z,info,recruiter-prospector,"↷ https://www.linkedin.com/in/luanarochaviana/en/ — skipped (locale-suffixed URL, likely BR)",
+Log,2026-05-08T12:56:17.117Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/sravanthi-jutla-15838720a/ — no connect button (viewed),
+Log,2026-05-08T12:56:17.112Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:56:03.120Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/sravanthi-jutla-15838720a/
+Log,2026-05-08T12:56:03.116Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/recruitervidhishah/ — no connect button (viewed),
+Log,2026-05-08T12:56:03.111Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:55:49.117Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/recruitervidhishah/
+Log,2026-05-08T12:55:49.114Z,info,recruiter-prospector,page 3/10 — 14 cards found,
+Log,2026-05-08T12:55:44.142Z,info,recruiter-prospector,▶ page 3 — waiting for SPA render...,
+Log,2026-05-08T12:55:39.116Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/steve-h-080858292/ — no connect button (viewed),
+Log,2026-05-08T12:55:39.112Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:55:22.125Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/steve-h-080858292/
+Log,2026-05-08T12:55:22.121Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/sherazchaudhry98/ — no connect button (viewed),
+Log,2026-05-08T12:55:22.117Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:55:06.123Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/sherazchaudhry98/
+Log,2026-05-08T12:55:06.120Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/koneni-bhavya-b459a178/ — no connect button (viewed),
+Log,2026-05-08T12:55:06.115Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:54:49.126Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/koneni-bhavya-b459a178/
+Log,2026-05-08T12:54:49.124Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/rahul-s-639167232/ — no connect button (viewed),
+Log,2026-05-08T12:54:49.120Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:54:33.130Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/rahul-s-639167232/
+Log,2026-05-08T12:54:33.127Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/navin-naidu-186a50135/ — no connect button (viewed),
+Log,2026-05-08T12:54:33.123Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:54:17.131Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/navin-naidu-186a50135/
+Log,2026-05-08T12:54:17.127Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/riya-biju-1aa627219/ — no connect button (viewed),
+Log,2026-05-08T12:54:17.123Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:54:00.126Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/riya-biju-1aa627219/
+Log,2026-05-08T12:54:00.122Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/aarab-shah-a217b0247/ — no connect button (viewed),
+Log,2026-05-08T12:54:00.117Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:53:45.132Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/aarab-shah-a217b0247/
+Log,2026-05-08T12:53:45.128Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/surabhisuman101/ — no connect button (viewed),
+Log,2026-05-08T12:53:45.123Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:53:28.129Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/surabhisuman101/
+Log,2026-05-08T12:53:28.127Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/surabhisuman101/ — no connect button (viewed),
+Log,2026-05-08T12:53:28.123Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:53:10.126Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/surabhisuman101/
+Log,2026-05-08T12:53:10.123Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/jhoomchoudhary/ — no connect button (viewed),
+Log,2026-05-08T12:53:10.119Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:52:55.126Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/jhoomchoudhary/
+Log,2026-05-08T12:52:55.123Z,info,recruiter-prospector,page 2/10 — 10 cards found,
+Log,2026-05-08T12:52:49.151Z,info,recruiter-prospector,▶ page 2 — waiting for SPA render...,
+Log,2026-05-08T12:52:43.122Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/aman-yadav-8223051701/ — no connect button (viewed),
+Log,2026-05-08T12:52:43.118Z,warn,recruiter-prospector,"[Diag] no connect btn found | card buttons: ""Follow"" aria=""Follow Aman Kumar Yadav""",
+Link,2026-05-08T12:52:30.118Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/aman-yadav-8223051701/
+Log,2026-05-08T12:52:30.115Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/aman-yadav-8223051701/ — no connect button (viewed),
+Log,2026-05-08T12:52:30.111Z,warn,recruiter-prospector,"[Diag] no connect btn found | card buttons: ""Follow"" aria=""Follow Aman Kumar Yadav""",
+Link,2026-05-08T12:52:19.928Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/aman-yadav-8223051701/
+Log,2026-05-08T12:52:19.926Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/aman-yadav-8223051701/ — no connect button (viewed),
+Log,2026-05-08T12:52:19.923Z,warn,recruiter-prospector,"[Diag] no connect btn found | card buttons: ""Follow"" aria=""Follow Aman Kumar Yadav""",
+Link,2026-05-08T12:52:09.613Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/aman-yadav-8223051701/
+Log,2026-05-08T12:52:09.611Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/kevin-miranda-7bb177220/ — no connect button (viewed),
+Log,2026-05-08T12:52:09.608Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:51:57.994Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/kevin-miranda-7bb177220/
+Log,2026-05-08T12:51:57.992Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/j-jenisha-079a3a2b2/ — no connect button (viewed),
+Log,2026-05-08T12:51:57.989Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:51:45.117Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/j-jenisha-079a3a2b2/
+Log,2026-05-08T12:51:45.114Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/jessicalobrigatti/ — no connect button (viewed),
+Log,2026-05-08T12:51:45.111Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:51:29.126Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/jessicalobrigatti/
+Log,2026-05-08T12:51:29.123Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/jessicalobrigatti/ — no connect button (viewed),
+Log,2026-05-08T12:51:29.119Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:51:14.124Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/jessicalobrigatti/
+Log,2026-05-08T12:51:14.122Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/jessicalobrigatti/ — no connect button (viewed),
+Log,2026-05-08T12:51:14.119Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:51:00.177Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/jessicalobrigatti/
+Log,2026-05-08T12:51:00.173Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/irinaalekseenko/ — no connect button (viewed),
+Log,2026-05-08T12:51:00.167Z,warn,recruiter-prospector,"[Diag] no connect btn found | card buttons: ""Follow"" aria=""Follow Irina Alekseenko""",
+Link,2026-05-08T12:50:49.121Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/irinaalekseenko/
+Log,2026-05-08T12:50:49.118Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/irinaalekseenko/ — no connect button (viewed),
+Log,2026-05-08T12:50:49.115Z,warn,recruiter-prospector,"[Diag] no connect btn found | card buttons: ""Follow"" aria=""Follow Irina Alekseenko""",
+Link,2026-05-08T12:50:37.125Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/irinaalekseenko/
+Log,2026-05-08T12:50:37.122Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/irinaalekseenko/ — no connect button (viewed),
+Log,2026-05-08T12:50:37.117Z,warn,recruiter-prospector,"[Diag] no connect btn found | card buttons: ""Follow"" aria=""Follow Irina Alekseenko""",
+Link,2026-05-08T12:50:24.129Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/irinaalekseenko/
+Log,2026-05-08T12:50:24.127Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/nattar-marees-a440a6201/ — no connect button (viewed),
+Log,2026-05-08T12:50:24.122Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:50:07.127Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/nattar-marees-a440a6201/
+Log,2026-05-08T12:50:07.125Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/nattar-marees-a440a6201/ — no connect button (viewed),
+Log,2026-05-08T12:50:07.121Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:49:50.378Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/nattar-marees-a440a6201/
+Log,2026-05-08T12:49:50.376Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/nattar-marees-a440a6201/ — no connect button (viewed),
+Log,2026-05-08T12:49:50.372Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:48:53.128Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/nattar-marees-a440a6201/
+Log,2026-05-08T12:48:53.126Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/troy-sutter-7b114915/ — no connect button (viewed),
+Log,2026-05-08T12:48:53.116Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:46:53.117Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/troy-sutter-7b114915/
+Log,2026-05-08T12:46:53.114Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/troy-sutter-7b114915/ — no connect button (viewed),
+Log,2026-05-08T12:46:53.110Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:44:53.128Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/troy-sutter-7b114915/
+Log,2026-05-08T12:44:53.125Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/troy-sutter-7b114915/ — no connect button (viewed),
+Log,2026-05-08T12:44:53.121Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:42:53.126Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/troy-sutter-7b114915/
+Log,2026-05-08T12:42:53.122Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/anushree-kushwah/ — no connect button (viewed),
+Log,2026-05-08T12:42:53.118Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:40:53.116Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/anushree-kushwah/
+Log,2026-05-08T12:40:53.114Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/anushree-kushwah/ — no connect button (viewed),
+Log,2026-05-08T12:40:53.110Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:39:29.123Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/anushree-kushwah/
+Log,2026-05-08T12:39:29.121Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/anushree-kushwah/ — no connect button (viewed),
+Log,2026-05-08T12:39:29.118Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:39:15.119Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/anushree-kushwah/
+Log,2026-05-08T12:39:15.117Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/georgiawellman/ — no connect button (viewed),
+Log,2026-05-08T12:39:15.114Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:39:03.130Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/georgiawellman/
+Log,2026-05-08T12:39:03.128Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/shubham-kumar-yadav-01b537213/ — no connect button (viewed),
+Log,2026-05-08T12:39:03.124Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none,
+Link,2026-05-08T12:38:46.124Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/shubham-kumar-yadav-01b537213/
+Log,2026-05-08T12:38:46.121Z,info,recruiter-prospector,page 1/10 — 22 cards found,
+Log,2026-05-08T12:38:36.884Z,info,recruiter-prospector,▶ recruiter-prospector started | https://www.linkedin.com/search/results/people/?keywords=Tech%20Recruiter%20Information%20Technology&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%2C%22102713980%22%2C%22101739942%22%2C%22104738515%22%2C%22102890883%22%2C%22102454443%22%2C%22105015875%22%2C%22106157047%22%5D&page=2&spellCorrectionEnabled=true&prioritizeMessage=false,
+Log,2026-05-08T12:38:32.138Z,info,,Step 2/6 — Prospecting Tech Recruiters via keyword search (cap: 7)…,
+Log,2026-05-08T12:38:32.116Z,success,,■ ssi-monitor done | total:51 brand:16 people:14 insights:14 rel:7,
+Log,2026-05-08T12:38:32.114Z,warn,,[SSI] brand:51 looks wrong (total:51) — recalculated as 16,
+SSI,2026-05-08T12:38:32.114Z,ssi-score,,total:51 brand:16 people:14 insights:14 rel:7,
+Log,2026-05-08T12:38:23.406Z,info,,▶ ssi-monitor started | https://www.linkedin.com/sales/ssi,
+Log,2026-05-08T12:38:19.803Z,info,,Step 1/6 — Capturing SSI scores…,
+Log,2026-05-08T12:38:19.800Z,warn,,[Scenario] Running: full-pipeline (cap 15),
+Log,2026-05-08T12:38:19.797Z,warn,,[RunSelected 1/5] Scenarios: full-pipeline | cap: 15,
+Log,2026-05-08T11:49:28.133Z,info,,✓ message sent: https://www.linkedin.com/in/aryan-yadav-428ab4390/,
+Log,2026-05-08T11:49:28.112Z,success,profile-messenger,✓ message sent | https://www.linkedin.com/messaging/thread/2-NzNlOTk4ZjctY2I0ZS00NTA3LTkwMDUtOGExN2YwODE3ZDc0XzEwMA==/,
+Log,2026-05-08T11:49:09.125Z,info,profile-messenger,✍ compose box found — inserting message…,
+Log,2026-05-08T11:49:01.797Z,info,profile-messenger,▶ profile-messenger started | https://www.linkedin.com/messaging/compose/?recipient=aryan-yadav-428ab4390,
+Log,2026-05-08T11:48:28.136Z,info,,✓ message sent: https://www.linkedin.com/in/michael-newman-0166a662/,
+Log,2026-05-08T11:48:28.117Z,success,profile-messenger,✓ message sent via Ctrl+Enter | https://www.linkedin.com/messaging/compose/?recipient=michael-newman-0166a662,
+Log,2026-05-08T11:48:25.112Z,warn,profile-messenger,⚠ send button not found — trying Ctrl+Enter,
+Log,2026-05-08T11:48:15.305Z,warn,,[relationship-builder] content script did not respond after 15 retries — skipping,
+Log,2026-05-08T11:48:15.121Z,info,profile-messenger,✍ compose box found — inserting message…,
+Log,2026-05-08T11:48:06.296Z,info,profile-messenger,▶ profile-messenger started | https://www.linkedin.com/messaging/compose/?recipient=michael-newman-0166a662,
+Log,2026-05-08T11:48:02.156Z,info,,📨 message queue — processing 10 profiles,
+Log,2026-05-08T11:48:02.153Z,info,,📨 auto-message: queuing 10 new profile(s)…,
+Log,2026-05-08T11:48:02.150Z,info,,Step 7/7 — Auto-messaging newly discovered profiles…,
+Log,2026-05-08T11:48:02.149Z,success,,[Summary] 🤝 Connections 0 | 💬 Posts 0 | 🎉 Relationships 0,
+Log,2026-05-08T11:48:02.146Z,success,,Daily routine complete. Cap used: 15. Window: US_EU.,
+Log,2026-05-08T11:48:02.126Z,info,profile-messenger,■ follow-up-sender DONE | no candidates ready,
+Log,2026-05-08T11:48:02.124Z,info,profile-messenger,📬 follow-up candidates: 0,
+Log,2026-05-08T11:47:56.306Z,info,profile-messenger,▶ follow-up-sender started | https://www.linkedin.com/messaging/thread/2-NTE1MTA3MjYtZGU5Yy00ZDU4LTkxN2UtMzYwMmJlODgyYWMxXzEwMA==/,
+Log,2026-05-08T11:47:52.158Z,info,,Step 6/6 — Sending follow-up messages to accepted connections (≥24h)…,
+Log,2026-05-08T11:47:52.131Z,success,,Exports: 124 log + 18 leads → output/ (Downloads/link_ssi/output/),
+Log,2026-05-08T11:47:52.124Z,success,connection-tracker,■ connection-tracker DONE | +0 accepted | total: 0/0 (0%),
+Log,2026-05-08T11:47:52.122Z,info,connection-tracker,📋 pending invitations on page: 0,
+Log,2026-05-08T11:47:34.714Z,info,connection-tracker,▶ connection-tracker started | https://www.linkedin.com/mynetwork/invitation-manager/sent/,
+Log,2026-05-08T11:47:30.205Z,info,,Step 5/6 — Tracking accepted connections…,
+Log,2026-05-08T11:47:30.183Z,warn,,[relationship-builder] timed out after 90 s — continuing sequence,
+Log,2026-05-08T11:46:55.126Z,warn,,[Diag] sendMessage failed | https://www.linkedin.com/in/henrique-adametes-329325108/ | Serasa Experian — new_job,
+Log,2026-05-08T11:46:55.124Z,warn,,"[Diag] no msg btn | card btns: """" aria=""Open reactions menu""",
+Log,2026-05-08T11:46:46.118Z,warn,,[Diag] sendMessage failed | https://www.linkedin.com/in/kaio-andrade-694632186/ | PX Ativos Judiciais — new_job,
+Log,2026-05-08T11:46:46.116Z,warn,,"[Diag] no msg btn | card btns: """" aria=""Open reactions menu""",
+Log,2026-05-08T11:46:45.252Z,warn,,[relationship-builder] content script did not respond after 15 retries — skipping,
+Log,2026-05-08T11:46:35.122Z,warn,,[Diag] sendMessage failed | https://www.linkedin.com/in/luanmedeirosrogerio/ | FCO OFFSHORE Treinamentos e Serviços — new_job,
+Log,2026-05-08T11:46:35.120Z,warn,,"[Diag] no msg btn | card btns: """" aria=""Open reactions menu""",
+Log,2026-05-08T11:46:26.116Z,warn,,[Diag] sendMessage failed | https://www.linkedin.com/in/neesha-champ/ | NASA Jet Propulsion Laboratory — new_job,
+Link,2026-05-08T11:43:00.114Z,link-discovered,commented,,https://www.linkedin.com/in/gabriel-saturi
+Post,2026-05-08T11:43:00.113Z,comment,,urn:li:activity:7457066522742538241,https://www.linkedin.com/in/gabriel-saturi
+Link,2026-05-08T11:41:41.123Z,link-discovered,commented,,https://www.linkedin.com/in/samuel-gomes-costa-55503a340
+Post,2026-05-08T11:41:41.122Z,comment,,urn:li:activity:7456722424441577473,https://www.linkedin.com/in/samuel-gomes-costa-55503a340
+Link,2026-05-08T11:38:13.112Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/mohakshroff/
+Link,2026-05-08T11:37:54.127Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/guptaprachi/
+Link,2026-05-08T11:37:36.125Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/yulytenorio/
+Link,2026-05-08T11:37:18.115Z,link-discovered,recruiter-search,,https://www.linkedin.com/in/silmara-souza-bilingual-talent-acquisition-5a2370b/
+Link,2026-05-08T11:37:13.111Z,link-discovered,recruiter-search,,https://www.linkedin.com/in/silmara-souza-bilingual-talent-acquisition-5a2370b/
+Link,2026-05-08T11:37:06.113Z,link-discovered,recruiter-search,,https://www.linkedin.com/in/silmara-souza-bilingual-talent-acquisition-5a2370b/
+Link,2026-05-08T11:37:01.115Z,link-discovered,recruiter-search,,https://www.linkedin.com/in/victor-bensadon-55a5a8133/
+Link,2026-05-08T11:36:56.310Z,link-discovered,recruiter-search,,https://www.linkedin.com/in/victor-bensadon-55a5a8133/
+Link,2026-05-08T11:36:50.357Z,link-discovered,recruiter-search,,https://www.linkedin.com/in/victor-bensadon-55a5a8133/
+Link,2026-05-08T11:36:18.121Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/saurabh-shukla-025aa3250/
+Link,2026-05-08T11:36:04.123Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/aryan-yadav-428ab4390/
+Link,2026-05-08T11:35:47.115Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/aryan-yadav-428ab4390/
+Link,2026-05-08T11:35:31.120Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/aryan-yadav-428ab4390/
+Link,2026-05-08T11:35:15.113Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/michael-newman-0166a662/
+Link,2026-05-08T11:35:03.117Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/michael-newman-0166a662/
+Link,2026-05-08T11:34:47.885Z,link-discovered,recruiter-search,there,https://www.linkedin.com/in/michael-newman-0166a662/
+SSI,2026-05-08T11:34:37.932Z,ssi-score,,total:51 brand:16 people:14 insights:14 rel:7,

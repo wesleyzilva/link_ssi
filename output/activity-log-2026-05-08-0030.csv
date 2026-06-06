@@ -1,0 +1,101 @@
+﻿Date,Level,Script,Message
+2026-05-08T00:30:09.593Z,success,connection-tracker,■ connection-tracker DONE | +0 accepted | total: 0/0 (0%)
+2026-05-08T00:30:09.589Z,info,connection-tracker,📋 pending invitations on page: 0
+2026-05-08T00:29:54.504Z,info,connection-tracker,▶ connection-tracker started | https://www.linkedin.com/mynetwork/invitation-manager/sent/
+2026-05-08T00:29:49.665Z,info,,Step 5/6 — Tracking accepted connections…
+2026-05-08T00:29:49.641Z,warn,,[relationship-builder] timed out after 90 s — continuing sequence
+2026-05-08T00:29:20.594Z,warn,,[Diag] sendMessage failed | https://www.linkedin.com/in/diego-volpe-vieira/ | GRUPO SEB — new_job
+2026-05-08T00:29:20.592Z,warn,,"[Diag] no msg btn | card btns: """" aria=""Open reactions menu"""
+2026-05-08T00:29:11.604Z,warn,,[Diag] sendMessage failed | https://www.linkedin.com/in/henrique-adametes-329325108/ | Serasa Experian — new_job
+2026-05-08T00:29:11.602Z,warn,,"[Diag] no msg btn | card btns: """" aria=""Open reactions menu"""
+2026-05-08T00:29:01.601Z,warn,,[Diag] sendMessage failed | https://www.linkedin.com/in/kaio-andrade-694632186/ | PX Ativos Judiciais — new_job
+2026-05-08T00:29:01.599Z,warn,,"[Diag] no msg btn | card btns: """" aria=""Open reactions menu"""
+2026-05-08T00:28:52.597Z,warn,,[Diag] sendMessage failed | https://www.linkedin.com/in/luanmedeirosrogerio/ | FCO OFFSHORE Treinamentos e Serviços — new_job
+2026-05-08T00:28:52.595Z,warn,,"[Diag] no msg btn | card btns: """" aria=""Open reactions menu"""
+2026-05-08T00:28:43.598Z,warn,,[Diag] sendMessage failed | https://www.linkedin.com/in/neesha-champ/ | NASA Jet Propulsion Laboratory — new_job
+2026-05-08T00:28:43.596Z,warn,,"[Diag] no msg btn | card btns: """" aria=""Open reactions menu"""
+2026-05-08T00:28:34.600Z,warn,,[Diag] sendMessage failed | https://www.linkedin.com/in/thframos/en/ | VEROT — new_job
+2026-05-08T00:28:34.598Z,warn,,"[Diag] no msg btn | card btns: ""Skip to main content"" aria="""" | """" aria=""Close jump menu"" | ""Home"" aria=""Home, 1 new notification"" | ""Me"" aria="""" | ""For Business"" aria=""For Business"" | """" aria=""Dismiss"" | ""Why am I seeing this ad?Manage"" aria=""Why am I seeing this ad?"" | ""Hide or report this adI don’t "" aria=""Hide or report this ad"" | """" aria=""Dismiss"" | ""Report this ad"" aria="""" | ""Submit"" aria="""" | """" aria=""Open reactions menu"" | """" aria=""Open reactions menu"" | """" aria=""Open reactions menu"" | """" aria=""Open reactions menu"" | """" aria=""Open reactions menu"" | """" aria=""Open reactions menu"" | """" aria=""Open reactions menu"" | """" aria=""Open reactions menu"" | """" aria=""Open reactions menu"" | """" aria=""Open reactions menu"""
+2026-05-08T00:28:28.770Z,warn,,[relationship-builder] content script did not respond after 15 retries — skipping
+2026-05-08T00:28:24.010Z,info,,▶ relationship-builder started | https://www.linkedin.com/mynetwork/catch-up/job_changes/
+2026-05-08T00:28:19.606Z,info,,■ relationship-builder done | 0 touched
+2026-05-08T00:28:19.604Z,warn,,"[Diag] 0 cards found | page:anniversary title:""Catch up | LinkedIn"" | btns: ""Skip to main content"" aria="""" | """" aria=""Close jump menu"" | ""Home"" aria=""Home, 1 new notification"" | ""Me"" aria="""" | ""For Business"" aria=""For Business"" | """" aria=""Dismiss"" | ""Why am I seeing this ad?Manage"" aria=""Why am I seeing this ad?"" | ""Hide or report this adI don’t "" aria=""Hide or report this ad"""
+2026-05-08T00:27:48.287Z,info,,▶ relationship-builder started | https://www.linkedin.com/mynetwork/catch-up/work_anniversaries/
+2026-05-08T00:27:43.635Z,warn,,[relationship-builder] timed out after 90 s — continuing sequence
+2026-05-08T00:27:04.598Z,warn,,[Diag] sendMessage failed | https://www.linkedin.com/in/renatokayatt/en/ | today — birthday
+2026-05-08T00:27:04.596Z,warn,,[Diag] no msg btn | card btns: (none)
+2026-05-08T00:26:54.596Z,warn,,[Diag] sendMessage failed | https://www.linkedin.com/in/leandrobrunhara/ | today — birthday
+2026-05-08T00:26:54.594Z,warn,,[Diag] no msg btn | card btns: (none)
+2026-05-08T00:26:44.599Z,warn,,[Diag] sendMessage failed | https://www.linkedin.com/in/ricardo-d-8b459620/ | today — birthday
+2026-05-08T00:26:44.597Z,warn,,[Diag] no msg btn | card btns: (none)
+2026-05-08T00:26:34.597Z,warn,,[Diag] sendMessage failed | https://www.linkedin.com/in/borges2carlos/ | today — birthday
+2026-05-08T00:26:34.595Z,warn,,[Diag] no msg btn | card btns: (none)
+2026-05-08T00:26:25.606Z,warn,,[Diag] sendMessage failed | https://www.linkedin.com/in/rodrigo-fernandes-98093b14/ | today — birthday
+2026-05-08T00:26:25.605Z,warn,,"[Diag] no msg btn | card btns: ""Skip to main content"" aria="""" | """" aria=""Close jump menu"" | ""Home"" aria=""Home, 1 new notification"" | ""Me"" aria="""" | ""For Business"" aria=""For Business"" | """" aria=""Dismiss"" | ""Why am I seeing this ad?Manage"" aria=""Why am I seeing this ad?"" | ""Hide or report this adI don’t "" aria=""Hide or report this ad"" | """" aria=""Dismiss"" | ""Report this ad"" aria="""" | ""Submit"" aria="""""
+2026-05-08T00:26:17.612Z,info,,▶ relationship-builder started | https://www.linkedin.com/mynetwork/catch-up/birthday/
+2026-05-08T00:26:13.625Z,info,,Step 4/6 — Building relationships (birthdays + anniversaries + job changes)…
+2026-05-08T00:26:13.623Z,success,,[PostQueue] Queue flushed. 3 post(s) processed.
+2026-05-08T00:26:13.619Z,success,,[PostQueue] Done: https://www.linkedin.com/posts/gabriel-saturi_backend-distributedsystems-architecture-share-7457052634265407488-tLcm/
+2026-05-08T00:26:13.603Z,success,post-engager,✓ commentSinglePost: commented on https://www.linkedin.com/in/gabriel-saturi
+2026-05-08T00:26:13.601Z,info,post-engager,🔗 link registered | commented | https://www.linkedin.com/in/gabriel-saturi
+2026-05-08T00:26:01.602Z,info,post-engager,"💬 typing comment: ""Interested — Let's connect! https://wesleyzilva.github.io/po..."""
+2026-05-08T00:25:28.256Z,info,post-engager,▶ post-engager COMMENT_SINGLE | url=https://www.linkedin.com/posts/gabriel-saturi_backend-distributedsystems-architecture-share-7457052634265407488-tLcm/
+2026-05-08T00:25:22.610Z,info,,[PostQueue] Commenting on: https://www.linkedin.com/posts/gabriel-saturi_backend-distributedsystems-architecture-share-7457052634265407488-tLcm/
+2026-05-08T00:25:22.607Z,success,,[PostQueue] Done: https://www.linkedin.com/posts/tales-habib_recently-i-started-using-git-worktree-share-7457077215042863104-z_1X/
+2026-05-08T00:25:22.588Z,warn,post-engager,⚠ commentSinglePost: comment action failed on https://www.linkedin.com/posts/tales-habib_recently-i-started-using-git-worktree-share-7457077215042863104-z_1X/
+2026-05-08T00:24:58.220Z,info,post-engager,▶ post-engager COMMENT_SINGLE | url=https://www.linkedin.com/posts/tales-habib_recently-i-started-using-git-worktree-share-7457077215042863104-z_1X/
+2026-05-08T00:24:53.616Z,info,,[PostQueue] Commenting on: https://www.linkedin.com/posts/tales-habib_recently-i-started-using-git-worktree-share-7457077215042863104-z_1X/
+2026-05-08T00:24:53.613Z,success,,[PostQueue] Done: https://www.linkedin.com/posts/samuel-gomes-costa-55503a340_backend-nodejs-nestjs-share-7456722421988044800-eWoS/
+2026-05-08T00:24:53.597Z,success,post-engager,✓ commentSinglePost: commented on https://www.linkedin.com/in/samuel-gomes-costa-55503a340
+2026-05-08T00:24:53.596Z,info,post-engager,🔗 link registered | commented | https://www.linkedin.com/in/samuel-gomes-costa-55503a340
+2026-05-08T00:24:41.593Z,info,post-engager,"💬 typing comment: ""Interested — Let's connect! https://wesleyzilva.github.io/po..."""
+2026-05-08T00:24:05.934Z,info,post-engager,▶ post-engager COMMENT_SINGLE | url=https://www.linkedin.com/posts/samuel-gomes-costa-55503a340_backend-nodejs-nestjs-share-7456722421988044800-eWoS/
+2026-05-08T00:24:00.060Z,info,,[PostQueue] Commenting on: https://www.linkedin.com/posts/samuel-gomes-costa-55503a340_backend-nodejs-nestjs-share-7456722421988044800-eWoS/
+2026-05-08T00:24:00.058Z,info,,[PostQueue] Processing 3 queued post(s)…
+2026-05-08T00:24:00.056Z,info,,Step 3b/6 — Commenting on queued specific posts…
+2026-05-08T00:24:00.001Z,warn,,[post-engager] content script did not respond after 15 retries — skipping
+2026-05-08T00:23:08.643Z,info,,"Keyword 1/27: ""project delivery"""
+2026-05-08T00:23:08.641Z,info,,Step 3/6 — Engaging with targeted content search posts…
+2026-05-08T00:23:08.600Z,success,recruiter-prospector,■ recruiter-prospector DONE | 0 sent / 4 checked
+2026-05-08T00:23:08.598Z,info,recruiter-prospector,■ no more pages after page 1 — stopping pagination
+2026-05-08T00:23:02.594Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/thiago-xavier-33b3372/ — no connect button (viewed)
+2026-05-08T00:23:02.591Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none
+2026-05-08T00:22:47.605Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/pedrolmelo/ — no connect button (viewed)
+2026-05-08T00:22:47.602Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none
+2026-05-08T00:22:32.597Z,info,recruiter-prospector,"↷ https://www.linkedin.com/in/suzana-martins-194ba4158/en/ — skipped (locale-suffixed URL, likely BR)"
+2026-05-08T00:22:32.596Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/bianca-ferreira-064a222b8/ — no connect button (viewed)
+2026-05-08T00:22:32.593Z,warn,recruiter-prospector,"[Diag] no connect btn found | card buttons: ""Skip to main content"" aria="""" | """" aria=""Close jump menu"" | ""Home"" aria=""Home, 1 new notification"" | ""Me"" aria="""" | ""For Business"" aria=""For Business"" | ""All filters"" aria="""" | """" aria=""Are these results helpful? Yes, these search resul"" | """" aria=""Are these results helpful? No, these search result"" | """" aria=""Dismiss"" | ""Why am I seeing this ad?Manage"" aria=""Why am I seeing this ad?"" | ""Hide or report this adI don’t "" aria=""Hide or report this ad"" | """" aria=""Dismiss"" | ""Report this ad"" aria="""" | ""Submit"" aria="""""
+2026-05-08T00:22:18.600Z,info,recruiter-prospector,page 1/10 — 4 cards found
+2026-05-08T00:22:10.242Z,info,recruiter-prospector,▶ recruiter-prospector started | https://www.linkedin.com/search/results/people/?keywords=eua&origin=GLOBAL_SEARCH_HEADER&network=%5B%22O%22%5D
+2026-05-08T00:22:05.648Z,info,,Step 2c/6 — Prospecting global profiles via direct URLs (cap: 8)…
+2026-05-08T00:22:05.606Z,success,recruiter-prospector,■ recruiter-prospector DONE | 0 sent / 5 checked
+2026-05-08T00:22:05.604Z,info,recruiter-prospector,■ no more pages after page 1 — stopping pagination
+2026-05-08T00:22:01.607Z,info,recruiter-prospector,"↷ https://www.linkedin.com/in/dario-melro-andrade/en/ — skipped (locale-suffixed URL, likely BR)"
+2026-05-08T00:22:01.606Z,info,recruiter-prospector,"↷ https://www.linkedin.com/in/danielmreis/en/ — skipped (locale-suffixed URL, likely BR)"
+2026-05-08T00:22:01.605Z,info,recruiter-prospector,"↷ https://www.linkedin.com/in/eduardo-gouv%C3%AAa-757a4a4b/en/ — skipped (locale-suffixed URL, likely BR)"
+2026-05-08T00:22:01.604Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/rodrigopoulis/ — viewed (SSI: localizar as pessoas certas)
+2026-05-08T00:21:54.603Z,info,recruiter-prospector,👁 https://www.linkedin.com/in/victor-bensadon-55a5a8133/ — viewed (SSI: localizar as pessoas certas)
+2026-05-08T00:21:48.602Z,info,recruiter-prospector,page 1/10 — 5 cards found
+2026-05-08T00:21:39.533Z,info,recruiter-prospector,▶ recruiter-prospector started | https://www.linkedin.com/search/results/people/?keywords=IT%20Manager%20remote%20brazil
+2026-05-08T00:21:35.618Z,info,,Step 2b/6 — Browsing people search (SSI: Localizar as pessoas certas)…
+2026-05-08T00:21:35.596Z,success,recruiter-prospector,■ recruiter-prospector DONE | 0 sent / 5 checked
+2026-05-08T00:21:35.594Z,info,recruiter-prospector,■ no more pages after page 1 — stopping pagination
+2026-05-08T00:21:31.605Z,info,recruiter-prospector,"↷ https://www.linkedin.com/in/rafael-sanches-24a2b034/en/ — skipped (locale-suffixed URL, likely BR)"
+2026-05-08T00:21:31.604Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/filipe-pimentel-43210a85/ — no connect button (viewed)
+2026-05-08T00:21:31.602Z,warn,recruiter-prospector,[Diag] no connect btn found | card buttons: none
+2026-05-08T00:21:15.603Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/saurabh-shukla-025aa3250/ — no connect button (viewed)
+2026-05-08T00:21:15.599Z,warn,recruiter-prospector,"[Diag] no connect btn found | card buttons: ""Follow"" aria=""Follow Saurabh Shukla"""
+2026-05-08T00:21:03.604Z,info,recruiter-prospector,↷ https://www.linkedin.com/in/michael-newman-0166a662/ — no connect button (viewed)
+2026-05-08T00:21:03.604Z,info,recruiter-prospector,"↷ https://www.linkedin.com/in/viniciusf-candido/en/ — skipped (locale-suffixed URL, likely BR)"
+2026-05-08T00:21:03.602Z,warn,recruiter-prospector,"[Diag] no connect btn found | card buttons: ""Skip to main content"" aria="""" | """" aria=""Close jump menu"" | ""Home"" aria=""Home, 1 new notification"" | ""Me"" aria="""" | ""For Business"" aria=""For Business"" | ""All filters"" aria="""" | """" aria=""Are these results helpful? Yes, these search resul"" | """" aria=""Are these results helpful? No, these search result"" | """" aria=""Dismiss"" | ""Why am I seeing this ad?Manage"" aria=""Why am I seeing this ad?"" | ""Hide or report this adI don’t "" aria=""Hide or report this ad"" | """" aria=""Dismiss"" | ""Report this ad"" aria="""" | ""Submit"" aria="""""
+2026-05-08T00:20:52.598Z,info,recruiter-prospector,page 1/10 — 5 cards found
+2026-05-08T00:20:44.519Z,info,recruiter-prospector,▶ recruiter-prospector started | https://www.linkedin.com/search/results/people/?keywords=Tech%20Recruiter%20Information%20Technology&network=%5B%22S%22%2C%22O%22%5D&geoUrn=%5B%22103644278%22%2C%22101165590%22%2C%22102713980%22%2C%22101739942%22%2C%22104738515%22%2C%22102890883%22%2C%22102454443%22%2C%22105015875%22%2C%22106157047%22%5D&spellCorrectionEnabled=true&prioritizeMessage=false
+2026-05-08T00:20:40.622Z,info,,Step 2/6 — Prospecting Tech Recruiters via keyword search (cap: 7)…
+2026-05-08T00:20:40.607Z,success,,■ ssi-monitor done | total:51 brand:16 people:14 insights:14 rel:7
+2026-05-08T00:20:40.606Z,warn,,[SSI] brand:51 looks wrong (total:51) — recalculated as 16
+2026-05-08T00:20:33.460Z,info,,▶ ssi-monitor started | https://www.linkedin.com/sales/ssi
+2026-05-08T00:20:29.971Z,warn,,[Scenario] Running: full-pipeline (cap 15)
+2026-05-08T00:20:29.971Z,info,,Step 1/6 — Capturing SSI scores…
+2026-05-08T00:20:29.970Z,warn,,[RunSelected 1/10] Scenarios: full-pipeline | cap: 15
+2026-05-08T00:20:13.616Z,success,,[PostQueue] 3 seed post(s) added to queue.
+2026-05-08T00:20:13.615Z,success,,Extension installed.

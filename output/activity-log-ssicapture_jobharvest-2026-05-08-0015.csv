@@ -1,0 +1,51 @@
+﻿Date,Level,Script,Message
+2026-05-08T00:15:24.519Z,info,,[JobHarvest] No new recruiter profiles to visit.
+2026-05-08T00:15:24.517Z,success,,"[JobHarvest] Harvest complete — 10 jobs, 0 new recruiter(s), 0 email(s)."
+2026-05-08T00:15:24.459Z,warn,,[job-recruiter-harvester] timed out after 120 s — continuing sequence
+2026-05-08T00:15:22.595Z,info,job-recruiter-harvester,Found 7 job cards on page 2
+2026-05-08T00:15:22.593Z,info,job-recruiter-harvester,📄 Processing page 2…
+2026-05-08T00:15:01.599Z,success,job-recruiter-harvester,"  ✓ Card 7: saved 1 recruiter(s) — Coltin Ferrick, View Coltin Ferrick’s verified profile"
+2026-05-08T00:14:52.596Z,info,job-recruiter-harvester,"  · Card 6: no ""Meet the hiring team"" section"
+2026-05-08T00:14:38.601Z,info,job-recruiter-harvester,"  · Card 5: no ""Meet the hiring team"" section"
+2026-05-08T00:14:25.598Z,info,job-recruiter-harvester,"  · Card 4: no ""Meet the hiring team"" section"
+2026-05-08T00:14:14.594Z,info,job-recruiter-harvester,"  · Card 3: no ""Meet the hiring team"" section"
+2026-05-08T00:14:01.598Z,info,job-recruiter-harvester,"  · Card 2: no ""Meet the hiring team"" section"
+2026-05-08T00:13:46.603Z,info,job-recruiter-harvester,"  · Card 1: no ""Meet the hiring team"" section"
+2026-05-08T00:13:32.617Z,info,job-recruiter-harvester,Found 7 job cards on page 1
+2026-05-08T00:13:32.609Z,info,job-recruiter-harvester,📄 Processing page 1…
+2026-05-08T00:13:29.086Z,info,job-recruiter-harvester,▶ job-recruiter-harvester started | https://www.linkedin.com/jobs/search/?currentJobId=4408667708&f_T=77&geoId=105056705&keywords=%22project%20manager%22%20%2Blatam&origin=JOB_SEARCH_PAGE_SEARCH_BUTTON&refresh=true&sortBy=R
+2026-05-08T00:13:24.450Z,info,,[JobHarvest] URL 3/3: https://www.linkedin.com/jobs/search/?currentJobId=4408667708&f_T=77&geoId=105056705&keywords=%22project%20manager%22%20%2Blatam&origin=JOB_SEARCH_PAGE_SEARCH_BUTTON&refresh=true&sortBy=R
+2026-05-08T00:13:11.600Z,success,job-recruiter-harvester,"✅ Harvest done — 5 jobs scanned, 0 new recruiter(s) saved, 0 email(s) found."
+2026-05-08T00:13:11.599Z,success,job-recruiter-harvester,No more pages — harvest complete.
+2026-05-08T00:13:11.598Z,info,job-recruiter-harvester,"  · Card 5: no ""Meet the hiring team"" section"
+2026-05-08T00:12:56.589Z,info,job-recruiter-harvester,"  · Card 4: no ""Meet the hiring team"" section"
+2026-05-08T00:12:42.592Z,info,job-recruiter-harvester,"  · Card 3: no ""Meet the hiring team"" section"
+2026-05-08T00:12:35.756Z,warn,,[job-recruiter-harvester] content script did not respond after 15 retries — skipping
+2026-05-08T00:12:29.597Z,info,job-recruiter-harvester,"  · Card 2: no ""Meet the hiring team"" section"
+2026-05-08T00:12:19.599Z,info,job-recruiter-harvester,"  · Card 1: no ""Meet the hiring team"" section"
+2026-05-08T00:12:07.603Z,info,job-recruiter-harvester,Found 5 job cards on page 1
+2026-05-08T00:12:07.602Z,info,job-recruiter-harvester,📄 Processing page 1…
+2026-05-08T00:12:04.206Z,info,job-recruiter-harvester,▶ job-recruiter-harvester started | https://www.linkedin.com/jobs/search/?currentJobId=4409975921&f_T=77&geoId=105056705&keywords=%22delivery%20manager%22%20%2Blatam&origin=JOB_SEARCH_PAGE_LOCATION_AUTOCOMPLETE&refresh=true&sortBy=R
+2026-05-08T00:11:59.174Z,info,,[JobHarvest] URL 2/3: https://www.linkedin.com/jobs/search/?currentJobId=4409975921&f_T=77&geoId=105056705&keywords=%22delivery%20manager%22%20%2Blatam&origin=JOB_SEARCH_PAGE_LOCATION_AUTOCOMPLETE&refresh=true&sortBy=R
+2026-05-08T00:11:50.627Z,warn,,[job-recruiter-harvester] timed out after 120 s — continuing sequence
+2026-05-08T00:11:43.590Z,info,job-recruiter-harvester,Found 7 job cards on page 2
+2026-05-08T00:11:43.588Z,info,job-recruiter-harvester,📄 Processing page 2…
+2026-05-08T00:11:24.604Z,info,job-recruiter-harvester,"  · Card 7: no ""Meet the hiring team"" section"
+2026-05-08T00:11:13.591Z,info,job-recruiter-harvester,"  · Card 6: no ""Meet the hiring team"" section"
+2026-05-08T00:11:00.432Z,success,job-recruiter-harvester,"  ✓ Card 5: saved 1 recruiter(s) — Pete Hickok, View Pete Hickok’s verified profile"
+2026-05-08T00:10:51.602Z,info,job-recruiter-harvester,"  · Card 4: no ""Meet the hiring team"" section"
+2026-05-08T00:10:40.955Z,info,job-recruiter-harvester,"  · Card 3: no ""Meet the hiring team"" section"
+2026-05-08T00:10:26.590Z,info,job-recruiter-harvester,"  · Card 2: no ""Meet the hiring team"" section"
+2026-05-08T00:10:10.591Z,success,job-recruiter-harvester,"  ✓ Card 1: saved 1 recruiter(s) — Jack DeReche-Johnson, View Jack DeReche-Johnson’s verified profile"
+2026-05-08T00:10:00.599Z,info,job-recruiter-harvester,Found 7 job cards on page 1
+2026-05-08T00:10:00.597Z,info,job-recruiter-harvester,📄 Processing page 1…
+2026-05-08T00:09:55.392Z,info,job-recruiter-harvester,▶ job-recruiter-harvester started | https://www.linkedin.com/jobs/search/?currentJobId=4405110262&distance=100&geoId=105458072&keywords=projet%20manager%20latam&origin=JOB_SEARCH_PAGE_JOB_FILTER&refresh=true
+2026-05-08T00:09:50.616Z,info,,[JobHarvest] URL 1/3: https://www.linkedin.com/jobs/search/?currentJobId=4405110262&distance=100&geoId=105458072&keywords=projet%20manager%20latam&origin=JOB_SEARCH_PAGE_JOB_FILTER&refresh=true
+2026-05-08T00:09:50.615Z,info,,[JobHarvest] Starting harvest across 3 search URL(s).
+2026-05-08T00:09:50.610Z,warn,,[Scenario] Running: job-harvest (cap 15)
+2026-05-08T00:09:50.603Z,success,,■ ssi-monitor done | total:51 brand:16 people:14 insights:14 rel:7
+2026-05-08T00:09:40.634Z,info,,▶ ssi-monitor started | https://www.linkedin.com/sales/ssi
+2026-05-08T00:09:36.826Z,warn,,"[RunSelected 1/1] Scenarios: ssi-capture, job-harvest | cap: 15"
+2026-05-08T00:09:36.826Z,warn,,[Scenario] Running: ssi-capture (cap 15)
+2026-05-08T00:09:11.382Z,success,,[PostQueue] 3 seed post(s) added to queue.
+2026-05-08T00:09:11.381Z,success,,Extension installed.
