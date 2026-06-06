@@ -350,12 +350,22 @@ async function runPillar3Insights() {
 
   await p3Log(`✔ done | ${commented} comment(s) posted this run`);
   chrome.runtime.sendMessage({ action: 'DONE', task: P3_SCRIPT, commented });
+
+  return { commented };
 }
 
-// ─── Boot ─────────────────────────────────────────────────────────────────────
+// ─── START handler (called by service-worker.js) ─────────────────────────────
 
-(async () => {
-  // Wait for feed to render
-  await randomWait(2500, 4500);
-  await runPillar3Insights();
-})();
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message.action === 'START' && message.task === P3_SCRIPT) {
+    p3Log(`▶ START message received | url=${window.location.href}`)
+      .then(() => randomWait(2500, 4500))
+      .then(() => runPillar3Insights())
+      .then((result) => sendResponse({ success: true, ...result }))
+      .catch(async (err) => {
+        await p3Log(`✗ fatal error: ${err.message}`, 'error');
+        sendResponse({ success: false, error: err.message });
+      });
+    return true;
+  }
+});

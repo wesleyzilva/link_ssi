@@ -153,11 +153,17 @@
         <button class="btn btn--task" data-task="post-engager">
           💬 Engage
         </button>
+        <button class="btn btn--task" data-task="pillar-3-insights">
+          ✍️ P3 Insights
+        </button>
         <button class="btn btn--task" data-task="relationship-builder">
           🔔 Build
         </button>
         <button class="btn btn--task" data-task="connection-tracker">
           🔍 Track
+        </button>
+        <button class="btn btn--task" data-task="profile-discoverer">
+          🌐 Discover
         </button>
         <button class="btn btn--task" data-task="follow-up-sender">
           📩 Follow-up
@@ -220,22 +226,39 @@
           class="input-url"
         />
         <button id="btn-comment-post" class="btn btn--primary">💬 Now</button>
-        <button id="btn-queue-post" class="btn btn--secondary" title="Add to queue — will be commented at the next scheduled run">📋 Queue</button>
+        <button
+          id="btn-queue-post"
+          class="btn btn--secondary"
+          title="Add to queue — will be commented at the next scheduled run"
+        >
+          📋 Queue
+        </button>
       </div>
       <p id="comment-post-status" class="comment-post-status"></p>
     </section>
 
     <section class="controls">
-      <h2>Post Queue <span id="queue-count" class="badge badge--neutral">0</span></h2>
-      <p class="queue-hint">Posts below will be commented at the next scheduled run (or "Run Now").</p>
+      <h2>
+        Post Queue <span id="queue-count" class="badge badge--neutral">0</span>
+      </h2>
+      <p class="queue-hint">
+        Posts below will be commented at the next scheduled run (or "Run Now").
+      </p>
       <ul id="queue-list" class="queue-list"></ul>
-      <button id="btn-clear-queue" class="btn btn--ghost btn--small">🗑 Clear queue</button>
-      <button id="btn-run-queue-now" class="btn btn--primary btn--small">▶ Run queue now</button>
+      <button id="btn-clear-queue" class="btn btn--ghost btn--small">
+        🗑 Clear queue
+      </button>
+      <button id="btn-run-queue-now" class="btn btn--primary btn--small">
+        ▶ Run queue now
+      </button>
     </section>
 
     <section class="controls">
       <h2>Scenarios</h2>
-      <p class="queue-hint">Select which scenarios to include in each run. Exports are auto-downloaded on completion — no button needed.</p>
+      <p class="queue-hint">
+        Select which scenarios to include in each run. Exports are
+        auto-downloaded on completion — no button needed.
+      </p>
       <ul id="scenario-list" class="scenario-list">
         <li class="scenario-item-loading">Loading…</li>
       </ul>
@@ -243,7 +266,11 @@
 
     <section class="controls">
       <h2>Run</h2>
-      <p class="queue-hint">Choose how many times to run the selected scenarios back-to-back. The day cycle advances after each iteration. A 5–10 min pause is inserted between iterations.</p>
+      <p class="queue-hint">
+        Choose how many times to run the selected scenarios back-to-back. The
+        day cycle advances after each iteration. A 5–10 min pause is inserted
+        between iterations.
+      </p>
       <div class="run-counter-row">
         <label for="select-run-count">Runs:</label>
         <select id="select-run-count">
@@ -258,7 +285,9 @@
           <option value="9">9×</option>
           <option value="10">10×</option>
         </select>
-        <button id="btn-set-runs" class="btn btn--primary btn--small">Set</button>
+        <button id="btn-set-runs" class="btn btn--primary btn--small">
+          Set
+        </button>
       </div>
       <p id="run-counter-status" class="comment-post-status"></p>
     </section>

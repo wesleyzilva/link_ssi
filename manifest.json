@@ -44,6 +44,14 @@
       "run_at": "document_idle"
     },
     {
+      "matches": [
+        "https://www.linkedin.com/feed/hashtag/*",
+        "https://www.linkedin.com/search/results/content/*"
+      ],
+      "js": ["utils/human-mimicry.js", "utils/db.js", "content/pillar-3-insights.js"],
+      "run_at": "document_idle"
+    },
+    {
       "matches": ["https://www.linkedin.com/mynetwork/*"],
       "js": ["utils/human-mimicry.js", "utils/db.js", "content/relationship-builder.js"],
       "run_at": "document_idle"
@@ -61,6 +69,11 @@
     {
       "matches": ["https://www.linkedin.com/in/*"],
       "js": ["utils/human-mimicry.js", "utils/db.js", "content/profile-connector.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.linkedin.com/in/*"],
+      "js": ["utils/human-mimicry.js", "utils/db.js", "utils/voyager-fetch.js", "content/profile-discoverer.js"],
       "run_at": "document_idle"
     },
     {

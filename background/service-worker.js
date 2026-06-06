@@ -143,37 +143,37 @@ async function runDailySequence(targetWindow, dailyCap) {
 
     await log('Step 6/7 — Sending follow-up messages to accepted connections (≥24h)…');
     await openTabAndWait('https://www.linkedin.com/messaging/', 'follow-up-sender', {});
+
+    // ─── Session summary (actual counts, not just caps) ──────────────────
+    const _summary = await chrome.storage.local.get(['lastProspecting', 'lastEngagement', 'lastRelationshipBuild']);
+    const _conns = _summary.lastProspecting?.sent ?? 0;
+    const _posts = (_summary.lastEngagement?.likes ?? 0) + (_summary.lastEngagement?.comments ?? 0);
+    const _rels  = _summary.lastRelationshipBuild?.touched ?? 0;
+    await log(
+      `[Summary] 🤝 Connections ${_conns} | 💬 Posts ${_posts} | 🎉 Relationships ${_rels}`,
+      'success'
+    );
+
+    await log('Step 7/7 — Auto-messaging newly discovered profiles…');
+    await buildAndRunAutoMessageQueue();
+
+    await chrome.storage.local.set({ routineRunning: false, lastSequenceDoneAt: new Date().toISOString() });
+    await log(`Daily routine complete. Cap used: ${dailyCap}. Window: ${targetWindow}.`, 'success');
+
+    // Note: iconUrl omitted — chrome.notifications fails to download extension icons in MV3 service workers
+    chrome.notifications.create(`run-done-${Date.now()}`, {
+      type: 'basic',
+      title: 'SSI Optimizer',
+      message: `Done. 🤝 ${_conns} connections | 💬 ${_posts} posts | 🎉 ${_rels} relationships`,
+    });
+
+    // Auto-open history page so the user can review results immediately
+    chrome.tabs.create({ url: chrome.runtime.getURL('history/history.html') });
   } catch (err) {
     await chrome.storage.local.set({ routineRunning: false });
     await log(`Sequence error: ${err.message}`, 'error');
     return;
   }
-
-  await chrome.storage.local.set({ routineRunning: false, lastSequenceDoneAt: new Date().toISOString() });
-  await log(`Daily routine complete. Cap used: ${dailyCap}. Window: ${targetWindow}.`, 'success');
-
-  // ─── Session summary (actual counts, not just caps) ──────────────────
-  const _summary = await chrome.storage.local.get(['lastProspecting', 'lastEngagement', 'lastRelationshipBuild']);
-  const _conns = _summary.lastProspecting?.sent ?? 0;
-  const _posts = (_summary.lastEngagement?.likes ?? 0) + (_summary.lastEngagement?.comments ?? 0);
-  const _rels  = _summary.lastRelationshipBuild?.touched ?? 0;
-  await log(
-    `[Summary] 🤝 Connections ${_conns} | 💬 Posts ${_posts} | 🎉 Relationships ${_rels}`,
-    'success'
-  );
-
-  await log('Step 7/7 — Auto-messaging newly discovered profiles…');
-  await buildAndRunAutoMessageQueue();
-
-  // Note: iconUrl omitted — chrome.notifications fails to download extension icons in MV3 service workers
-  chrome.notifications.create(`run-done-${Date.now()}`, {
-    type: 'basic',
-    title: 'SSI Optimizer',
-    message: `Done. 🤝 ${_conns} connections | 💬 ${_posts} posts | 🎉 ${_rels} relationships`,
-  });
-
-  // Auto-open history page so the user can review results immediately
-  chrome.tabs.create({ url: chrome.runtime.getURL('history/history.html') });
 }
 
 // ─── Specific-post queue ─────────────────────────────────────────────────────
@@ -294,13 +294,21 @@ function trySendStart(tabId, task, payload, attempt, done, doneSuccess) {
 
   const wait = attempt === 0 ? SEND_FIRST_WAIT : SEND_RETRY_WAIT;
   setTimeout(() => {
-    chrome.tabs.sendMessage(tabId, { action: 'START', task, ...payload }, (_resp) => {
+    chrome.tabs.sendMessage(tabId, { action: 'START', task, ...payload }, (resp) => {
       if (chrome.runtime.lastError) {
         // Content script not ready yet — try again
         trySendStart(tabId, task, payload, attempt + 1, done, doneSuccess);
         return;
       }
-      // Content script received START and called sendResponse — task complete
+
+      // Content script responded but reported an internal failure.
+      if (resp && resp.success === false) {
+        log(`[${task}] content script returned error: ${resp.error || 'unknown error'}`, 'warn');
+        done();
+        return;
+      }
+
+      // Content script received START and reported success — task complete
       if (doneSuccess) doneSuccess(); else done();
     });
   }, wait);
@@ -443,7 +451,7 @@ const SCENARIOS = [
   { id: 'full-pipeline',       label: '🔁 Full Pipeline',         description: 'SSI · Prospect · Engage · Relationships · Track · Follow-up + Messages' },
   { id: 'ssi-capture',         label: '📊 Capture SSI',           description: 'Read and store current SSI pillar scores (baseline before any action)' },
   { id: 'prospect-connect',    label: '🤝 Prospect & Connect',    description: 'Find and send connection requests to tech recruiters via people search + direct URLs' },
-  { id: 'engage-insights',     label: '💬 Engage with Posts',     description: 'Like/comment on the next keyword in the round-robin rotation (SSI: Insights)' },
+  { id: 'engage-insights',     label: '💬 Engage with Posts',     description: 'Run Pillar 3 comment flow on the next round-robin hashtag keyword (SSI: Insights)' },
   { id: 'engage-hiring-latam', label: '🎯 Engage: Hiring LATAM', description: 'Comment on all 3 hiring/agile/scrum/delivery LATAM hashtag feeds (SSI: Insights)' },
   { id: 'engage-exec-posts',   label: '🏢 Engage: Exec Posts',    description: 'Comment on posts by CTO/VP Eng/Head of Eng/Account Exec — logs author names + links' },
   { id: 'build-relationships', label: '🔔 Build Relationships',   description: 'Birthday/anniversary congrats + connection tracking + follow-up messages (SSI: Relationships)' },
@@ -891,7 +899,7 @@ async function runScenario(scenarioId, dailyCap) {
     case 'engage-insights': {
       const { expr, url } = await getNextSearchExpression();
       await log(`[Scenario] Engaging hashtag: ${expr}`, 'info');
-      await openTabAndWait(url, 'post-engager', {}, 90_000);
+      await openTabAndWait(url, 'pillar-3-insights', {}, 90_000);
       await advanceExprQueue();
       break;
     }
@@ -1219,6 +1227,8 @@ async function processMessageQueue() {
 const TASK_URLS = {
   'ssi-monitor': 'https://www.linkedin.com/sales/ssi',
   'post-engager': 'https://www.linkedin.com/feed/',
+  'pillar-3-insights': 'https://www.linkedin.com/feed/hashtag/hiring-agile-latam/',
+  'profile-discoverer': 'https://www.linkedin.com/in/',
   'relationship-builder': 'https://www.linkedin.com/mynetwork/catch-up/birthday/',
   'connection-tracker': 'https://www.linkedin.com/mynetwork/invitation-manager/sent/',
   'follow-up-sender': 'https://www.linkedin.com/messaging/',
@@ -1265,11 +1275,11 @@ const CYCLE_STEPS = [
     run: async () => { await processUnprocessedLeads(3); },
   },
   {
-    name: 'post-engager',
+    name: 'pillar-3-insights',
     run: async () => {
       const { expr, index, url } = await getNextSearchExpression();
-      await log(`[Cycle] post-engager keyword ${index + 1}/${CONTENT_SEARCH_EXPRESSIONS.length}: "${expr}"`);
-      await openTabAndWait(url, 'post-engager', {});
+      await log(`[Cycle] pillar-3-insights keyword ${index + 1}/${CONTENT_SEARCH_EXPRESSIONS.length}: "${expr}"`);
+      await openTabAndWait(url, 'pillar-3-insights', {});
       await advanceExprQueue();
     },
   },
@@ -1660,27 +1670,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true;
   }
 
-  // Post-commenter queue (handled by content/post-commenter.js)
-  if (message.action === 'START_QUEUE') {
-    handleStartCommenterQueue()
-      .then(() => sendResponse({ ok: true }))
-      .catch(e => sendResponse({ ok: false, error: e.message }));
-    return true;
-  }
-
-  if (message.action === 'PAGE_DONE') {
-    const tabId = _sender && _sender.tab && _sender.tab.id;
-    handleCommenterPageDone(message, tabId)
-      .then(() => sendResponse({ ok: true }))
-      .catch(e => { console.error('[SW] PAGE_DONE error:', e); sendResponse({ ok: false }); });
-    return true;
-  }
-
-  if (message.action === 'LOG') {
-    appendCommenterLog(message.text).catch(console.error);
-    sendResponse({ ok: true });
-    return true;
-  }
 });
 
 /**
@@ -1801,88 +1790,3 @@ async function harvestJobRecruiterUrls() {
   return { totalJobs, totalRecruiters, totalEmails };
 }
 
-// ---------------------------------------------------------------------------
-// Post-Commenter Queue helpers
-// ---------------------------------------------------------------------------
-
-const COMMENTER_SEARCH_URLS = [
-  'https://www.linkedin.com/search/results/content/?keywords=project%20manager%20latam&origin=SWITCH_SEARCH_VERTICAL',
-  'https://www.linkedin.com/search/results/content/?keywords=%22delivery%20manager%22%20latam&origin=GLOBAL_SEARCH_HEADER',
-  'https://www.linkedin.com/search/results/content/?keywords=%22delivery%20project%22%20latam&origin=GLOBAL_SEARCH_HEADER',
-  'https://www.linkedin.com/search/results/content/?keywords=%22nearshore%22%20latam&origin=GLOBAL_SEARCH_HEADER',
-  'https://www.linkedin.com/search/results/content/?keywords=%22offshore%22%20latam&origin=GLOBAL_SEARCH_HEADER',
-  'https://www.linkedin.com/search/results/content/?keywords=%22digital%20products%22%20latam&origin=GLOBAL_SEARCH_HEADER',
-  'https://www.linkedin.com/search/results/content/?keywords=%22digital%20project%22%20latam&origin=GLOBAL_SEARCH_HEADER',
-  'https://www.linkedin.com/search/results/content/?keywords=%22agile%22%20latam&origin=GLOBAL_SEARCH_HEADER',
-  'https://www.linkedin.com/search/results/content/?keywords=%22scrum%22%20latam&origin=GLOBAL_SEARCH_HEADER',
-  'https://www.linkedin.com/search/results/content/?keywords=project%20manager%20latam%20hiring&origin=GLOBAL_SEARCH_HEADER',
-];
-
-async function handleStartCommenterQueue() {
-  const state = {
-    running: true,
-    queueIndex: 0,
-    totalUrls: COMMENTER_SEARCH_URLS.length,
-    totalCommented: 0,
-    totalLiked: 0,
-    totalSkipped: 0,
-    startedAt: new Date().toISOString(),
-    finishedAt: null,
-    log: [],
-  };
-  await chrome.storage.local.set({ commenterState: state, commenterRunning: true });
-  await appendCommenterLog('Queue started -- ' + COMMENTER_SEARCH_URLS.length + ' URLs to process');
-  await openCommenterUrl(0);
-}
-
-async function handleCommenterPageDone(message, tabId) {
-  const data = await chrome.storage.local.get('commenterState');
-  const state = data.commenterState || {};
-  state.totalCommented = (state.totalCommented || 0) + (message.commented || 0);
-  state.totalLiked     = (state.totalLiked     || 0) + (message.liked     || 0);
-  state.totalSkipped   = (state.totalSkipped   || 0) + (message.skipped   || 0);
-  const nextIndex = (state.queueIndex || 0) + 1;
-  state.queueIndex = nextIndex;
-  await chrome.storage.local.set({ commenterState: state });
-
-  await appendCommenterLog(
-    'URL ' + nextIndex + '/' + COMMENTER_SEARCH_URLS.length + ' done' +
-    ' -- commented: ' + message.commented +
-    ', liked: ' + message.liked +
-    ', skipped: ' + message.skipped
-  );
-
-  if (tabId) {
-    try { await chrome.tabs.remove(tabId); } catch (_) {}
-  }
-  await openCommenterUrl(nextIndex);
-}
-
-async function openCommenterUrl(index) {
-  if (index >= COMMENTER_SEARCH_URLS.length) {
-    const data = await chrome.storage.local.get('commenterState');
-    const state = data.commenterState || {};
-    state.running    = false;
-    state.finishedAt = new Date().toISOString();
-    await chrome.storage.local.set({ commenterState: state, commenterRunning: false });
-    await appendCommenterLog('All ' + COMMENTER_SEARCH_URLS.length + ' URLs processed. Session complete.');
-    return;
-  }
-  const url   = COMMENTER_SEARCH_URLS[index];
-  const label = decodeURIComponent(new URL(url).searchParams.get('keywords') || url);
-  await appendCommenterLog('Opening [' + (index + 1) + '/' + COMMENTER_SEARCH_URLS.length + ']: ' + label);
-  await chrome.tabs.create({ url, active: true });
-}
-
-async function appendCommenterLog(text) {
-  try {
-    const data = await chrome.storage.local.get('commenterState');
-    const state = data.commenterState || {};
-    if (!Array.isArray(state.log)) state.log = [];
-    state.log.push({ ts: new Date().toISOString().slice(11, 19), text });
-    state.log = state.log.slice(-300);
-    await chrome.storage.local.set({ commenterState: state });
-  } catch (e) {
-    console.warn('[SW] appendCommenterLog failed:', e);
-  }
-}
