@@ -89,7 +89,7 @@ chrome.runtime.onStartup.addListener(async () => {
 async function runDailySequence(targetWindow, dailyCap) {
   await chrome.storage.local.set({ routineRunning: true });
   try {
-    await log('Step 1/6 — Capturing SSI scores…');
+    await log('Step 1/7 — Capturing SSI scores…');
     await openTabAndWait('https://www.linkedin.com/sales/ssi', 'ssi-monitor', {});
 
     // Split the daily cap: Step 2 uses the keyword pool, Step 2c uses direct validated URLs.
@@ -97,20 +97,20 @@ async function runDailySequence(targetWindow, dailyCap) {
     const capHalf = Math.floor(dailyCap / 2);
     const capRest = dailyCap - capHalf;
 
-    await log(`Step 2/6 — Prospecting Tech Recruiters via keyword search (cap: ${capHalf})…`);
+    await log(`Step 2/7 — Prospecting Tech Recruiters via keyword search (cap: ${capHalf})…`);
     await openTabAndWait(await buildSearchUrl(targetWindow), 'recruiter-prospector', { dailyCap: capHalf }, 600_000);
 
-    await log('Step 2b/6 — Browsing people search (SSI: Localizar as pessoas certas)…');
+    await log('Step 2b/7 — Browsing people search (SSI: Localizar as pessoas certas)…');
     const peopleUrl = await getNextPeopleSearchUrl();
     await openTabAndWait(peopleUrl, 'recruiter-prospector', { dailyCap: 0 }, 600_000);
     await advancePeopleQueue();
 
-    await log(`Step 2c/6 — Prospecting global profiles via direct URLs (cap: ${capRest})…`);
+    await log(`Step 2c/7 — Prospecting global profiles via direct URLs (cap: ${capRest})…`);
     const directUrl = await getNextDirectConnectUrl();
     await openTabAndWait(directUrl, 'recruiter-prospector', { dailyCap: capRest }, 600_000);
     await advanceDirectConnectQueue();
 
-    await log('Step 3/6 — Engaging with targeted content search posts…');
+    await log('Step 3/7 — Engaging with targeted content search posts…');
     const { expr, index: exprIndex, url: postEngageUrl } = await getNextSearchExpression();
     await log(`Keyword ${exprIndex + 1}/${CONTENT_SEARCH_EXPRESSIONS.length}: "${expr}"`);
     await openTabAndWait(postEngageUrl, 'post-engager', {});
@@ -138,10 +138,10 @@ async function runDailySequence(targetWindow, dailyCap) {
     await openTabAndWait('https://www.linkedin.com/mynetwork/catch-up/work_anniversaries/', 'relationship-builder', { pageType: 'anniversary' });
     await openTabAndWait('https://www.linkedin.com/mynetwork/catch-up/job_changes/', 'relationship-builder', { pageType: 'new_job' });
 
-    await log('Step 5/6 — Tracking accepted connections…');
+    await log('Step 5/7 — Tracking accepted connections…');
     await openTabAndWait('https://www.linkedin.com/mynetwork/invitation-manager/sent/', 'connection-tracker', {});
 
-    await log('Step 6/6 — Sending follow-up messages to accepted connections (≥24h)…');
+    await log('Step 6/7 — Sending follow-up messages to accepted connections (≥24h)…');
     await openTabAndWait('https://www.linkedin.com/messaging/', 'follow-up-sender', {});
   } catch (err) {
     await chrome.storage.local.set({ routineRunning: false });
@@ -520,7 +520,7 @@ async function advanceExprQueue() {
 async function getNextPeopleSearchUrl() {
   const { peopleQueueIndex = 0 } = await chrome.storage.local.get('peopleQueueIndex');
   const idx = peopleQueueIndex % PEOPLE_SEARCH_URLS.length;
-  console.log(`[SSI Optimizer] People search URL ${idx + 1}/${PEOPLE_SEARCH_URLS.length}: ${PEOPLE_SEARCH_URLS[idx]}`);
+  await log(`[PeopleSearch] URL ${idx + 1}/${PEOPLE_SEARCH_URLS.length}: ${PEOPLE_SEARCH_URLS[idx]}`);
   return PEOPLE_SEARCH_URLS[idx];
 }
 
@@ -528,13 +528,13 @@ async function advancePeopleQueue() {
   const { peopleQueueIndex = 0 } = await chrome.storage.local.get('peopleQueueIndex');
   const next = (peopleQueueIndex + 1) % PEOPLE_SEARCH_URLS.length;
   await chrome.storage.local.set({ peopleQueueIndex: next });
-  console.log(`[SSI Optimizer] People queue advanced: ${peopleQueueIndex} → ${next}`);
+  await log(`[PeopleSearch] queue advanced: ${peopleQueueIndex} → ${next}`);
 }
 
 async function getNextDirectConnectUrl() {
   const { directConnectIndex = 0 } = await chrome.storage.local.get('directConnectIndex');
   const idx = directConnectIndex % RECRUITER_DIRECT_CONNECT_URLS.length;
-  console.log(`[SSI Optimizer] Direct connect URL ${idx + 1}/${RECRUITER_DIRECT_CONNECT_URLS.length}: ${RECRUITER_DIRECT_CONNECT_URLS[idx]}`);
+  await log(`[DirectConnect] URL ${idx + 1}/${RECRUITER_DIRECT_CONNECT_URLS.length}: ${RECRUITER_DIRECT_CONNECT_URLS[idx]}`);
   return RECRUITER_DIRECT_CONNECT_URLS[idx];
 }
 
@@ -542,7 +542,8 @@ async function advanceDirectConnectQueue() {
   const { directConnectIndex = 0 } = await chrome.storage.local.get('directConnectIndex');
   const next = (directConnectIndex + 1) % RECRUITER_DIRECT_CONNECT_URLS.length;
   await chrome.storage.local.set({ directConnectIndex: next });
-  console.log(`[SSI Optimizer] Direct connect queue advanced: ${directConnectIndex} → ${next}`);
+  await log(`[DirectConnect] queue advanced: ${directConnectIndex} → ${next}`);
+}
 
 async function getNextJobKeyword() {
   const { jobQueueIndex = 0 } = await chrome.storage.local.get('jobQueueIndex');
