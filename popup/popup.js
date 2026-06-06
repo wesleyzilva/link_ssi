@@ -6,7 +6,6 @@
  */
 
 document.addEventListener('DOMContentLoaded', async () => {
-<<<<<<< HEAD
   // Each render function is isolated so one failure never blocks the rest.
   // wireButtons() MUST always run — broken buttons are worse than broken data.
   const safeRun = (fn) => fn().catch(err => console.warn('[Popup]', err));
@@ -19,16 +18,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   await safeRun(renderPostQueue);
   await safeRun(renderScenarios);
   await safeRun(renderRunNowButton);
-=======
-  await renderSSIScores();
-  await renderDayCycle();
-  await renderActivityLog();
-  await renderAnalytics();
-  await renderNextAlarm();
-  await renderLiveLog();
-  await renderJobsLeadsSummary();
-  await renderCycleStatus();
->>>>>>> d82b910 (feat: novos coletores (job, lead, detail) e refresh popup/manifest)
+  await safeRun(renderJobsLeadsSummary);
+  await safeRun(renderCycleStatus);
   wireButtons();
 });
 
@@ -39,17 +30,17 @@ chrome.storage.onChanged.addListener((changes) => {
   if (changes.pendingRuns || changes.currentRunNumber || changes.totalRunsSession) safe(renderRunCounter);
   if (changes.specificPostQueue) safe(renderPostQueue);
   if (changes.selectedScenarios) safe(renderScenarios);
-  if (changes.activityLog)      safe(renderLiveLog);
-  if (changes.lastSSI)          { safe(renderSSIScores); safe(renderActivityLog); }
-  if (changes.dayCycleIndex)    safe(renderDayCycle);
+  if (changes.activityLog) safe(renderLiveLog);
+  if (changes.lastSSI) { safe(renderSSIScores); safe(renderActivityLog); }
+  if (changes.dayCycleIndex) safe(renderDayCycle);
   if (changes.acceptedConnections || changes.lastConnectionTracking || changes.lastFollowUp || changes.ssiScores) {
     safe(renderAnalytics);
   }
   if (changes.lastProspecting || changes.lastEngagement || changes.lastRelationshipBuild || changes.lastUsedExpression) {
     safe(renderActivityLog);
   }
-  if (changes.jobs || changes.leads || changes.lastJobCollect) renderJobsLeadsSummary();
-  if (changes.cycleState) renderCycleStatus();
+  if (changes.jobs || changes.leads || changes.lastJobCollect) safe(renderJobsLeadsSummary);
+  if (changes.cycleState) safe(renderCycleStatus);
 });
 
 async function renderJobsLeadsSummary() {
@@ -207,7 +198,7 @@ async function renderAnalytics() {
     const trend = scores.map((s, i) => {
       if (i === 0) return String(s.total ?? '?');
       const prev = scores[i - 1].total ?? 0;
-      const cur  = s.total ?? 0;
+      const cur = s.total ?? 0;
       const arrow = cur > prev ? '↑' : cur < prev ? '↓' : '→';
       return `${arrow}${cur}`;
     }).join(' ');
@@ -434,9 +425,8 @@ function wireButtons() {
     renderLiveLog();
   });
 
-<<<<<<< HEAD
   document.getElementById('btn-comment-post').addEventListener('click', async () => {
-    const input  = document.getElementById('input-post-url');
+    const input = document.getElementById('input-post-url');
     const status = document.getElementById('comment-post-status');
     const postUrl = (input.value || '').trim();
 
@@ -469,7 +459,7 @@ function wireButtons() {
   });
 
   document.getElementById('btn-queue-post').addEventListener('click', async () => {
-    const input  = document.getElementById('input-post-url');
+    const input = document.getElementById('input-post-url');
     const status = document.getElementById('comment-post-status');
     const postUrl = (input.value || '').trim();
 
@@ -516,7 +506,7 @@ function wireButtons() {
       btn.textContent = '▶ Run queue now';
     }, 10000);
   });
-=======
+
   const dlBtn = document.getElementById('btn-download-csvs');
   if (dlBtn) {
     dlBtn.addEventListener('click', async () => {
@@ -575,7 +565,6 @@ function wireButtons() {
 
   // Refresh cycle status every 5s while popup is open (lastTickAt drifts)
   setInterval(renderCycleStatus, 5000);
->>>>>>> d82b910 (feat: novos coletores (job, lead, detail) e refresh popup/manifest)
 
   document.getElementById('open-history').addEventListener('click', (e) => {
     e.preventDefault();
@@ -585,7 +574,7 @@ function wireButtons() {
   // ─── Run counter ───────────────────────────────────────────────────────────
   document.getElementById('btn-set-runs').addEventListener('click', async () => {
     const select = document.getElementById('select-run-count');
-    const count  = parseInt(select.value, 10);
+    const count = parseInt(select.value, 10);
     await chrome.storage.local.set({ runsTarget: count });
     await renderRunCounter();
   });

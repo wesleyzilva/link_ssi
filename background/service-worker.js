@@ -27,8 +27,8 @@ const MESSAGE_CAP_PER_RUN = 20;
 
 // Maximum number of sendMessage retries while waiting for the content script
 const SEND_MAX_RETRIES = 15;  // 15 × 3 s = 45 s after page load
-const SEND_FIRST_WAIT  = 3000; // first attempt: 3 s after status:complete
-const SEND_RETRY_WAIT  = 3000; // subsequent attempts: every 3 s
+const SEND_FIRST_WAIT = 3000; // first attempt: 3 s after status:complete
+const SEND_RETRY_WAIT = 3000; // subsequent attempts: every 3 s
 
 // ─── Extension install / startup ────────────────────────────────────────────
 
@@ -116,28 +116,24 @@ async function runDailySequence(targetWindow, dailyCap) {
     await openTabAndWait(postEngageUrl, 'post-engager', {});
     await advanceExprQueue();
 
-<<<<<<< HEAD
     await log('Step 3b/6 — Commenting on queued specific posts…');
     await processSpecificPostQueue();
 
-    await log('Step 4/6 — Building relationships (birthdays + anniversaries + job changes)…');
-=======
-    await log('Step 3b/5 — Collecting job postings (PM / Delivery / Agile)…');
+    await log('Step 3c/6 — Collecting job postings (PM / Delivery / Agile)…');
     const { keyword: jobKw, index: jobIdx } = await getNextJobKeyword();
     await log(`Job keyword ${jobIdx + 1}/${JOB_SEARCH_KEYWORDS.length}: "${jobKw}"`);
     await openTabAndWait(buildJobSearchUrl(jobKw), 'job-collector', { keyword: jobKw });
     await advanceJobQueue();
 
-    await log('Step 3c/5 — Processing unprocessed jobs (recruiter + emails)…');
+    await log('Step 3d/6 — Processing unprocessed jobs (recruiter + emails)…');
     const processedCount = await processUnprocessedJobs(5);
     await log(`Job-detail pass: ${processedCount} jobs processed.`);
 
-    await log('Step 3d/5 — Visiting unprocessed lead profiles…');
+    await log('Step 3e/6 — Visiting unprocessed lead profiles…');
     const leadsProcessed = await processUnprocessedLeads(5);
     await log(`Lead-profile pass: ${leadsProcessed} leads visited.`);
 
-    await log('Step 4/5 — Building relationships (birthdays + anniversaries)…');
->>>>>>> d82b910 (feat: novos coletores (job, lead, detail) e refresh popup/manifest)
+    await log('Step 4/6 — Building relationships (birthdays + anniversaries + job changes)…');
     await openTabAndWait('https://www.linkedin.com/mynetwork/catch-up/birthday/', 'relationship-builder', { pageType: 'birthday' });
     await openTabAndWait('https://www.linkedin.com/mynetwork/catch-up/work_anniversaries/', 'relationship-builder', { pageType: 'anniversary' });
     await openTabAndWait('https://www.linkedin.com/mynetwork/catch-up/job_changes/', 'relationship-builder', { pageType: 'new_job' });
@@ -160,7 +156,7 @@ async function runDailySequence(targetWindow, dailyCap) {
   const _summary = await chrome.storage.local.get(['lastProspecting', 'lastEngagement', 'lastRelationshipBuild']);
   const _conns = _summary.lastProspecting?.sent ?? 0;
   const _posts = (_summary.lastEngagement?.likes ?? 0) + (_summary.lastEngagement?.comments ?? 0);
-  const _rels  = _summary.lastRelationshipBuild?.touched ?? 0;
+  const _rels = _summary.lastRelationshipBuild?.touched ?? 0;
   await log(
     `[Summary] 🤝 Connections ${_conns} | 💬 Posts ${_posts} | 🎉 Relationships ${_rels}`,
     'success'
@@ -248,7 +244,7 @@ function openTabAndWait(url, task, payload = {}, timeoutMs = 90_000) {
       clearTimeout(safetyTimer);
       if (createdTabId !== null) {
         chrome.tabs.remove(createdTabId, () => {
-          if (chrome.runtime.lastError) {} // tab may already be closed
+          if (chrome.runtime.lastError) { } // tab may already be closed
           resolve(contentScriptResponded);
         });
       } else {
@@ -270,7 +266,7 @@ function openTabAndWait(url, task, payload = {}, timeoutMs = 90_000) {
     chrome.tabs.create({ url, active: false }, (tab) => {
       createdTabId = tab.id;
       if (settled) {
-        chrome.tabs.remove(tab.id, () => {});
+        chrome.tabs.remove(tab.id, () => { });
         return;
       }
 
@@ -444,14 +440,14 @@ const EXEC_ENGAGE_URLS = [
  * Each id maps to a case in runScenario().
  */
 const SCENARIOS = [
-  { id: 'full-pipeline',       label: '🔁 Full Pipeline',         description: 'SSI · Prospect · Engage · Relationships · Track · Follow-up + Messages' },
-  { id: 'ssi-capture',         label: '📊 Capture SSI',           description: 'Read and store current SSI pillar scores (baseline before any action)' },
-  { id: 'prospect-connect',    label: '🤝 Prospect & Connect',    description: 'Find and send connection requests to tech recruiters via people search + direct URLs' },
-  { id: 'engage-insights',     label: '💬 Engage with Posts',     description: 'Like/comment on the next keyword in the round-robin rotation (SSI: Insights)' },
+  { id: 'full-pipeline', label: '🔁 Full Pipeline', description: 'SSI · Prospect · Engage · Relationships · Track · Follow-up + Messages' },
+  { id: 'ssi-capture', label: '📊 Capture SSI', description: 'Read and store current SSI pillar scores (baseline before any action)' },
+  { id: 'prospect-connect', label: '🤝 Prospect & Connect', description: 'Find and send connection requests to tech recruiters via people search + direct URLs' },
+  { id: 'engage-insights', label: '💬 Engage with Posts', description: 'Like/comment on the next keyword in the round-robin rotation (SSI: Insights)' },
   { id: 'engage-hiring-latam', label: '🎯 Engage: Hiring LATAM', description: 'Comment on all 3 hiring/agile/scrum/delivery LATAM hashtag feeds (SSI: Insights)' },
-  { id: 'engage-exec-posts',   label: '🏢 Engage: Exec Posts',    description: 'Comment on posts by CTO/VP Eng/Head of Eng/Account Exec — logs author names + links' },
-  { id: 'build-relationships', label: '🔔 Build Relationships',   description: 'Birthday/anniversary congrats + connection tracking + follow-up messages (SSI: Relationships)' },
-  { id: 'job-harvest',         label: '🔍 Job Recruiter Harvest', description: 'Scrape LinkedIn jobs → connect + follow + message new recruiters' },
+  { id: 'engage-exec-posts', label: '🏢 Engage: Exec Posts', description: 'Comment on posts by CTO/VP Eng/Head of Eng/Account Exec — logs author names + links' },
+  { id: 'build-relationships', label: '🔔 Build Relationships', description: 'Birthday/anniversary congrats + connection tracking + follow-up messages (SSI: Relationships)' },
+  { id: 'job-harvest', label: '🔍 Job Recruiter Harvest', description: 'Scrape LinkedIn jobs → connect + follow + message new recruiters' },
 ];
 
 // Direct people-search URLs for global (non-Brazilian) profiles — network=O (3rd degree+)
@@ -500,7 +496,7 @@ const JOB_SEARCH_KEYWORDS = [
  */
 async function getNextSearchExpression() {
   const { exprQueueIndex = 0 } = await chrome.storage.local.get('exprQueueIndex');
-  const idx  = exprQueueIndex % CONTENT_SEARCH_EXPRESSIONS.length;
+  const idx = exprQueueIndex % CONTENT_SEARCH_EXPRESSIONS.length;
   const expr = CONTENT_SEARCH_EXPRESSIONS[idx];
 
   // LinkedIn 2026: /search/results/content/ renders posts with fully obfuscated CSS classes —
@@ -535,7 +531,6 @@ async function advancePeopleQueue() {
   console.log(`[SSI Optimizer] People queue advanced: ${peopleQueueIndex} → ${next}`);
 }
 
-<<<<<<< HEAD
 async function getNextDirectConnectUrl() {
   const { directConnectIndex = 0 } = await chrome.storage.local.get('directConnectIndex');
   const idx = directConnectIndex % RECRUITER_DIRECT_CONNECT_URLS.length;
@@ -548,7 +543,8 @@ async function advanceDirectConnectQueue() {
   const next = (directConnectIndex + 1) % RECRUITER_DIRECT_CONNECT_URLS.length;
   await chrome.storage.local.set({ directConnectIndex: next });
   console.log(`[SSI Optimizer] Direct connect queue advanced: ${directConnectIndex} → ${next}`);
-=======
+}
+
 async function getNextJobKeyword() {
   const { jobQueueIndex = 0 } = await chrome.storage.local.get('jobQueueIndex');
   const idx = jobQueueIndex % JOB_SEARCH_KEYWORDS.length;
@@ -653,7 +649,6 @@ async function openTopJobs(cap = 5) {
     chrome.tabs.create({ url: job.url, active: false });
   }
   return pending.length;
->>>>>>> d82b910 (feat: novos coletores (job, lead, detail) e refresh popup/manifest)
 }
 
 function buildPostEngageUrl() {
@@ -715,9 +710,9 @@ async function buildSearchUrl(targetWindow) {
   const pool = RECRUITER_SEARCH_POOL[targetWindow] || RECRUITER_SEARCH_POOL.US_EU;
   // Each keyword spans 10 pages before rotating to the next
   const keywordIdx = Math.floor(counter / 10) % pool.length;
-  const page       = (counter % 10) + 1;          // 1 – 10
-  const keyword    = pool[keywordIdx];
-  const keywords   = encodeURIComponent(keyword);
+  const page = (counter % 10) + 1;          // 1 – 10
+  const keyword = pool[keywordIdx];
+  const keywords = encodeURIComponent(keyword);
 
   await chrome.storage.local.set({ [counterKey]: counter + 1 });
   console.log(
@@ -729,9 +724,9 @@ async function buildSearchUrl(targetWindow) {
   const geoMap = {
     // USA, UK, Canada, Australia, Netherlands, Germany, France, Portugal, UAE
     US_EU: '%5B%22103644278%22%2C%22101165590%22%2C%22102713980%22%2C%22101739942%22%2C%22104738515%22%2C%22102890883%22%2C%22102454443%22%2C%22105015875%22%2C%22106157047%22%5D',
-    APAC:  '%5B%22102257491%22%2C%22101452733%22%5D',   // Australia + Singapore
+    APAC: '%5B%22102257491%22%2C%22101452733%22%5D',   // Australia + Singapore
   };
-  const geo      = geoMap[targetWindow] || geoMap.US_EU;
+  const geo = geoMap[targetWindow] || geoMap.US_EU;
   const pagePart = page > 1 ? `&page=${page}` : '';
   return (
     `https://www.linkedin.com/search/results/people/?keywords=${keywords}` +
@@ -821,10 +816,10 @@ async function computeProfileStats(profileIds, label) {
   const { allTimeProfiles = [] } = await chrome.storage.local.get('allTimeProfiles');
   const allTimeSet = new Set(allTimeProfiles);
 
-  const batchSet  = new Set();
-  let duplicates  = 0;
-  let newCount    = 0;
-  let returning   = 0;
+  const batchSet = new Set();
+  let duplicates = 0;
+  let newCount = 0;
+  let returning = 0;
 
   for (const pid of profileIds) {
     if (batchSet.has(pid)) { duplicates++; continue; }
@@ -832,7 +827,7 @@ async function computeProfileStats(profileIds, label) {
     if (allTimeSet.has(pid)) { returning++; } else { newCount++; allTimeSet.add(pid); }
   }
 
-  const total  = batchSet.size;
+  const total = batchSet.size;
   const newPct = total > 0 ? Math.round((newCount / total) * 100) : 0;
   await log(
     `[${label}] ${newCount} new (${newPct}%), ${returning} returning, ${duplicates} duplicates in batch`,
@@ -929,7 +924,7 @@ async function runScenario(scenarioId, dailyCap) {
  */
 async function runSelectedScenarios(scenarioIds, n) {
   const safeN = Math.max(1, Math.min(10, n));
-  const ids   = Array.isArray(scenarioIds) && scenarioIds.length ? scenarioIds : ['full-pipeline'];
+  const ids = Array.isArray(scenarioIds) && scenarioIds.length ? scenarioIds : ['full-pipeline'];
 
   await chrome.storage.local.set({
     pendingRuns: safeN, totalRunsSession: safeN, currentRunNumber: 0,
@@ -993,15 +988,7 @@ function downloadCsvFromSW(filename, headers, rows) {
 async function exportLogCsv(scenarioId = '') {
   const { activityLog = [] } = await chrome.storage.local.get('activityLog');
   const ts = new Date().toISOString().slice(0, 16).replace('T', '-').replace(':', '');
-<<<<<<< HEAD
-  const slug = scenarioId ? `${scenarioId}-` : '';
-  const HEADERS = ['Date', 'Level', 'Script', 'Message'];
-  const rows = [...activityLog]
-    .sort((a, b) => new Date(b.ts) - new Date(a.ts))
-    .map(e => [e.ts || '', e.level || 'info', e.script || '', e.msg || '']);
-  downloadCsvFromSW(`activity-log-${slug}${ts}.csv`, HEADERS, rows);
-  return rows.length;
-=======
+  const data = await chrome.storage.local.get(['connections', 'postInteractions', 'relationships', 'activityLog', 'ssiScores', 'discoveredLinks', 'acceptedConnections', 'jobs', 'leads']);
 
   const conns = [...(data.connections || [])].sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt));
   downloadCsvFromSW(`connections-${ts}.csv`,
@@ -1017,7 +1004,7 @@ async function exportLogCsv(scenarioId = '') {
   downloadCsvFromSW(`relationships-${ts}.csv`,
     ['Date', 'Name', 'Event Type', 'Message Sent', 'Profile URL', 'Profile ID'],
     rels.map(r => [r.touchedAt, r.name || r.profileId, r.eventType, r.messageSent || '',
-      r.profileUrl || `https://www.linkedin.com/in/${r.profileId}/`, r.profileId]));
+    r.profileUrl || `https://www.linkedin.com/in/${r.profileId}/`, r.profileId]));
 
   const logs = [...(data.activityLog || [])].reverse();
   downloadCsvFromSW(`activity-log-${ts}.csv`,
@@ -1028,7 +1015,7 @@ async function exportLogCsv(scenarioId = '') {
   downloadCsvFromSW(`ssi-scores-${ts}.csv`,
     ['Date', 'CapturedAt', 'Total', 'Brand', 'People', 'Insights', 'Relationships'],
     ssi.map(s => [s.date || (s.capturedAt || '').slice(0, 10), s.capturedAt,
-      s.total ?? '', s.brand ?? '', s.people ?? '', s.insights ?? '', s.relationships ?? '']));
+    s.total ?? '', s.brand ?? '', s.people ?? '', s.insights ?? '', s.relationships ?? '']));
 
   // Links discovered — for human validation
   const links = [...(data.discoveredLinks || [])].sort((a, b) => new Date(b.ts) - new Date(a.ts));
@@ -1041,15 +1028,15 @@ async function exportLogCsv(scenarioId = '') {
   downloadCsvFromSW(`accepted-connections-${ts}.csv`,
     ['AcceptedAt', 'Name', 'Profile URL', 'Profile ID', 'SentAt', 'FollowUpSent', 'FollowUpAt'],
     accepted.map(a => [a.acceptedAt, a.name || '', a.profileUrl || '', a.profileId || '',
-      a.sentAt || '', a.followUpSent ? 'yes' : 'no', a.followUpAt || '']));
+    a.sentAt || '', a.followUpSent ? 'yes' : 'no', a.followUpAt || '']));
 
   // Jobs harvested (PM / Delivery / Agile)
   const jobs = [...(data.jobs || [])].sort((a, b) => new Date(b.capturedAt) - new Date(a.capturedAt));
   downloadCsvFromSW(`jobs-${ts}.csv`,
     ['CapturedAt', 'Processed', 'ProcessedAt', 'Title', 'Company', 'Location',
-     'PostedAgo', 'Keyword', 'URL', 'JobID',
-     'RecruiterName', 'RecruiterHeadline', 'RecruiterProfile',
-     'Emails', 'ExternalApply', 'Insights', 'DescriptionSnippet'],
+      'PostedAgo', 'Keyword', 'URL', 'JobID',
+      'RecruiterName', 'RecruiterHeadline', 'RecruiterProfile',
+      'Emails', 'ExternalApply', 'Insights', 'DescriptionSnippet'],
     jobs.map(j => [
       j.capturedAt, j.processed ? 'yes' : 'no', j.processedAt || '',
       j.title || '', j.company || '', j.location || '',
@@ -1064,14 +1051,13 @@ async function exportLogCsv(scenarioId = '') {
   const leads = [...(data.leads || [])].sort((a, b) => new Date(b.capturedAt) - new Date(a.capturedAt));
   downloadCsvFromSW(`leads-${ts}.csv`,
     ['CapturedAt', 'Processed', 'ProcessedAt', 'Email', 'Name', 'Context',
-     'JobID', 'Snippet', 'SourceURL'],
+      'JobID', 'Snippet', 'SourceURL'],
     leads.map(l => [l.capturedAt, l.processed ? 'yes' : 'no', l.processedAt || '',
-      l.email || '', l.name || '', l.context || '',
-      l.jobId || '',
-      (l.snippet || '').slice(0, 240), l.sourceUrl || '']));
+    l.email || '', l.name || '', l.context || '',
+    l.jobId || '',
+    (l.snippet || '').slice(0, 240), l.sourceUrl || '']));
 
   await log(`Auto-CSV export complete — ${links.length} links, ${accepted.length} accepted, ${jobs.length} jobs, ${leads.length} leads, ${logs.length} log entries → Downloads/link_ssi/output/`, 'success');
->>>>>>> d82b910 (feat: novos coletores (job, lead, detail) e refresh popup/manifest)
 }
 
 /**
@@ -1431,7 +1417,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     const { task } = message;
     getDailyConnectionCap().then(async (cap) => {
       await log(`[Manual] Single task triggered: ${task}.`, 'warn');
-<<<<<<< HEAD
 
       if (task === 'post-queue') {
         await processSpecificPostQueue();
@@ -1440,13 +1425,9 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         return;
       }
 
-      const url = task === 'recruiter-prospector'
-        ? await buildSearchUrl(TARGET_WINDOWS.US_EU)
-        : TASK_URLS[task];
-=======
       let url, payload = {};
       if (task === 'recruiter-prospector') {
-        url = buildSearchUrl(TARGET_WINDOWS.US_EU);
+        url = await buildSearchUrl(TARGET_WINDOWS.US_EU);
         payload = { dailyCap: cap };
       } else if (task === 'job-collector') {
         const customKw = (message.keyword || '').trim();
@@ -1482,7 +1463,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
       } else {
         url = TASK_URLS[task];
       }
->>>>>>> d82b910 (feat: novos coletores (job, lead, detail) e refresh popup/manifest)
       if (!url) {
         await log(`[Manual] Unknown task: ${task}`, 'error');
         sendResponse({ error: 'Unknown task' });
@@ -1731,9 +1711,9 @@ async function harvestJobRecruiterUrls() {
     // Read the summary written by the content script
     const { lastJobHarvest } = await chrome.storage.local.get('lastJobHarvest');
     if (lastJobHarvest) {
-      totalJobs       += lastJobHarvest.jobsScanned   ?? 0;
+      totalJobs += lastJobHarvest.jobsScanned ?? 0;
       totalRecruiters += lastJobHarvest.recruitersFound ?? 0;
-      totalEmails     += lastJobHarvest.emailsFound    ?? 0;
+      totalEmails += lastJobHarvest.emailsFound ?? 0;
       if (Array.isArray(lastJobHarvest.newProfileUrls)) {
         allNewProfileUrls.push(...lastJobHarvest.newProfileUrls);
       }
@@ -1783,9 +1763,11 @@ async function harvestJobRecruiterUrls() {
         const m = url.match(/\/in\/([^/?#]+)/);
         const pid = m ? m[1] : null;
         return pid && !alreadyMessaged.has(pid)
-          ? { url: url.split('?')[0], profileId: pid, status: 'pending',
-              messageBody: RECRUITER_OUTREACH_MESSAGE, subject: RECRUITER_OUTREACH_SUBJECT,
-              addedAt: new Date().toISOString() }
+          ? {
+            url: url.split('?')[0], profileId: pid, status: 'pending',
+            messageBody: RECRUITER_OUTREACH_MESSAGE, subject: RECRUITER_OUTREACH_SUBJECT,
+            addedAt: new Date().toISOString()
+          }
           : null;
       })
       .filter(Boolean);
