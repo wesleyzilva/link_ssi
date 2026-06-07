@@ -994,7 +994,10 @@ function downloadCsvFromSW(filename, headers, rows) {
  * Pure chronological activity log. Headers: Date | Level | Script | Message
  */
 async function exportLogCsv(scenarioId = '') {
-  const { activityLog = [] } = await chrome.storage.local.get('activityLog');
+  const data = await chrome.storage.local.get([
+    'connections', 'postInteractions', 'relationships', 'activityLog',
+    'ssiScores', 'discoveredLinks', 'acceptedConnections', 'jobs', 'leads',
+  ]);
   const ts = new Date().toISOString().slice(0, 16).replace('T', '-').replace(':', '');
 
   const conns = [...(data.connections || [])].sort((a, b) => new Date(b.sentAt) - new Date(a.sentAt));

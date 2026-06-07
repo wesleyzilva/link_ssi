@@ -122,6 +122,21 @@ async function buildRelationships() {
 
     if (!success) {
       await contentLog(`[Diag] sendMessage failed | ${profileUrl || profileId} | ${name} — ${type}`, 'warn');
+      // Fallback: LinkedIn 2026 catch-up cards may only show reaction buttons (no direct msg btn).
+      // Queue the profile in messageQueue so profile-messenger handles it in the next step.
+      if (profileId) {
+        try {
+          const { messageQueue = [], messagedProfiles = [] } = await chrome.storage.local.get(['messageQueue', 'messagedProfiles']);
+          const alreadyQueued = messageQueue.some(m => m.profileId === profileId);
+          const alreadyMessaged = messagedProfiles.includes(profileId);
+          if (!alreadyQueued && !alreadyMessaged) {
+            const profileUrlFull = profileUrl || `https://www.linkedin.com/in/${profileId}/`;
+            messageQueue.push({ url: profileUrlFull, profileId, name: name || '', status: 'pending', addedAt: new Date().toISOString(), context: type });
+            await chrome.storage.local.set({ messageQueue });
+            await contentLog(`↳ queued for message-queue fallback | ${profileId} (${type})`, 'warn');
+          }
+        } catch (_e) { /* storage error — skip silently */ }
+      }
     }
 
     if (success) {

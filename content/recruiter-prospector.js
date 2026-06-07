@@ -115,6 +115,7 @@ async function prospectRecruiters() {
   let sent = 0;
   let totalChecked = 0;
   const MAX_PAGES = 10;
+  const viewedInSession = new Set(); // dedup VIEW_ONLY_MODE — LinkedIn can render same card 2-3x per page
 
   for (let page = 1; page <= MAX_PAGES; page++) {
     if (!VIEW_ONLY_MODE && sent >= SESSION_CAP) break;
@@ -164,6 +165,8 @@ async function prospectRecruiters() {
 
       // VIEW_ONLY_MODE: scroll each card — signals "Find Right People" to LinkedIn SSI
       if (VIEW_ONLY_MODE) {
+        if (viewedInSession.has(profileId)) continue;   // dedup: LinkedIn can render same card 2-3x
+        viewedInSession.add(profileId);
         await scrollIntoViewAndPause(card);
         await randomWait(2000, 4500);
         await logProfileLink(profileUrl, profileId, '');
