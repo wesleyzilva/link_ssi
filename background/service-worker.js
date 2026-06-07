@@ -86,8 +86,17 @@ chrome.runtime.onStartup.addListener(async () => {
  * @param {string} targetWindow - TARGET_WINDOWS value
  * @param {number} dailyCap     - connection requests allowed today
  */
+/**
+ * Throws if a FORCE_STOP was requested via the popup Stop button.
+ * Called between steps so the running step always finishes cleanly.
+ */
+async function checkStop() {
+  const { _stopRequested } = await chrome.storage.local.get('_stopRequested');
+  if (_stopRequested) throw new Error('STOP_REQUESTED');
+}
+
 async function runDailySequence(targetWindow, dailyCap) {
-  await chrome.storage.local.set({ routineRunning: true });
+  await chrome.storage.local.set({ routineRunning: true, _stopRequested: false });
   try {
     await log('Step 1/7 — Capturing SSI scores…');
     await openTabAndWait('https://www.linkedin.com/sales/ssi', 'ssi-monitor', {});
@@ -170,8 +179,12 @@ async function runDailySequence(targetWindow, dailyCap) {
     // Auto-open history page so the user can review results immediately
     chrome.tabs.create({ url: chrome.runtime.getURL('history/history.html') });
   } catch (err) {
-    await chrome.storage.local.set({ routineRunning: false });
-    await log(`Sequence error: ${err.message}`, 'error');
+    await chrome.storage.local.set({ routineRunning: false, _stopRequested: false });
+    if (err.message === 'STOP_REQUESTED') {
+      await log('⏹ Rotina parada pelo usuário.', 'warn');
+    } else {
+      await log(`Sequence error: ${err.message}`, 'error');
+    }
     return;
   }
 }
@@ -1538,6 +1551,14 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
 
   // Content scripts request CSV export after each run (logs go to output/ immediately)
+  if (message.action === 'FORCE_STOP_ROUTINE') {
+    chrome.storage.local.set({ _stopRequested: true })
+      .then(() => log('⏹ Stop solicitado pelo usuário.', 'warn'))
+      .then(() => sendResponse({ stopped: true }))
+      .catch((err) => sendResponse({ error: err.message }));
+    return true;
+  }
+
   if (message.action === 'EXPORT_LOGS') {
     exportAllCsvs()
       .then(() => sendResponse({ exported: true }))

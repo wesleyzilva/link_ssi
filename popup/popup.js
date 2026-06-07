@@ -376,18 +376,27 @@ async function renderRunNowButton() {
 function setRunNowState(state) {
   const btn = document.getElementById('btn-run-now');
   btn.classList.remove('btn--danger', 'btn--running', 'btn--done');
+  btn.title = '';
 
   if (state === 'running') {
     btn.classList.add('btn--running');
-    btn.textContent = '⏳ Running…';
-    btn.disabled = true;
+    btn.textContent = '⏹ Stop';
+    btn.title = 'Force stop the running sequence';
+    btn.disabled = false;
+  } else if (state === 'stopping') {
+    btn.classList.add('btn--running');
+    btn.textContent = '⏳ Stop requested…';
+    btn.title = 'Stop request sent to the service worker';
+    btn.disabled = false;
   } else if (state === 'done') {
     btn.classList.add('btn--done');
     btn.textContent = '✓ Done';
+    btn.title = 'Last run completed recently';
     btn.disabled = false;
   } else {
     btn.classList.add('btn--danger');
     btn.textContent = '▶ Run Now';
+    btn.title = 'Run the full SSI sequence now';
     btn.disabled = false;
   }
 }
@@ -398,7 +407,16 @@ function wireButtons() {
   const runNow = document.getElementById('btn-run-now');
   runNow.addEventListener('click', async () => {
     const { routineRunning } = await chrome.storage.local.get('routineRunning');
-    if (routineRunning) return; // already running — ignore click
+    if (routineRunning) {
+      setRunNowState('stopping');
+      try {
+        await chrome.runtime.sendMessage({ action: 'FORCE_STOP_ROUTINE' });
+      } catch {
+        // Service worker may restart briefly; that's OK — storage flag will sync
+      }
+      return;
+    }
+
     setRunNowState('running');
     try {
       await chrome.runtime.sendMessage({ action: 'RUN_NOW' });
